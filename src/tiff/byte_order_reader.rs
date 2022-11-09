@@ -22,6 +22,7 @@ impl<R: Read> ByteOrderReader<R> {
 macro_rules! generate_read_function {
     ($kind:ty) => {
         paste! {
+            #[allow(unused)]
             pub fn [<read_ $kind>](&mut self) -> Result<$kind, io::Error> {
                 if self.is_ilttle_endian {
                     self.reader.[<read_ $kind>]::<LittleEndian>()

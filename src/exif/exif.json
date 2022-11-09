@@ -1,1677 +1,10 @@
 [
     {
-        "tag": "0x00FE",
-        "name": "NewSubfileType",
-        "description": "Subfile type (new-style)",
-        "long_description": "The NewSubfileType field contains a bitmask of intents of the IFD.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 36",
-        "count": "1",
-        "dtype": [
-            "LONG",
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "BITFLAGS",
-            "values": {
-                "ReducedResolution (Reduced-resolution image data)": "bit 0",
-                "Page (Single page of a multiple page document)": "bit 1",
-                "Mask (Image mask data)": "bit 2",
-                "FP (TIFF/IT Final Page)": "bit 3",
-                "MRC (TIFF-FX Mixed Raster Content)": "bit 4"
-            }
-        }
-    },
-    {
-        "tag": "0x00FF",
-        "name": "SubfileType",
-        "description": "Subfile type (old-style)",
-        "long_description": "The SubfileType field contains an enumerated value of intents of the IFD. The SubfileType field is made obsolete by NewSubfileType.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 40",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "FullResolution (Full-resolution image data)": "1",
-                "ReducedResolution (Reduced-resolution image data)": "2",
-                "Page (Single page of a multiple page document)": "3"
-            }
-        }
-    },
-    {
-        "tag": "0x0100",
-        "name": "ImageWidth",
-        "description": "Width of the image in pixels (columns)",
-        "long_description": "The ImageWidth field is the width of the image, the number of columns in the pel-path direction.",
-        "references": "See also<a href=\"#ImageLength\">ImageLength</a>, <a href=\"#Orientation\">Orientation</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 34",
-        "count": "1",
-        "dtype": [
-            "SHORT",
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0101",
-        "name": "ImageLength",
-        "description": "Length of the image in pixels (rows)",
-        "long_description": "The ImageLength field is the length of the image, the number of scanlines in the scan direction.",
-        "references": "See also<a href=\"#ImageWidth\">ImageWidth</a>, <a href=\"#Orientation\">Orientation</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 34",
-        "count": "1",
-        "dtype": [
-            "SHORT",
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0102",
-        "name": "BitsPerSample",
-        "description": "Counts of bits per sample",
-        "long_description": "The BitsPerSample field specifies the precision or number of bits that is used to represent each component of the image in an image sample. This field sometimes contains one value, for each component having the same precision, it should have a value for each component.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 29",
-        "count": "SPP\n1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0103",
-        "name": "Compression",
-        "description": "Compression scheme",
-        "long_description": "The Compression field represents the type of compression used to compress the image data.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 30",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "None (No compression)": "1",
-                "MH (Modified Huffman compression)": "2",
-                "Group3 (T.4 compression)": "3",
-                "Group4 (T.6 (MMR) compression)": "4",
-                "LZW (LZW (Lempel-Ziv-Welch) compression)": "5",
-                "OJPEG (JPEG (old-style) compression)": "6",
-                "JPEG (JPEG (new-style) compression)": "7",
-                "JBIG (TIFF-FX JBIG (T.82) compression)": "9",
-                "JBIG_MRC (TIFF-FX JBIG (T.82) MRC (T.43) representation compression)": "10",
-                "NeXT (NeXT 2-bit grey scale compression)": "0x7FFE",
-                "Group3_1D_wordalign (Group 3 1-D (MH) compression, word-aligned)": "0x8003",
-                "Packbits (Macintosh Packbits Run-Length Encoding (RLE) compression)": "0x8005",
-                "Thunderscan (Thunderscan 4-bit compression)": "0x8029",
-                "IT8CT_MP_RasterPadding": "0x807F",
-                "IT8LW_RLE": "0x8080",
-                "IT8MP_RLE": "0x8081",
-                "IT8BL_RLE": "0x8082",
-                "PixarFilm": "0x808C",
-                "PixarLog": "0x808D",
-                "Deflate_experimental (Deflate algorithm compression (experimental value))": "0x80B2",
-                "Deflate (Deflate algorithm compression (standard value))": "0x0008",
-                "DCS": "0x80B3",
-                "JBIG_experimental": "0x8765",
-                "SGILog": "0x8774",
-                "SGILog24": "0x8775",
-                "JPEG2000_LEAD": "0x8798",
-                "JBIG2_TIFF_FX": "0x879B"
-            }
-        }
-    },
-    {
-        "tag": "0x0106",
-        "name": "PhotometricInterpretation",
-        "description": "Photometric interpretation",
-        "long_description": "The PhotometricInterpretation field describes the colorspace the image samples represent.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 37",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "WhiteIsZero (White is zero)": "0",
-                "BlackIsZero (Black is zero)": "1",
-                "RGB (RGB (Red, Green, Blue))": "2",
-                "PaletteColor (Palette color)": "3",
-                "TransparencyMask (Transparency mask)": "4",
-                "Separated (Separation)": "5",
-                "YCbCr (YCbCr)": "6",
-                "CIELab (CIE L*a*b*)": "8",
-                "ICCLab (ICC L*a*b*)": "9",
-                "ITULab (ITU-T Facsimile L*a*b*)": "10",
-                "LogL (Log luminance)": "32844",
-                "LogLUV (Log luminance and chrominance)": "32845",
-                "CFA (Color filter array)": "32803",
-                "LinearRaw (DNG Linear Raw)": "34892"
-            }
-        }
-    },
-    {
-        "tag": "0x0107",
-        "name": "Thresholding",
-        "description": "Halftone/dithering algorithm",
-        "long_description": "The Thresholding field contains the type of the halftoning/dithering algorithm used.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 41",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "NoDither": "1",
-                "OrderedDither": "2",
-                "RandomizedProcess": "3"
-            }
-        }
-    },
-    {
-        "tag": "0x0108",
-        "name": "CellWidth",
-        "description": "Width of the halftone or dither cell",
-        "long_description": "The CellWidth fields contains the width of the halftone cell. This field should only be present if Thresholding==OrderedDither.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 29",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0109",
-        "name": "CellLength",
-        "description": "Length of the halftone or dither cell",
-        "long_description": "The CellLength field contains the length of the halftone cell. This field should only be present if Thresholding==OrderedDither.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 29",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x010A",
-        "name": "FillOrder",
-        "description": "The bit order within coded image data",
-        "long_description": "The FillOrder field describes the bit order of the compressed image data. This is almost always msb-to-lsb.  The native form of Group 3 facsimile devices is lsb-to-msb.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 32",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "MSBtoLSB (most-significant-bit to least-significant-bit)": "1",
-                "LSBtoMSB (least-significant-bit to most-significant-bit)": "2"
-            }
-        }
-    },
-    {
-        "tag": "0x010D",
-        "name": "DocumentName",
-        "description": "Document name",
-        "long_description": "The DocumentName fields contains the name of the document.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 12:  Document Storage and Retrieval\", p. 55",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x010E",
-        "name": "ImageDescription",
-        "description": "Image description",
-        "long_description": "The ImageDescription fields contains text describing the image.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x010F",
-        "name": "Make",
-        "description": "Input device make",
-        "long_description": "The Make field defines the manufacturer of the input scanner/camera that digitized the image.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0110",
-        "name": "Model",
-        "description": "Input device model",
-        "long_description": "The Model field defines the model of the input scanner/camera that digitized the image.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0111",
-        "name": "StripOffsets",
-        "description": "Offsets to strip data",
-        "long_description": "The StripOffsets field contains a value for each strip of the image that is the offset to the beginning of the strip data. The strips per image is determined from the image length and the rows per strip.  See ImageLength, RowsPerStrip. If the image has PlanarConfiguration==Planar then there is an offset for each sample for each strip of the image, with the offsets pointing to in order the strips for each separated component.",
-        "references": "See also<a href=\"#StripByteCounts\">StripByteCounts</a>, <a href=\"#RowsPerStrip\">RowsPerStrip</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 40",
-        "count": "SPI\nSPPxSPI",
-        "dtype": [
-            "LONG",
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "OFFSETS"
-        }
-    },
-    {
-        "tag": "0x0112",
-        "name": "Orientation",
-        "description": "Orientation of image",
-        "long_description": "The Orientation field describes how the output image is to be interpreted by rotating or flipping the coordinate origin.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "RowTopColumnLeft": "1",
-                "RowTopColumnRight": "2",
-                "RowBottomColumnRight": "3",
-                "RowBottomColumnLeft": "4",
-                "RowLeftColumnTop": "5",
-                "RowRightColumnTop": "6",
-                "RowRightColumnBottom": "7",
-                "RowLeftColumnBottom": "8",
-                "Unknown": "9"
-            }
-        }
-    },
-    {
-        "tag": "0x0115",
-        "name": "SamplesPerPixel",
-        "description": "Count of samples per pixel",
-        "long_description": "The SamplesPerPixel field is how many image or data component samples there are for each pixel. Each pixel has the same number of samples, except in the case of subsampled YCbCr and ITU/Facsimile L*a*b* per TIFF 6.0 and TIFF-FX, in which case this value reflects the number of components. Each sample represents an channel or component given the photometric interpretation, unless extra samples are present.  See ExtraSamples. The image may have multiple components but be a palettized image, in which case SamplesPerPixel would only reflect one sample for the color map entry.  See Indexed, PhotometricInterpretation==PaletteColor.",
-        "references": "See also<a href=\"#ExtraSamples\">ExtraSamples</a>, <a href=\"#Indexed\">Indexed</a>, <a href=\"#PhotometricInterpretation\">PhotometricInterpretation</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 39",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0116",
-        "name": "RowsPerStrip",
-        "description": "Rows per strip",
-        "long_description": "The RowsPerStrip field contains the number of rows (scanlines) per strip. It is used to determine the strips per image. A value of 0xFFFFFFFF, or the maximum value of the data type, implies that the entire image is one strip.",
-        "references": "See also<a href=\"#StripOffsets\">StripOffsets</a>, <a href=\"#StripByteCounts\">StripByteCounts</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 39",
-        "count": "1",
-        "dtype": [
-            "LONG",
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0117",
-        "name": "StripByteCounts",
-        "description": "Byte counts of strip data",
-        "long_description": "The StripByteCounts field contains a value for each strip of the image that is the byte count of the strip. The strips per image is determined from the image length and the rows per strip.  See ImageLength, RowsPerStrip. If the image has PlanarConfiguration==Planar then there is an offset for each sample for each strip of the image, with the offsets pointing to in order the strips for each separated component.",
-        "references": "See also<a href=\"#StripOffsets\">StripOffsets</a>, <a href=\"#RowsPerStrip\">RowsPerStrip</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 40",
-        "count": "SPI\nSPPxSPI",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "LENGTHS"
-        }
-    },
-    {
-        "tag": "0x0118",
-        "name": "MinSampleValue",
-        "description": "Minimum sample value",
-        "long_description": "The MinSampleValue field identifies the least sample value for each sample, from the range of values possible given the bits per sample of the sample as an unsigned integer. This is for use only for statistical purposes and not footroom of the sample.",
-        "references": "See also<a href=\"#MaxSampleValue\">MaxSampleValue</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 36",
-        "count": "SPP",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0119",
-        "name": "MaxSampleValue",
-        "description": "Maximum sample value",
-        "long_description": "The MaxSamplesValue field identifies the greatest sample value for each sample, from the range of values possible given the bits per sample of the sample as an unsigned integer. This is for use only for statistical purposes and not headroom of the sample.",
-        "references": "See also<a href=\"#MinSampleValue\">MinSampleValue</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 36",
-        "count": "SPP",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x011A",
-        "name": "XResolution",
-        "description": "Horizontal resolution",
-        "long_description": "The XResolution contains the pixels per resolution unit in the horizontal direction, before orientation.",
-        "references": "See also<a href=\"#YResolution\">YResolution</a>, <a href=\"#ResolutionUnit\">ResolutionUnit</a>, <a href=\"#Orientation\">Orientation</a>. <a href=\"#TIFF6\">TIFF6</a>",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x011B",
-        "name": "YResolution",
-        "description": "Vertical resolution",
-        "long_description": "The YResolution contains the pixels per resolution unit in the vertical direction, before orientation.",
-        "references": "See also<a href=\"#XResolution\">XResolution</a>, <a href=\"#ResolutionUnit\">ResolutionUnit</a>, <a href=\"#Orientation\">Orientation</a>. <a href=\"#TIFF6\">TIFF6</a>",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x011C",
-        "name": "PlanarConfiguration",
-        "description": "Configuration of data interleaving",
-        "long_description": "The PlanarConfiguration field describes how the data is interleaved, for example pixel interleaved, scanline interleaved, or component interleaved.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 38",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Chunky (Chunky (component interleaved) sample organization)": "1",
-                "Planar (Planar (channel interleaved) sample organization)": "2",
-                "Line (Line (line interleaved) sample organization (IT8))": "0x8000"
-            }
-        }
-    },
-    {
-        "tag": "0x011D",
-        "name": "PageName",
-        "description": "Page name",
-        "long_description": "The PageName field contains the name of a page within a multiple-page document, for example a logical page number.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 12:  Document Storage and Retrieval\", p. 55",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x011E",
-        "name": "XPosition",
-        "description": "Horizontal positional offset",
-        "long_description": "The XPosition field defines the horizontal offset from the edge of an output page of the image data. The XPosition field is used in TIFF-FX MRC to define the offset of image elements in MRC.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 12:  Document Storage and Retrieval\", p. 55\n <a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x011F",
-        "name": "YPosition",
-        "description": "Vertical positional offset",
-        "long_description": "The YPosition field defines the vertical offset from the edge of an output page of the image data. The YPosition field is used in TIFF-FX MRC to define the offset of image elements in MRC.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 12:  Document Storage and Retrieval\", p. 56\n <a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0120",
-        "name": "FreeOffsets",
-        "description": "Offsets to unused file areas",
-        "long_description": "The FreeOffsets field contains an array of offsets to unused regions within the file.",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "OFFSETS"
-        }
-    },
-    {
-        "tag": "0x0121",
-        "name": "FreeByteCounts",
-        "description": "Byte counts of unused file areas",
-        "long_description": "The FreeOffsets field contains an array of byte counts of unused regions within the file.",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "LENGTHS"
-        }
-    },
-    {
-        "tag": "0x0122",
-        "name": "GrayResponseUnit",
-        "description": "Grayscale response curve units",
-        "long_description": "The GrayResponseUnit field contains a value describing the multiplier of the GrayResponseCurve values.  Each GrayResponseCurve value is multiplied by the value of the GrayResponseUnit, eg 1/10, 1/100, 1/1000, etcetera.",
-        "references": "See also<a href=\"#GrayResponseCurve\">GrayResponseCurve</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 33",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Tenths": "1",
-                "Hundredths": "2",
-                "Thousandths": "3",
-                "TenThousandths": "4",
-                "HundredThousandths": "5"
-            }
-        }
-    },
-    {
-        "tag": "0x0123",
-        "name": "GrayResponseCurve",
-        "description": "Grayscale response curve",
-        "long_description": "The GrayResponseCurve contains a value for each of the values of BitsPerSample many bits that describes the optical density of a pixel having that value. The values of the GrayResponseCurve are each to be multiplied by the factor described in the GrayResponseUnits field.",
-        "references": "See also<a href=\"#GrayResponseUnit\">GrayResponseUnit</a>, <a href=\"#ColorResponseCurves\">ColorResponseCurves</a>, <a href=\"#TransferFunction\">TransferFunction</a>. <a href=\"#TIFF6\">TIFF6</a>, p. 33",
-        "count": "2toBPS",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0124",
-        "name": "T4Options",
-        "description": "Group 3 Fax options",
-        "long_description": "The T4Options field contains options of the ITU-T T.4 (CCITT Group 3 Facsmile) coding.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 11:  CCITT Bilevel Encodings\", p. 51",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "BITFLAGS",
-            "values": {
-                "2D": "bit 0",
-                "UncompressedMode": "bit 1",
-                "EOLByteAlign": "bit 2"
-            }
-        }
-    },
-    {
-        "tag": "0x0125",
-        "name": "T6Options",
-        "description": "Group 4 Fax options",
-        "long_description": "The T6Options field contains options of the ITU-T T.6 (CCITT Group 4 Facsmile) coding.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 11:  CCITT Bilevel Encodings\", p. 52",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "BITFLAGS",
-            "values": {
-                "UncompressedMode": "bit 1"
-            }
-        }
-    },
-    {
-        "tag": "0x0128",
-        "name": "ResolutionUnit",
-        "description": "Resolution units",
-        "long_description": "The ResolutionUnit field contains whether the resolution unit is inch, centimeter, or unknown/unspecified.",
-        "references": "See also<a href=\"#XResolution\">XResolution</a>, <a href=\"#YResolution\">YResolution</a>. <a href=\"#TIFF6\">TIFF6</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Unitless (Units not specified)": "1",
-                "Inch (Units in inches)": "2",
-                "Centimeter (Units in centimeters)": "3"
-            }
-        }
-    },
-    {
-        "tag": "0x0129",
-        "name": "PageNumber",
-        "description": "Page number",
-        "long_description": "The PageNumber field contains two values, the first being the page index for this page and the second being the number of pages or zero for unknown.  Some broken applications reverse these values.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 12:  Document Storage and Retrieval\", p. 55",
-        "count": "2",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x012C",
-        "name": "ColorResponseUnit",
-        "description": "Color response curve units",
-        "long_description": "The ColorResponseUnit field contains a value describing the multiplier of the ColorResponseCurves values.  Each of the ColorResponseCurves' values is multiplied by the value of the ColorResponseUnit, eg 1/10, 1/100, 1/1000, etcetera.",
-        "references": "See also<a href=\"#ColorResponseCurves\">ColorResponseCurves</a>. <a href=\"#TIFF4\">TIFF4</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Tenths": "1",
-                "Hundredths": "2",
-                "Thousandths": "3",
-                "TenThousandths": "4",
-                "HundredThousandths": "5"
-            }
-        }
-    },
-    {
-        "tag": "0x012D",
-        "name": "TransferFunction",
-        "description": "Transfer function",
-        "long_description": "The TransferFunction field contains a value for each of the possible values of the pixel for each component or all components. The TransferFunction tag coincides with the ColorResponseCurves tag, if the ColorResponseUnits field exists then TransferFunction should be treated as ColorResponseCurves.",
-        "references": "See also<a href=\"#TransferRange\">TransferRange</a>, <a href=\"#ReferenceBlackWhite\">ReferenceBlackWhite</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 20:  RGB Image Colorimetry\", p. 84",
-        "count": "2toBPS\n3x2toBPS",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0131",
-        "name": "Software",
-        "description": "Software version",
-        "long_description": "The Software field defines the software product and version that generated the image file.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0132",
-        "name": "DateTime",
-        "description": "Date and time of image creation",
-        "long_description": "The DateTime contains an ASCII string of 20 characters, with the ending binary zero. The ASCII string encodes a date and time as \"YYYY:MM:DD HH:MM:SS\".",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>",
-        "count": "20",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DATETIME"
-        }
-    },
-    {
-        "tag": "0x013B",
-        "name": "Artist",
-        "description": "Person who created the image",
-        "long_description": "The Artist field contains the artist/author of the image. This field is sometimes used to hold copyright information. This field sometimes contains two null-terminated strings, with the second being copyright information.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x013C",
-        "name": "HostComputer",
-        "description": "Host computer",
-        "long_description": "The HostComputer field contains the name of the computer which created the image file.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x013D",
-        "name": "Predictor",
-        "description": "Differencing predictor",
-        "long_description": "The Predictor field describes the differencing predictor method used. It is used with LZW and perhaps also Deflate compression schemes.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 14: Differencing Predictor\", p. 64",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "NoPrediction (No prediction sheme)": "1",
-                "HorizontalDifferencing (Horizontal differencing prediction scheme)": "2"
-            }
-        }
-    },
-    {
-        "tag": "0x013E",
-        "name": "WhitePoint",
-        "description": "Chromaticity of white point",
-        "long_description": "The WhitePoint field contains two values that describe the CIE xy components of the chromaticity of the white point, where the primaries (channels) have their reference white values.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 20:  RGB Image Colorimetry\", p. 83",
-        "count": "2",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x013F",
-        "name": "PrimaryChromaticities",
-        "description": "Chromaticities of primaries",
-        "long_description": "The PrimaryChromaticities field contains six values that described the CIE xy components of the chromaticity of the three primaries (channels) at their reference white values, where the other primaries are at their reference black values.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 20:  RGB Image Colorimetry\", p. 83",
-        "count": "6",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0140",
-        "name": "ColorMap",
-        "description": "Color map / palette",
-        "long_description": "The ColorMap field contains a 16-bit value for each component. The values are component interleaved, for example for an RGB images the values of the colormap are stored RRR...GGG...BBB.... The colormap may contain a map for three or four component images, when either PhotometricInterpretation==PaletteColor or Indexed==Indexed.",
-        "references": "See also<a href=\"#PhotometricInterpretation\">PhotometricInterpretation</a>, <a href=\"#Indexed\">Indexed</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 5:  Palette-color Images\", p. 23",
-        "count": "SPPx2toBPS",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "COLORMAP"
-        }
-    },
-    {
-        "tag": "0x0141",
-        "name": "HalftoneHints",
-        "description": "Halftone hints",
-        "long_description": "The HalftoneHints field contains range extents for the halftone function of values to retain tonal value.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 17:  HalftoneHints\", p. 72",
-        "count": "2",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0142",
-        "name": "TileWidth",
-        "description": "Tile width",
-        "long_description": "The TileWidth field contains the width of the tiles of the tiled image. TileWidth must be a multiple of 16.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 15:  Tiled Images\", p. 66",
-        "count": "1",
-        "dtype": [
-            "SHORT",
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0143",
-        "name": "TileLength",
-        "description": "Tile length",
-        "long_description": "The TileLength field contains the length of the tiles in the tiled image. TileLength must be a multiple of 16.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 15:  Tiled Images\", p. 66",
-        "count": "1",
-        "dtype": [
-            "SHORT",
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0144",
-        "name": "TileOffsets",
-        "description": "Offsets to tile data",
-        "long_description": "The TileOffsets field contains a value for each tile that is the offset to the beginning of the tile data. The tiles per image is determined from the image dimensions and the tile dimensions.  See ImageWidth, ImageLength, TileWidth, TileLength. The tiles are in order from left-to-right and then top-to-bottom. If the image has PlanarConfiguration==Planar then there is an offset for each sample for each tile of the image, with the offsets pointing to in order the tiles for each separated component.",
-        "references": "See also<a href=\"#TileByteCounts\">TileByteCounts</a>, <a href=\"#TileWidth\">TileWidth</a>, <a href=\"#TileLength\">TileLength</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 15:  Tiled Images\", p. 66",
-        "count": "TPI\nSPPxTPI",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "OFFSETS"
-        }
-    },
-    {
-        "tag": "0x0145",
-        "name": "TileByteCounts",
-        "description": "Byte counts of tile data",
-        "long_description": "The TileByteCounts field contains a value for each tile that is the offset to the beginning of the tile data. The tiles per image is determined from the image dimensions and the tile dimensions.  See ImageWidth, ImageLength, TileWidth, TileLength. The tiles are in order from left-to-right and then top-to-bottom. If the image has PlanarConfiguration==Planar then there is an offset for each sample for each tile of the image, with the offsets pointing to in order the tiles for each separated component.",
-        "references": "See also<a href=\"#TileOffsets\">TileOffsets</a>, <a href=\"#TileWidth\">TileWidth</a>, <a href=\"#TileLength\">TileLength</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 15:  Tiled Images\", p. 66",
-        "count": "TPI\nSPPxTPI",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "LENGTHS"
-        }
-    },
-    {
-        "tag": "0x0146",
-        "name": "BadFaxLines",
-        "description": "Bad received fax lines",
-        "long_description": "The BadFaxLines field contains how many of the ImageLength many rows were damaged on facsimile transmission.",
-        "references": "<a href=\"#TIFFSF\">TIFFSF</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT",
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0147",
-        "name": "CleanFaxData",
-        "description": "Fax data cleanliness",
-        "long_description": "The CleanFaxData field describes the damaged or undamaged state of transmitted Group 3 facsimile data.",
-        "references": "<a href=\"#TIFFSF\">TIFFSF</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Clean": "0",
-                "Regenerated": "1",
-                "Unregenerated": "2"
-            }
-        }
-    },
-    {
-        "tag": "0x0148",
-        "name": "ConsecutiveBadFaxLines",
-        "description": "Maximum consecutive bad fax lines",
-        "long_description": "The ConsecutiveBadFaxLines field contains the maximum of how many facsimile lines in a row were damaged or unreadable on transmission.",
-        "references": "<a href=\"#TIFFSF\">TIFFSF</a>",
-        "count": "1",
-        "dtype": [
-            "LONG",
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x014A",
-        "name": "SubIFDs",
-        "description": "Offsets to child IFDs",
-        "long_description": "The SubIFDs fields contains offsets to child IFDs of the current IFD that are not otherwise linked in the IFD chain.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 2:  TIFF Structure\", p. 14\n <a href=\"#TTN1\">TTN1</a> \n <a href=\"#TIFFPM6\">TIFFPM6</a>, \"TIFF Tech Note 1:  TIFF Trees\", p. 4",
-        "count": "N",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "IFDOFFSET"
-        }
-    },
-    {
-        "tag": "0x014C",
-        "name": "InkSet",
-        "description": "Ink set",
-        "long_description": "The InkSet field for separated images describes whether the inkset is CMYK, or not.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 16:  CMYK Images\", p. 70",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "CMYK (CMYK inkset)": "1",
-                "NotCMYK (Not a CMYK inkset)": "2"
-            }
-        }
-    },
-    {
-        "tag": "0x014D",
-        "name": "InkNames",
-        "description": "Ink names",
-        "long_description": "The InkNames field contains a null-separated list of strings that define ink/colorant names. The number of strings must be equal to the value of the NumberOfInks field.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 16:  CMYK Images\", p. 70",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "MULTIPLEASCII"
-        }
-    },
-    {
-        "tag": "0x014E",
-        "name": "NumberOfInks",
-        "description": "Ink count",
-        "long_description": "The NumberOfInks fields contains the number of inks for a separated image.",
-        "references": "See also<a href=\"#InkSet\">InkSet</a>, <a href=\"#InkNames\">InkNames</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 16:  CMYK Images\", p. 70",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0150",
-        "name": "DotRange",
-        "description": "Ink range limits",
-        "long_description": "The DotRange value contains the value of the sample for 0% and 100% saturation, for either all samples or each sample.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 16:  CMYK Images\", p. 71",
-        "count": "2\n2xSPP",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0151",
-        "name": "TargetPrinter",
-        "description": "Target printer",
-        "long_description": "The TargetPrinter describes the output printer environment.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 16:  CMYK Images\", p. 71",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0152",
-        "name": "ExtraSamples",
-        "description": "Description of extra components",
-        "long_description": "The ExtraSamples field defines how many data samples there are beyond those for the photometric interpretation. There may be extra components of the image beyond those for the PhotometricInterpretation.  These components are often used to represent transparency information of the samples. For each of the N many extra components, the value of this field represents the meaning of the extra sample.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, p. 31\n <a href=\"#TIFF6\">TIFF6</a>, p. 69\n <a href=\"#TIFF6\">TIFF6</a>, p. 77",
-        "count": "N",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Unspecified (Unspecified data)": "0x0000",
-                "AssociatedAlpha (Associated alpha (transparency), premultiplied)": "0x0001",
-                "UnassociatedAlpha (Unassociated alpha (transparency))": "0x0002"
-            }
-        }
-    },
-    {
-        "tag": "0x0153",
-        "name": "SampleFormat",
-        "description": "Format of data sample",
-        "long_description": "The SampleFormat field represents for each sample the data format of the sample, whether unsigned or signed integer, floating point, or undefined.  The bits per sample are determined by the BitsPerSample field. The default is unsigned integer data, and undefined data should be left or treated as unsigned integer data.",
-        "references": "See also<a href=\"#BitsPerSample\">BitsPerSample</a>, <a href=\"#SMinSampleValue\">SMinSampleValue</a>, <a href=\"#SMaxSampleValue\">SMaxSampleValue</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 19:  Data Sample Format\", p. 80",
-        "count": "SPP",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "UnsignedInteger (Unsigned integer data)": "1",
-                "SignedInteger (Signed (two's complement) integer data)": "2",
-                "FloatingPoint (IEEE floating point data)": "3",
-                "Undefined (Undefined sample format)": "4"
-            }
-        }
-    },
-    {
-        "tag": "0x0154",
-        "name": "SMinSampleValue",
-        "description": "Minimum sample value of data format",
-        "long_description": "The SMinSampleValue field identifies the least sample value for each sample, from the range of values possible given the bits per sample of the sample as its type as specified by the SampleFormat field.",
-        "references": "See also<a href=\"#SMaxSampleValue\">SMaxSampleValue</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 19:  Data Sample Format\", p. 80",
-        "count": "SPP",
-        "dtype": [
-            "LONG",
-            "SHORT",
-            "BYTE",
-            "SLONG",
-            "SSHORT",
-            "SBYTE",
-            "DOUBLE",
-            "FLOAT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0155",
-        "name": "SMaxSampleValue",
-        "description": "Maximum sample value of data format",
-        "long_description": "The SMaxSampleValue field identifies the greatest sample value for each sample, from the range of values possible given the bits per sample of the sample as its type as specified by the SampleFormat field.",
-        "references": "See also<a href=\"#SMinSampleValue\">SMinSampleValue</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 19:  Data Sample Format\", p. 80",
-        "count": "SPP",
-        "dtype": [
-            "LONG",
-            "SHORT",
-            "BYTE",
-            "SLONG",
-            "SSHORT",
-            "SBYTE",
-            "DOUBLE",
-            "FLOAT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0156",
-        "name": "TransferRange",
-        "description": "Transfer range",
-        "long_description": "The TransferRange field contains two values for each of three components that are an offset and a scaling, these values expand the TransferFunction range.",
-        "references": "See also<a href=\"#TransferFunction\">TransferFunction</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 20:  RGB Image Colorimetry\", p. 85",
-        "count": "6",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0157",
-        "name": "ClipPath",
-        "description": "Clipping path",
-        "long_description": "The ClipPath field contains the specification of a clipping path that outlines the image data to be output. The TIFF clipping path is designed to be directly compatible with PostScript path information. The clip path contains a header, 16 bytes with \"II\" or \"MM\" and then zeros, and then path operators, commands.",
-        "references": "<a href=\"#TIFFPM6\">TIFFPM6</a>, \"TIFF Tech Note 2:  Clipping Path\", p. 6\n <a href=\"#PLRM\">PLRM</a>",
-        "count": "N",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "PSCLIPPATH"
-        }
-    },
-    {
-        "tag": "0x0158",
-        "name": "XClipPathUnits",
-        "description": "Clipping path horizontal units",
-        "long_description": "The XClipPathUnits field contains the number of horizontal clip path coordinates, the count of coordinates for the clip path coordinate system across the image.",
-        "references": "<a href=\"#TIFFPM6\">TIFFPM6</a>, \"TIFF Tech Note 2:  Clipping Path\", p. 6",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0159",
-        "name": "YClipPathUnits",
-        "description": "Clipping path vertical units",
-        "long_description": "The YClipPathUnits field contains the number of vertical clip path coordinates, the count of coordinates for the clip path coordinate system down the image.",
-        "references": "<a href=\"#TIFFPM6\">TIFFPM6</a>, \"TIFF Tech Note 2:  Clipping Path\", p. 6",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x015A",
-        "name": "Indexed",
-        "description": "Indexed (palettized) image",
-        "long_description": "The Indexed field denotes whether the image data given the photometric interpretation (see PhotometricInterpretation) is palettized or indexed to the color map (see ColorMap).",
-        "references": "See also<a href=\"#PhotometricInterpretation\">PhotometricInterpretation</a>, <a href=\"#ColorMap\">ColorMap</a>. <a href=\"#TIFFPM6\">TIFFPM6</a>, \"TIFF Tech Note 3:  Indexed Images\", p. 11\n <a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "NotIndexed (Not indexed)": "0x0000",
-                "Indexed (Indexed)": "0x0001"
-            }
-        }
-    },
-    {
-        "tag": "0x015B",
-        "name": "JPEGTables",
-        "description": "Contents of new JPEG tables",
-        "long_description": "The JPEGTables field contains an abbreviated JPEG data table specification to install the tables into the JPEG coder for JPEG coded data.",
-        "references": "<a href=\"#TTN2\">TTN2</a>",
-        "count": "N",
-        "dtype": [
-            "UNDEFINED"
-        ],
-        "interpretation": {
-            "kind": "JPEGTABLES"
-        }
-    },
-    {
-        "tag": "0x015F",
-        "name": "OPIProxy",
-        "description": "OPI proxy indicator",
-        "long_description": "The OPIProxy field denotes whether this image is a proxy for a higher resolution image named in the ImageID field.",
-        "references": "See also<a href=\"#ImageID\">ImageID</a>. <a href=\"#TIFFPM6\">TIFFPM6</a>, p. 15\n <a href=\"#OPI2\">OPI2</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0181",
-        "name": "Decode",
-        "description": "TIFF-FX decode array",
-        "long_description": "The Decode field contains values that define the range of colorspace values to map the range of sample values.",
-        "references": "<a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "2xSPP",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DECODEARRAY"
-        }
-    },
-    {
-        "tag": "0x0182",
-        "name": "DefaultImageColor",
-        "description": "TIFF-FX default image color",
-        "long_description": "The DefaultImageColor field contains the samples of a pixel that define the default image color in TIFF-FX MRC image data.",
-        "references": "<a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "SPP",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0190",
-        "name": "GlobalParametersIFD",
-        "description": "TIFF-FX IFD offset for global parameters",
-        "long_description": "The GlobalParametersIFD field is to contain an offset to a child IFD that contains fields with global parameters of the TIFF-FX profile file. The GlobalParametersIFD field should be written to the first IFD of the TIFF-FX file.  The global parameters IFD should contain ProfileType, FaxProfile, CodingMethods, VersionYear, and ModeNumber fields.",
-        "references": "See also<a href=\"#ProfileType\">ProfileType</a>, <a href=\"#FaxProfile\">FaxProfile</a>, <a href=\"#CodingMethods\">CodingMethods</a>, <a href=\"#VersionYear\">VersionYear</a>, <a href=\"#ModeNumber\">ModeNumber</a>. <a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "IFDOFFSET"
-        }
-    },
-    {
-        "tag": "0x0191",
-        "name": "ProfileType",
-        "description": "TIFF-FX profile type",
-        "long_description": "The ProfileType field describes the profile of data in the TIFF file.",
-        "references": "See also<a href=\"#GlobalParametersIFD\">GlobalParametersIFD</a>. <a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Unspecified": "0",
-                "Group3Fax": "1"
-            }
-        }
-    },
-    {
-        "tag": "0x0192",
-        "name": "FaxProfile",
-        "description": "TIFF-FX fax profile",
-        "long_description": "The FaxProfile field describes the TIFF-FX profile of data in the TIFF file.",
-        "references": "See also<a href=\"#GlobalParametersIFD\">GlobalParametersIFD</a>, <a href=\"#MultiProfiles\">MultiProfiles</a>. <a href=\"#TIFFFX\">TIFFFX</a> \n <a href=\"#TIFFFXEX1\">TIFFFXEX1</a>",
-        "count": "1",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "NotProfile": "0",
-                "ProfileS": "1",
-                "ProfileF": "2",
-                "ProfileJ": "3",
-                "ProfileC": "4",
-                "ProfileL": "5",
-                "ProfileM": "6",
-                "ProfileT": "7",
-                "MultiProfiles": "255"
-            }
-        }
-    },
-    {
-        "tag": "0x0193",
-        "name": "CodingMethods",
-        "description": "TIFF-FX coding methods",
-        "long_description": "The CodingMethods field describes the coding methods used on the data in the TIFF-FX file.",
-        "references": "See also<a href=\"#GlobalParametersIFD\">GlobalParametersIFD</a>. <a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "BITFLAGS",
-            "values": {
-                "Unspecified": "bit 0",
-                "Group3_1D": "bit 1",
-                "Group3_2D": "bit 2",
-                "Group4": "bit 3",
-                "JBIG": "bit 4",
-                "JPEG": "bit 5",
-                "JBIGColor": "bit 6"
-            }
-        }
-    },
-    {
-        "tag": "0x0194",
-        "name": "VersionYear",
-        "description": "TIFF-FX version year",
-        "long_description": "The VersionYear field contains four characters forming the ASCII representation of the TIFF-FX version.",
-        "references": "See also<a href=\"#GlobalParametersIFD\">GlobalParametersIFD</a>. <a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "4",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "FOURBYTEASCII"
-        }
-    },
-    {
-        "tag": "0x0195",
-        "name": "ModeNumber",
-        "description": "TIFF-FX mode number",
-        "long_description": "The ModeNumber field describes the mode of the standard used by the TIFF-FX FaxProfile field.",
-        "references": "See also<a href=\"#GlobalParametersIFD\">GlobalParametersIFD</a>, <a href=\"#FaxProfile\">FaxProfile</a>. <a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "1",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Version_1_0 (FaxProfile Mode 1.0)": "0"
-            }
-        }
-    },
-    {
-        "tag": "0x01B3",
-        "name": "T82Options",
-        "description": "TIFF-FX T.82 options",
-        "long_description": "The T82Options field contains options of the ITU-T T.82 (JBIG) coding.",
-        "references": "<a href=\"#TIFFFXEX1\">TIFFFXEX1</a>",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "BITFLAGS",
-            "values": {}
-        }
-    },
-    {
-        "tag": "0x0200",
-        "name": "JPEGProc",
-        "description": "JPEG Process",
-        "long_description": "The JPEGProc field defines the JPEG process used to compress the image data, as either baseline sequential or lossless.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 22:  JPEG Compression\", p. 104",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "BaselineSequential (Baseline sequential JPEG process)": "1",
-                "LosslessHuffman (Lossless JPEG process with Huffman encoding)": "14"
-            }
-        }
-    },
-    {
-        "tag": "0x0201",
-        "name": "JPEGInterchangeFormat",
-        "description": "Offset to JPEG interchange format",
-        "long_description": "The JPEGInterchangeFormat field contains an offset to the beginning of a block of JPEG interchange format data.",
-        "references": "See also<a href=\"#JPEGInterchangeFormatLength\">JPEGInterchangeFormatLength</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 22:  JPEG Compression\", p. 105",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "OFFSETS"
-        }
-    },
-    {
-        "tag": "0x0202",
-        "name": "JPEGInterchangeFormatLength",
-        "description": "Byte count of JPEG interchange format",
-        "long_description": "The JPEGInterchangeFormatLength describes the extent of a block of JPEG interchange format data from the offset of the data.",
-        "references": "See also<a href=\"#JPEGInterchangeFormat\">JPEGInterchangeFormat</a>. <a href=\"#TIFF6\">TIFF6</a>, \"Section 22:  JPEG Compression\", p. 105",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "LENGTHS"
-        }
-    },
-    {
-        "tag": "0x0203",
-        "name": "JPEGRestartInterval",
-        "description": "JPEG restart interval",
-        "long_description": "The JPEGRestartInterval field contains the value of the restart interval of the JPEG coded data.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 22:  JPEG Compression\", p. 105",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0205",
-        "name": "JPEGLosslessPredictors",
-        "description": "JPEG lossless predictors",
-        "long_description": "The JPEGLosslessPredictors field contains a list of the lossless predictor selection values of the JPEG coded data.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 22:  JPEG Compression\", p. 106",
-        "count": "SPP",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0206",
-        "name": "JPEGPointTransforms",
-        "description": "JPEG point transforms",
-        "long_description": "The JPEGPointTransforms field contains a list of the point transforms of the JPEG coded data.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 22:  JPEG Compression\", p. 106",
-        "count": "SPP",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0207",
-        "name": "JPEGQTables",
-        "description": "Offsets to JPEG quantization tables",
-        "long_description": "The JPEGQTables field contains a list of offsets to quantization tables of the JPEG coded data. Each table is 64 bytes in extent.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 22:  JPEG Compression\", p. 107",
-        "count": "SPP",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "JPEGQTABLES"
-        }
-    },
-    {
-        "tag": "0x0208",
-        "name": "JPEGDCTables",
-        "description": "Offsets to JPEG DC tables",
-        "long_description": "The JPEGDCTables field contains a list of offsets to Huffman DC tables of the JPEG coded data. The extent of each is 16 bytes plus the sum of the values in those 16 bytes.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 22:  JPEG Compression\", p. 107",
-        "count": "SPP",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "JPEGHTABLES"
-        }
-    },
-    {
-        "tag": "0x0209",
-        "name": "JPEGACTables",
-        "description": "Offsets to JPEG AC tables",
-        "long_description": "The JPEGACTables field contains a list of offsets to Huffman AC tables of the JPEG coded data. The extent of each is 16 bytes plus the sum of the values in those 16 bytes.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 22:  JPEG Compression\", p. 107",
-        "count": "SPP",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "JPEGHTABLES"
-        }
-    },
-    {
-        "tag": "0x0211",
-        "name": "YCbCrCoefficients",
-        "description": "Transformation from RGB to YCbCr",
-        "long_description": "The YCbCrCoefficients fields specifies three fractions that represent the coefficients used to generate the luminance channel, Y, of YCbCr data, from RGB data.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 21:  YCbCr Images\", p. 90",
-        "count": "3",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0212",
-        "name": "YCbCrSubSampling",
-        "description": "Chrominance component subsampling",
-        "long_description": "The YCbCrSubSampling field contains a value for both of two chromaticity components that describes the horizontal subsampling frequency and the vertical subsampling frequency, horizontal in the first value and vertical in the second value.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 21:  YCbCr Images\", p. 91",
-        "count": "2",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x0213",
-        "name": "YCbCrPositioning",
-        "description": "Position of chrominance to luminance samples",
-        "long_description": "The YCbCrPositioning field describes whether the chrominance channels are centered among the luminance channels or cosited upon subsampling of the chrominance channels.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 21:  YCbCr Images\", p. 92",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Centered": "1",
-                "Cosited": "2"
-            }
-        }
-    },
-    {
-        "tag": "0x0214",
-        "name": "ReferenceBlackWhite",
-        "description": "Reference black and white",
-        "long_description": "The ReferenceBlackWhite field contains two values for each of three primaries that specify headroom and footroom values for each of three primaries (channels).",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>, \"Section 20:  RGB Image Colorimetry\", p. 86",
-        "count": "6",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x022F",
-        "name": "StripRowCounts",
-        "description": "TIFF-FX rows per strips",
-        "long_description": "The StripRowCounts field contains a count for each strip of the number of rows in that strip for use with TIFF-FX MRC data, which can have a variable number of row per strip. If the StripRowCounts field is present then the RowsPerStrip field is to not be.",
-        "references": "<a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "SPI",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x02BC",
-        "name": "XMLPacket",
-        "description": "XMP (XML) packet",
-        "long_description": "The XMLPacket field contains embedded XMP (XML/RDF) metadata about the information.",
-        "references": "<a href=\"#XMPEMBED\">XMPEMBED</a>",
-        "count": "N",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "XMP"
-        }
-    },
-    {
-        "tag": "0x03E7",
-        "name": "USPTOMiscellaneous",
-        "description": "USPTO Miscellaneous (private tag)",
-        "long_description": "The USPTO Miscellaenous field is by default blank.",
-        "references": "<a href=\"#YB2\">YB2</a>, p. 7",
-        "count": "253",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x800D",
-        "name": "ImageID",
-        "description": "OPI image identifier",
-        "long_description": "The ImageID tag contains a filename or other identifier of the high resolution original of this image.",
-        "references": "See also<a href=\"#OPIProxy\">OPIProxy</a>. <a href=\"#TIFFPM6\">TIFFPM6</a>, p. 15\n <a href=\"#OPI2\">OPI2</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x80A3",
-        "name": "WangTag1",
-        "description": "Wang Imaging (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "UNDEFINED"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x80A4",
-        "name": "WangAnnotation",
-        "description": "Wang Imaging annotation",
-        "long_description": "The WangAnnotation field contains the content of data structures that define annotations to the image per the Wang/Eastman/Kodak/eiStream annotation specification.",
-        "references": "<a href=\"#WANGANNO\">WANGANNO</a>",
-        "count": "N",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "WANGANNOTATION"
-        }
-    },
-    {
-        "tag": "0x80A5",
-        "name": "WangTag3",
-        "description": "Wang Imaging (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "UNDEFINED"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x80A6",
-        "name": "WangTag4",
-        "description": "Wang Imaging (private tag)",
-        "long_description": "The WangTag field contains some information put into TIFF files by Wang Imaging software.",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "UNDEFINED"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x828D",
-        "name": "CFARepeatPatternDim",
-        "description": "TIFF/EP color filter array dimensions",
-        "long_description": "The CFARepeatPatternDim field contains two values representing the minimum rows and columns to define the repeating patterns of the color filter array.",
-        "references": "See also<a href=\"#CFAPattern\">CFAPattern</a>, <a href=\"#SensingMethod\">SensingMethod</a>. <a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "2",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x828E",
-        "name": "CFAPattern",
-        "description": "TIFF/EP picture color filter array pattern",
-        "long_description": "The CFAPattern field contains a description of the color filter array geometric pattern for interleaving of sampling channels.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "CFA",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "CFAPATTERN"
-        }
-    },
-    {
-        "tag": "0x828F",
-        "name": "BatteryLevel",
-        "description": "TIFF/EP battery level",
-        "long_description": "The BatteryLevel field contains a value of the battery level as a fraction or string.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1\nN",
-        "dtype": [
-            "RATIONAL",
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x8298",
-        "name": "Copyright",
-        "description": "Copyright notice",
-        "long_description": "The Copyright field contains copyright information of the interpreted image data. GEDI standard, gedistand99.pdf, page 39, has value being 0x0828.",
-        "references": "<a href=\"#TIFF6\">TIFF6</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
         "tag": "0x829A",
         "name": "ExposureTime",
-        "description": "TIFF/EP picture exposure time",
+        "description": "Exif picture exposure time",
         "long_description": "The ExposureTime field contains how many seconds the frame was exposed.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
             "RATIONAL"
@@ -1683,9 +16,9 @@
     {
         "tag": "0x829D",
         "name": "FNumber",
-        "description": "TIFF/EP picture F number",
+        "description": "Exif picture F number",
         "long_description": "The FNumber field contains the F number of the picture.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
             "RATIONAL"
@@ -1695,585 +28,11 @@
         }
     },
     {
-        "tag": "0x830E",
-        "name": "ModelPixelScaleTag",
-        "description": "GeoTIFF model pixel scale",
-        "long_description": "",
-        "references": "<a href=\"#GEOTIFF\">GEOTIFF</a>",
-        "count": "3",
-        "dtype": [
-            "DOUBLE"
-        ],
-        "interpretation": {
-            "kind": "GEOPIXELSCALE"
-        }
-    },
-    {
-        "tag": "0x8335",
-        "name": "AdventScale",
-        "description": "Advent Imaging scale (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x8336",
-        "name": "AdventRevision",
-        "description": "Advent Imaging revision (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x83BB",
-        "name": "IPTCNAA",
-        "description": "IPTC/NAA metadata record",
-        "long_description": "The IPTCNAA field contains an IPTC/NAA record.",
-        "references": "<a href=\"#RICHTIFF\">RICHTIFF</a> \n <a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "N",
-        "dtype": [
-            "BYTE",
-            "ASCII",
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "IPTCNAARECORD"
-        }
-    },
-    {
-        "tag": "0x847E",
-        "name": "INGRPacketData",
-        "description": "Intergraph INGR packet data (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "INGRPACKET"
-        }
-    },
-    {
-        "tag": "0x847F",
-        "name": "INGRFlagRegisters",
-        "description": "Intergraph INGR flag registers (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "INGRFLAGREGISTER"
-        }
-    },
-    {
-        "tag": "0x8480",
-        "name": "IntergraphMatrix",
-        "description": "Intergraph matrix (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "17\n16",
-        "dtype": [
-            "DOUBLE"
-        ],
-        "interpretation": {
-            "kind": "INGRMATRIX"
-        }
-    },
-    {
-        "tag": "0x8481",
-        "name": "INGRReserved",
-        "description": "Intergraph reserved (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "UNDEFINED"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x8482",
-        "name": "ModelTiepointTag",
-        "description": "GeoTIFF model tiepoints",
-        "long_description": "Also called Georeferencing.",
-        "references": "<a href=\"#GEOTIFF\">GEOTIFF</a>",
-        "count": "N",
-        "dtype": [
-            "DOUBLE"
-        ],
-        "interpretation": {
-            "kind": "GEOTIEPOINTS"
-        }
-    },
-    {
-        "tag": "0x84E0",
-        "name": "Site",
-        "description": "TIFF/IT production site",
-        "long_description": "The Site field contains the location of where the image was originated or converted to TIFF/IT.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x84E1",
-        "name": "ColorSequence",
-        "description": "TIFF/IT color sequence",
-        "long_description": "The ColorSequence field is a string where each letter signifies a color to be assigned to a component.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "COLORSEQUENCE"
-        }
-    },
-    {
-        "tag": "0x84E2",
-        "name": "IT8Header",
-        "description": "TIFF/IT header",
-        "long_description": "The IT8Header field contains null-separated headers from ISO 10755, ISO 10756, and ISO 10759.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "MULTIPLEASCII"
-        }
-    },
-    {
-        "tag": "0x84E3",
-        "name": "RasterPadding",
-        "description": "TIFF/IT raster padding",
-        "long_description": "The RasterPadding field describes the padding of data to byte, word, long word, sector, or double sector. When applied to line interleaved data, the padding applies to each color instead of each line.",
-        "references": "See also<a href=\"#PhotometricInterpretation\">PhotometricInterpretation</a>. <a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "ByteRaster": "0",
-                "WordRaster": "1",
-                "LongWordRaster": "2",
-                "SectorRaster": "9",
-                "LongSectorRaster": "10"
-            }
-        }
-    },
-    {
-        "tag": "0x84E4",
-        "name": "BitsPerRunLength",
-        "description": "TIFF/IT LW bits per run length",
-        "long_description": "The BitsPerRunLength field contains how many bits are required to represent the short run of the run length encoding of the TIFF/IT LW (line work) data.",
-        "references": "See also<a href=\"#BitsPerExtendedRunLength\">BitsPerExtendedRunLength</a>. <a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x84E5",
-        "name": "BitsPerExtendedRunLength",
-        "description": "TIFF/IT LW bits per extended run length",
-        "long_description": "The BitsPerRunLength field contains how many bits are required to represent the long run of the run length encoding of the TIFF/IT LW (line work) data.",
-        "references": "See also<a href=\"#BitsPerRunLength\">BitsPerRunLength</a>. <a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x84E6",
-        "name": "ColorTable",
-        "description": "TIFF/IT LW color table",
-        "long_description": "The ColorTable field contains a color identifier and transparency information for separated line work images.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>, p. 17",
-        "count": "N",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x84E7",
-        "name": "ImageColorIndicator",
-        "description": "TIFF/IT BP/BL foreground color indicator",
-        "long_description": "The ImageColorIndicator field describes whether the image or foreground color is in the binary image or the monochrome continuous tone image.",
-        "references": "See also<a href=\"#BackgroundColorIndicator\">BackgroundColorIndicator</a>. <a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "1",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "UnspecifiedImageColor (Image color not specified)": "0",
-                "SpecifiedImageColor (Image color specified)": "1"
-            }
-        }
-    },
-    {
-        "tag": "0x84E8",
-        "name": "BackgroundColorIndicator",
-        "description": "TIFF/IT BP/BL background color indicator",
-        "long_description": "The BackgroundColorIndicator field describes whether the image or background color is in the binary image or the monochrome continuous tone image.",
-        "references": "See also<a href=\"#ImageColorIndicator\">ImageColorIndicator</a>. <a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "1",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "UnspecifiedBackgroundColor (Background color not specified)": "0",
-                "SpecifiedBackgroundColor (Background color specified)": "1"
-            }
-        }
-    },
-    {
-        "tag": "0x84E9",
-        "name": "ImageColorValue",
-        "description": "TIFF/IT BP/BL foreground color value",
-        "long_description": "The ImageColorValue describes the foreground color of a TIFF/IT BP or BL bitmap.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "CSC",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x84EA",
-        "name": "BackgroundColorValue",
-        "description": "TIFF/IT BP/BL background color value",
-        "long_description": "The BackgroundColorValue describes the background color of a TIFF/IT BP or BL bitmap.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "CSC",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x84EB",
-        "name": "PixelIntensityRange",
-        "description": "TIFF/IT MP pixel intensity range",
-        "long_description": "The PixelIntensityRange is similar to DotRange for a TIFF/IT MP image.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "N",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x84EC",
-        "name": "TransparencyIndicator",
-        "description": "TIFF/IT HC transparency indicator",
-        "long_description": "The TransparencyIndicator field denotes whether transparency information is within TIFF/IT HC data.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "1",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x84ED",
-        "name": "ColorCharacterization",
-        "description": "TIFF/IT color characterization",
-        "long_description": "The ColorCharacterization fields describes colors per ISO 12641, ISO 12642, and ANSI CGATS.15.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x84EE",
-        "name": "HCUsage",
-        "description": "TIFF/IT HC usage",
-        "long_description": "The HCUsage field defines the type of information in the TIFF/IT HC file.",
-        "references": "<a href=\"#TIFFIT\">TIFFIT</a>",
-        "count": "1",
-        "dtype": [
-            "LONG",
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {}
-        }
-    },
-    {
-        "tag": "0x8568",
-        "name": "KodakIPTC",
-        "description": "IPTC/NAA metadata record",
-        "long_description": "The KodakIPTC field contains an IPTC/NAA record.",
-        "references": "<a href=\"#RICHTIFF\">RICHTIFF</a>",
-        "count": "N",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "IPTCNAARECORD"
-        }
-    },
-    {
-        "tag": "0x85B8",
-        "name": "PixelMagicJBIGOptions",
-        "description": "Pixel Magic JBIG options (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x85D8",
-        "name": "ModelTransformationTag",
-        "description": "GeoTIFF model transformation",
-        "long_description": "",
-        "references": "<a href=\"#GEOTIFF\">GEOTIFF</a>",
-        "count": "16",
-        "dtype": [
-            "DOUBLE"
-        ],
-        "interpretation": {
-            "kind": "GEOTRANSFORM"
-        }
-    },
-    {
-        "tag": "0x8649",
-        "name": "ImageResourceBlocks",
-        "description": "Adobe Photoshop image resource blocks",
-        "long_description": "The Photoshop field contains information embedded by the Adobe Photoshop application.",
-        "references": "<a href=\"#PSFF\">PSFF</a>",
-        "count": "N",
-        "dtype": [
-            "UNDEFINED",
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "PHOTOSHOP"
-        }
-    },
-    {
-        "tag": "0x8769",
-        "name": "ExifIFD",
-        "description": "Exif IFD offset",
-        "long_description": "The ExifIFD field contains an offset to a sub-IFD containing Exif (digital camera) information.",
-        "references": "<a href=\"#EXIF21\">EXIF21</a>, p. 19",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "IFDOFFSET"
-        }
-    },
-    {
-        "tag": "0x8773",
-        "name": "InterColorProfile",
-        "description": "ICC profile",
-        "long_description": "The InterColorProfile field contains an InterColor Consortium (ICC) format color space characterization/profile.",
-        "references": "<a href=\"#ICCEMBED\">ICCEMBED</a> \n <a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "N",
-        "dtype": [
-            "UNDEFINED"
-        ],
-        "interpretation": {
-            "kind": "ICCPROFILE"
-        }
-    },
-    {
-        "tag": "0x877F",
-        "name": "TIFF_FXExtensions",
-        "description": "TIFF-FX Extensions",
-        "long_description": "The TIFF-FXExtensions field describes extensions used.",
-        "references": "See also<a href=\"#GlobalParametersIFD\">GlobalParametersIFD</a>. <a href=\"#TIFFFXEX1\">TIFFFXEX1</a>",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "BITFLAGS",
-            "values": {
-                "Resolution_ImageWidth (Extended resolutions and imagewidths extension)": "bit 0",
-                "N_Layer_ProfileM (N-Layer Profile M extension)": "bit 1",
-                "SharedData (Shared data extension)": "bit 2",
-                "BilevelJBIG2_ProfileT (Black-and-White JBIG2 coding extension)": "bit 3",
-                "JBIG2Extension_ProfileM (JBIG2 mask layer coding and foreground layer color tag extension)": "bit 4"
-            }
-        }
-    },
-    {
-        "tag": "0x8780",
-        "name": "MultiProfiles",
-        "description": "TIFF-FX multiple profiles",
-        "long_description": "The MultiProfiles field describes multiple profiles used.",
-        "references": "See also<a href=\"#GlobalParametersIFD\">GlobalParametersIFD</a>, <a href=\"#FaxProfile\">FaxProfile</a>, <a href=\"#TIFF-FXExtensions\">TIFF-FXExtensions</a>. <a href=\"#TIFFFXEX1\">TIFFFXEX1</a>",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "BITFLAGS",
-            "values": {
-                "ProfileS": "bit 0",
-                "ProfileF": "bit 1",
-                "ProfileJ": "bit 2",
-                "ProfileC": "bit 3",
-                "ProfileL": "bit 4",
-                "ProfileM": "bit 5",
-                "ProfileT": "bit 6",
-                "Resolution_ImageWidth (Extended resolutions and imagewidths extension)": "bit 7",
-                "N_Layer_ProfileM (N-Layer Profile M extension)": "bit 8",
-                "SharedData (Shared data extension)": "bit 9",
-                "JBIG2Extension_ProfileM (JBIG2 mask layer coding and foreground layer color tag extension)": "bit 10"
-            }
-        }
-    },
-    {
-        "tag": "0x8781",
-        "name": "SharedData",
-        "description": "TIFF-FX shared data offset",
-        "long_description": "The SharedData field cotains an offset to the TIFF-FX Extension share data block within the file.",
-        "references": "See also<a href=\"#GlobalParametersIFD\">GlobalParametersIFD</a>. <a href=\"#TIFFFXEX1\">TIFFFXEX1</a>",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "OFFSETS"
-        }
-    },
-    {
-        "tag": "0x8782",
-        "name": "T88Options",
-        "description": "TIFF-FX T.88 options",
-        "long_description": "The T88Options field contains options of the ITU-T T.88 (JBIG2) coding.",
-        "references": "<a href=\"#TIFFFXEX1\">TIFFFXEX1</a>",
-        "count": "1\n2",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "BITFLAGS",
-            "values": {}
-        }
-    },
-    {
-        "tag": "0x87AC",
-        "name": "ImageLayer",
-        "description": "TIFF-FX MRC image layer",
-        "long_description": "The ImageLayer field contains two values, one to describe of which of the three TIFF-FX MRC layers this image component is a part, the second is the order in that the image component is to be composited.",
-        "references": "<a href=\"#TIFFFX\">TIFFFX</a>",
-        "count": "2",
-        "dtype": [
-            "SHORT",
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x87AF",
-        "name": "GeoKeyDirectoryTag",
-        "description": "GeoTIFF key directory",
-        "long_description": "Also called ProjectionInfoTag, CoordSystemInfoTag.",
-        "references": "<a href=\"#GEOTIFF\">GEOTIFF</a>",
-        "count": "N",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "GEOKEYDIR"
-        }
-    },
-    {
-        "tag": "0x87B0",
-        "name": "GeoDoubleParamsTag",
-        "description": "GeoTIFF double parameters",
-        "long_description": "",
-        "references": "<a href=\"#GEOTIFF\">GEOTIFF</a>",
-        "count": "N",
-        "dtype": [
-            "DOUBLE"
-        ],
-        "interpretation": {
-            "kind": "GEOKEYDOUBLE"
-        }
-    },
-    {
-        "tag": "0x87B1",
-        "name": "GeoAsciiParamsTag",
-        "description": "GeoTIFF ASCII parameters",
-        "long_description": "",
-        "references": "<a href=\"#GEOTIFF\">GEOTIFF</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "GEOKEYASCII"
-        }
-    },
-    {
         "tag": "0x8822",
         "name": "ExposureProgram",
-        "description": "TIFF/EP picture exposure program",
+        "description": "Exif picture exposure program",
         "long_description": "The ExposureProgram field describes the exposure setting program condition of the picture.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
             "SHORT"
@@ -2296,9 +55,9 @@
     {
         "tag": "0x8824",
         "name": "SpectralSensitivity",
-        "description": "TIFF/EP picture spectral sensitivity",
+        "description": "Exif picture spectral sensitivity",
         "long_description": "The SpectralSensitivity field contains a description of the sensitivity of each channel of the image data according to ASTM standards.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "N",
         "dtype": [
             "ASCII"
@@ -2308,25 +67,11 @@
         }
     },
     {
-        "tag": "0x8825",
-        "name": "GPSInfoIFD",
-        "description": "Exif GPS offset",
-        "long_description": "The GPSInfoIFD field contains an offset to a sub-IFD containing GPS (Global Positioning System) information.",
-        "references": "<a href=\"#EXIF21\">EXIF21</a>, p. 19\n <a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "IFDOFFSET"
-        }
-    },
-    {
         "tag": "0x8827",
         "name": "ISOSpeedRatings",
-        "description": "TIFF/EP picture ISO speed ratings",
+        "description": "Exif picture ISO speed ratings",
         "long_description": "The ISOSpeedRatings field contains the ISO speed or ISO latitude of the camera as specified by ISO 12232.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "N",
         "dtype": [
             "SHORT"
@@ -2338,9 +83,9 @@
     {
         "tag": "0x8828",
         "name": "OECF",
-        "description": "TIFF/EP picture optoelectronic conversion function",
+        "description": "Exif picture optoelectronic conversion function",
         "long_description": "The OECF field contains a specification of an opto-electronic conversion function as specified by ISO 14524.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "N",
         "dtype": [
             "UNDEFINED"
@@ -2350,95 +95,25 @@
         }
     },
     {
-        "tag": "0x8829",
-        "name": "Interlace",
-        "description": "TIFF/EP field number",
-        "long_description": "The Interlace field contains a value that describes the vertical and horizontal field of multiple field TIFF/EP images.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1",
+        "tag": "0x9000",
+        "name": "ExifVersion",
+        "description": "Exif version",
+        "long_description": "The Exif version field contains the four ASCII characters \"0210\" to indicate Exif 2.1 conformance, or \"0220\" for Exif 2.2 conformance.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "4",
         "dtype": [
-            "SHORT"
+            "UNDEFINED"
         ],
         "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x882A",
-        "name": "TimeZoneOffset",
-        "description": "TIFF/EP time zone offset",
-        "long_description": "The TimeZoneOffset contains the time zone offset in hours from GMT for the DateTimeOriginal field and optionally the DateTime field of the TIFF/EP image.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1\n2",
-        "dtype": [
-            "SSHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x882B",
-        "name": "SelfTimerMode",
-        "description": "TIFF/EP self timer mode",
-        "long_description": "The SelfTimerMode field contains the number of seconds from when the plunger was depressed that the camera fired, or zero for no delay.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x885C",
-        "name": "FaxRecvParams",
-        "description": "SGI fax receival parameters (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x885D",
-        "name": "FaxSubAddress",
-        "description": "SGI fax subaddress (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x885E",
-        "name": "FaxRecvTime",
-        "description": "SGI fax receival time (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
+            "kind": "FOURBYTEASCII"
         }
     },
     {
         "tag": "0x9003",
         "name": "DateTimeOriginal",
-        "description": "TIFF/EP origination date/time",
-        "long_description": "The DateTimeOriginal field contains 20 ASCII characters in the form \"YYYY:MM:DD HH:MM:SS\" indicating the data and time when the image data was sampled.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "description": "Exif origination date/time",
+        "long_description": "The DateTimeOriginal field contains 20 ASCII characters in the form \"YYYY:MM:DD HH:MM:SS\" indicating the date and time when the image data was sampled.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "20",
         "dtype": [
             "ASCII"
@@ -2448,11 +123,39 @@
         }
     },
     {
+        "tag": "0x9004",
+        "name": "DateTimeDigitized",
+        "description": "Exif digitization date/time",
+        "long_description": "The DateTimeDigitized field contains 20 ASCII characters in the form \"YYYY:MM:DD HH:MM:SS\" indicating the date  and time when the image data was digitized to file.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "20",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DATETIME"
+        }
+    },
+    {
+        "tag": "0x9101",
+        "name": "ComponentsConfiguration",
+        "description": "Exif component configuration",
+        "long_description": "The ComponentsConfiguration fields defines the order of components per the photometric interpretation, for describing other than default orders for RGB, CMYK, or YCbCr components.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "4",
+        "dtype": [
+            "UNDEFINED"
+        ],
+        "interpretation": {
+            "kind": "EXIFCOMPCONF"
+        }
+    },
+    {
         "tag": "0x9102",
         "name": "CompressedBitsPerPixel",
-        "description": "TIFF/EP compressed bits per pixel",
-        "long_description": "The CompressedBitsPerPixel field contains TIFF/EP data compression information.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "description": "Exif compressed bits per pixel",
+        "long_description": "The CompressedBitsPerPixel field contains Exif data compression information.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
             "RATIONAL"
@@ -2464,12 +167,12 @@
     {
         "tag": "0x9201",
         "name": "ShutterSpeedValue",
-        "description": "TIFF/EP shutter speed",
-        "long_description": "The ShutterSpeedValue contains the shutter speed in APEX units of the TIFF/EP image.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "description": "Exif picture shutter speed",
+        "long_description": "The ShutterSpeedValue field contains the APEX shutter speed setting.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
-            "RATIONAL"
+            "SRATIONAL"
         ],
         "interpretation": {
             "kind": "DEFAULT"
@@ -2478,9 +181,9 @@
     {
         "tag": "0x9202",
         "name": "ApertureValue",
-        "description": "TIFF/EP picture lens aperture",
+        "description": "Exif picture lens aperture",
         "long_description": "The ApertureValue field contains the APEX unit valued lens aperture.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
             "RATIONAL"
@@ -2492,10 +195,10 @@
     {
         "tag": "0x9203",
         "name": "BrightnessValue",
-        "description": "TIFF/EP picture brightness",
+        "description": "Exif picture brightness",
         "long_description": "The BrightnessValue field contains the APEX unit valued brightness.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1\n2",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
         "dtype": [
             "SRATIONAL"
         ],
@@ -2506,10 +209,10 @@
     {
         "tag": "0x9204",
         "name": "ExposureBiasValue",
-        "description": "TIFF/EP picture exposure bias",
+        "description": "Exif picture exposure bias",
         "long_description": "The ExposureBiasValue field contains the APEX unit valued exposure bias.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1\n2",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
         "dtype": [
             "SRATIONAL"
         ],
@@ -2520,9 +223,9 @@
     {
         "tag": "0x9205",
         "name": "MaxApertureValue",
-        "description": "TIFF/EP picture lens maximum aperture",
+        "description": "Exif picture lens maximum aperture",
         "long_description": "The MaxApertureValue field contains the APEX unit valued minimum F number of the lens.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
             "RATIONAL"
@@ -2534,12 +237,12 @@
     {
         "tag": "0x9206",
         "name": "SubjectDistance",
-        "description": "TIFF/EP picture subject distance",
+        "description": "Exif picture subject distance",
         "long_description": "The SubjectDistance field contains the distance from the camera to the picture's subject, in meters.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1\n2",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
         "dtype": [
-            "SRATIONAL"
+            "RATIONAL"
         ],
         "interpretation": {
             "kind": "DEFAULT"
@@ -2548,9 +251,9 @@
     {
         "tag": "0x9207",
         "name": "MeteringMode",
-        "description": "TIFF/EP picture metering mode",
+        "description": "Exif picture metering mode",
         "long_description": "The MeteringMode field describes the metering mode of the camera.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
             "SHORT"
@@ -2562,16 +265,19 @@
                 "Average": "1",
                 "CenterWeightedAverage": "2",
                 "Spot": "3",
-                "MultiSpot": "4"
+                "MultiSpot": "4",
+                "Pattern": "5",
+                "Partial": "6",
+                "Other": "255"
             }
         }
     },
     {
         "tag": "0x9208",
         "name": "LightSource",
-        "description": "TIFF/EP picture light source",
+        "description": "Exif picture light source",
         "long_description": "The LightSource field describes the light source conditions of the picture.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a> \n <a href=\"#EXIF22\">EXIF22</a>",
         "count": "1",
         "dtype": [
             "SHORT"
@@ -2583,172 +289,49 @@
                 "Daylight": "1",
                 "Fluorescent": "2",
                 "Tungsten": "3",
-                "Flash": "10",
+                "Flash": "4",
+                "FineWeather": "9",
+                "CloudyWeather": "10",
+                "Shady": "11",
+                "DaylightFluorescent": "12",
+                "DayWhiteFluorescent": "13",
+                "CoolWhiteFluorescent": "14",
+                "WhiteFluorescent": "15",
                 "StandardIlluminantA": "17",
                 "StandardIlluminantB": "18",
                 "StandardIlluminantC": "19",
                 "D55Illuminant": "20",
                 "D65Illuminant": "21",
-                "D75Illuminant": "22"
+                "D75Illuminant": "22",
+                "D50Illuminant": "23",
+                "ISOStudioTungsten": "24",
+                "Other": "255"
             }
         }
     },
     {
         "tag": "0x9209",
         "name": "Flash",
-        "description": "TIFF/EP picture flash usage",
+        "description": "Exif picture flash usage",
         "long_description": "The Flash field describes the use of strobe flash with the picture.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a> \n <a href=\"#EXIF22\">EXIF22</a>",
         "count": "1",
         "dtype": [
             "SHORT"
         ],
         "interpretation": {
-            "kind": "FLASHEP"
+            "kind": "FLASHEXIF"
         }
     },
     {
         "tag": "0x920A",
         "name": "FocalLength",
-        "description": "TIFF/EP picture lens focal length",
+        "description": "Exif picture lens focal length",
         "long_description": "The FocalLength field contains the focal length in millimeters of the lens.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1\n2",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x920B",
-        "name": "FlashEnergy",
-        "description": "TIFF/EP picture flash energy",
-        "long_description": "The FlashEnergy field contains the power of the strobe flash in BCPS, beam candlepower seconds, units.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1\n2",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x920C",
-        "name": "SpatialFrequencyResponse",
-        "description": "TIFF/EP picture spatial frequency response",
-        "long_description": "The SpatialFrequencyResponse field contains the device spatial frequency response table and values for the picture per ISO 12233.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "N",
-        "dtype": [
-            "UNDEFINED"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x920D",
-        "name": "Noise",
-        "description": "TIFF/EP noise measurement",
-        "long_description": "The Noise field contains a measurement of the noise value of the TIFF/EP image.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "N",
-        "dtype": [
-            "UNDEFINED"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x920E",
-        "name": "FocalPlaneXResolution",
-        "description": "TIFF/EP picture focal plane column resolution",
-        "long_description": "The FocalPlaneXResolution field contains the focal plane column resolution in FocalPlaneResolutionUnits units.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
             "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x920F",
-        "name": "FocalPlaneYResolution",
-        "description": "TIFF/EP picture focal plane row resolution",
-        "long_description": "The FocalPlaneXResolution field contains the focal plane row resolution in FocalPlaneResolutionUnit units.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x9210",
-        "name": "FocalPlaneResolutionUnit",
-        "description": "TIFF/EP picture focal plane resolution unit",
-        "long_description": "The FocalPlaneResolutionUnit field describes the focal plane resolution unit.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Inch": "1",
-                "Meter": "2",
-                "Centimeter": "3",
-                "Millimeter": "4",
-                "Micrometer": "5"
-            }
-        }
-    },
-    {
-        "tag": "0x9211",
-        "name": "ImageNumber",
-        "description": "TIFF/EP image number",
-        "long_description": "The ImageNumber fields contains an identifier assigned to an image in a TIFF/EP file.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x9212",
-        "name": "SecurityClassification",
-        "description": "TIFF/EP security classification",
-        "long_description": "The SecurityClassification field contains either a single ASCII character or an ASCII string describing the security classification of the image per the NITF specification (MIL-STD-2500).",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1\nN",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "CHARACTERORASCII"
-        }
-    },
-    {
-        "tag": "0x9213",
-        "name": "ImageHistory",
-        "description": "TIFF/EP image modification history",
-        "long_description": "The ImageHistory field contains a description of modifications to the TIFF/EP image.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
         ],
         "interpretation": {
             "kind": "DEFAULT"
@@ -2756,10 +339,10 @@
     },
     {
         "tag": "0x9214",
-        "name": "SubjectLocation",
-        "description": "TIFF/EP picture subject location",
-        "long_description": "The SubjectLocation field contains two coordinate values into the image of the pixel of the subject location in the picture.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "name": "SubjectArea",
+        "description": "Exif picture subject area",
+        "long_description": "The SubjectArea field contains a number of coordinates to describe either a point, sphere, or rectangle of the main subject area of the picture.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
         "count": "2\n3\n4",
         "dtype": [
             "SHORT"
@@ -2769,39 +352,95 @@
         }
     },
     {
-        "tag": "0x9215",
-        "name": "ExposureIndex",
-        "description": "TIFF/EP picture exposure index",
-        "long_description": "The ExposureIndex field contains the camera exposure index setting.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
-        "count": "1\n2",
+        "tag": "0x927C",
+        "name": "MakerNote",
+        "description": "Exif maker note",
+        "long_description": "The MakerNote field contains information specific to the digital camera manufacturer.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "N",
         "dtype": [
-            "RATIONAL"
+            "UNDEFINED"
+        ],
+        "interpretation": {
+            "kind": "EXIFMAKERNOTE"
+        }
+    },
+    {
+        "tag": "0x9286",
+        "name": "UserComment",
+        "description": "Exif user comment",
+        "long_description": "The UserComment field contains a user comment.  The first eight bytes of the user comment data indicate the character encoding of the remaining comment data.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "N",
+        "dtype": [
+            "UNDEFINED"
+        ],
+        "interpretation": {
+            "kind": "EXIFUSERCOMMENT"
+        }
+    },
+    {
+        "tag": "0x9290",
+        "name": "SubSecTime",
+        "description": "Exif subsecond time",
+        "long_description": "The SubSecTime field contains an ASCII string of as many significant digits as there are of the decimal fractions of a second associated with the DateTime field.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "N",
+        "dtype": [
+            "ASCII"
         ],
         "interpretation": {
             "kind": "DEFAULT"
         }
     },
     {
-        "tag": "0x9216",
-        "name": "TIFFEPStandardID",
-        "description": "TIFF/EP standard identifier",
-        "long_description": "The TIFFEPStandardID field contains four ASCII characters representing the TIFF/EP standard version of a TIFF/EP file, eg '1', '0', '0', '0'.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "tag": "0x9291",
+        "name": "SubSecTimeOriginal",
+        "description": "Exif origination subsecond time",
+        "long_description": "The SubSecTime field contains an ASCII string of as many significant digits as there are of the decimal fractions of a second associated with the DateTimeOriginal field.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "N",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x9292",
+        "name": "SubSecTimeDigitized",
+        "description": "Exif digitization subsecond time",
+        "long_description": "The SubSecTime field contains an ASCII string of as many significant digits as there are of the decimal fractions of a second associated with the DateTimeDigitized field.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "N",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA000",
+        "name": "FlashPixVersion",
+        "description": "Exif FlashPix version",
+        "long_description": "The FlashPixVersion field contains the conformance level to FlashPix interoperability, conformance to FlashPix 1.0 is indicated by the four ASCII characters \"0100\".",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "4",
         "dtype": [
-            "BYTE"
+            "UNDEFINED"
         ],
         "interpretation": {
             "kind": "FOURBYTEASCII"
         }
     },
     {
-        "tag": "0x9217",
-        "name": "SensingMethod",
-        "description": "TIFF/EP picture sensing method",
-        "long_description": "The SensingMethod field describes the sensors that capture the image of the picture.",
-        "references": "<a href=\"#TIFFEP\">TIFFEP</a>",
+        "tag": "0xA001",
+        "name": "ColorSpace",
+        "description": "Exif color space",
+        "long_description": "The ColorSpace field describes whether the Exif file uses the sRGB color space or is uncalibrated.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
         "count": "1",
         "dtype": [
             "SHORT"
@@ -2809,108 +448,252 @@
         "interpretation": {
             "kind": "ENUMERATED",
             "values": {
-                "Undefined": "0",
-                "MonochromeArea": "1",
+                "sRGB (sRGB color space)": "1",
+                "Unspecified (Unspecified color space)": "0xFFFF"
+            }
+        }
+    },
+    {
+        "tag": "0xA002",
+        "name": "PixelXDimension",
+        "description": "Exif unpadded columns",
+        "long_description": "The PixelXDimension field contains the number of imaged data sample columns in compressed data where there may be padding beyond the imaged width.",
+        "references": "See also<a href=\"#PixelYDimension\">PixelYDimension</a>. <a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT",
+            "LONG"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA003",
+        "name": "PixelYDimension",
+        "description": "Exif unpadded rows",
+        "long_description": "The PixelYDimension field contains the number of imaged data sample rows in compressed data.",
+        "references": "See also<a href=\"#PixelYDimension\">PixelYDimension</a>. <a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT",
+            "LONG"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA004",
+        "name": "RelatedSoundFile",
+        "description": "Exif related sound file",
+        "long_description": "The RelatedSoundFile field contains an ASCII filename of a sound file related to the image.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "13",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA005",
+        "name": "InteroperabilityIFD",
+        "description": "Exif Interoperability sub-IFD pointer",
+        "long_description": "The InteroperabilityIFD field contains an offset to an IFD structure containing interoperability information.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "LONG"
+        ],
+        "interpretation": {
+            "kind": "IFDOFFSET"
+        }
+    },
+    {
+        "tag": "0xA20B",
+        "name": "FlashEnergy",
+        "description": "Exif picture flash energy",
+        "long_description": "The FlashEnergy field contains the power of the strobe flash in BCPS, beam candlepower seconds, units.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA20C",
+        "name": "SpatialFrequencyResponse",
+        "description": "Exif picture spatial frequency response",
+        "long_description": "The SpatialFrequencyResponse field contains the device spatial frequency response table and values for the picture per ISO 12233.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "N",
+        "dtype": [
+            "UNDEFINED"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA20E",
+        "name": "FocalPlaneXResolution",
+        "description": "Exif picture focal plane column resolution",
+        "long_description": "The FocalPlaneXResolution field contains the focal plane column resolution in FocalPlaneResolutionUnits units.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA20F",
+        "name": "FocalPlaneYResolution",
+        "description": "Exif picture focal plane row resolution",
+        "long_description": "The FocalPlaneXResolution field contains the focal plane row resolution in FocalPlaneResolutionUnit units.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA210",
+        "name": "FocalPlaneResolutionUnit",
+        "description": "Exif picture focal plane resolution unit",
+        "long_description": "The FocalPlaneResolutionUnit field describes the focal plane resolution unit.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "Unitless (Units not specified)": "1",
+                "Inch (Units in inches)": "2",
+                "Centimeter (Units in centimeters)": "3"
+            }
+        }
+    },
+    {
+        "tag": "0xA214",
+        "name": "SubjectLocation",
+        "description": "Exif picture subject location",
+        "long_description": "The SubjectLocation field contains two coordinate values into the image of the pixel of the subject location in the picture.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA215",
+        "name": "ExposureIndex",
+        "description": "Exif picture exposure index",
+        "long_description": "The ExposureIndex field contains the camera exposure index setting.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA217",
+        "name": "SensingMethod",
+        "description": "Exif picture sensing method",
+        "long_description": "The SensingMethod field describes the sensors that capture the image of the picture.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "Undefined": "1",
                 "OneChipColorArea": "2",
                 "TwoChipColorArea": "3",
                 "ThreeChipColorArea": "4",
                 "ColorSequentialArea": "5",
-                "MonochromeLinearArea": "6",
                 "TriLinear": "7",
                 "ColorSequentialLinear": "8"
             }
         }
     },
     {
-        "tag": "0x923A",
-        "name": "CIP3DataFile",
-        "description": "CIP3 PPF data",
-        "long_description": "The CIP3DataFile field contains a string that is to be intepreted as the filename of a CIP3 PPF file, as a field of a TIFF/IT FP IFD.",
-        "references": "<a href=\"#CIP3EMBED\">CIP3EMBED</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x923B",
-        "name": "CIP3Sheet",
-        "description": "CIP3 sheet name",
-        "long_description": "The CIP3Sheet field contains a string that references the sheet to use in a multiple sheet PPF file, as a field of a TIFF/IT FP IFD.",
-        "references": "<a href=\"#CIP3EMBED\">CIP3EMBED</a>",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0x923C",
-        "name": "CIP3Side",
-        "description": "CIP3 sheet side",
-        "long_description": "The CIP3Side field describes which side of a PPF sheet is to be used, as a field of a TIFF/IT FP IFD.",
-        "references": "<a href=\"#CIP3EMBED\">CIP3EMBED</a>",
+        "tag": "0xA300",
+        "name": "FileSource",
+        "description": "Exif picture data file source",
+        "long_description": "The FileSource field describes the source of the image data of this picture.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a> \n <a href=\"#EXIF221\">EXIF221</a>",
         "count": "1",
         "dtype": [
-            "BYTE"
+            "UNDEFINED"
         ],
         "interpretation": {
-            "kind": "DEFAULT"
+            "kind": "ENUMERATED",
+            "values": {
+                "OtherSource": "0",
+                "TransparentScannerSource": "1",
+                "ReflexScannerSource": "2",
+                "DSCSource": "3"
+            }
         }
     },
     {
-        "tag": "0x935C",
-        "name": "ImageSourceData",
-        "description": "Adobe Photoshop image source data",
-        "long_description": "The ImageSourceData field contains information embedded by the Adobe Photoshop application.",
-        "references": "<a href=\"#TIFFPS\">TIFFPS</a>",
+        "tag": "0xA301",
+        "name": "SceneType",
+        "description": "Exif picture scene type",
+        "long_description": "The SceneType field describes the picture-taking conditions of the Exif picture.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "UNDEFINED"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "DirectlyPhotographed": "1"
+            }
+        }
+    },
+    {
+        "tag": "0xA302",
+        "name": "CFAPattern",
+        "description": "Exif picture color filter array pattern",
+        "long_description": "The CFAPattern field contains a description of the color filter array geometric pattern for interleaving of sampling channels.",
+        "references": "See also<a href=\"#SensingMethod\">SensingMethod</a>. <a href=\"#EXIF21\">EXIF21</a>",
         "count": "N",
         "dtype": [
             "UNDEFINED"
         ],
         "interpretation": {
-            "kind": "PHOTOSHOP"
+            "kind": "CFAPATTERN"
         }
     },
     {
-        "tag": "0xA480",
-        "name": "GDAL_METADATA",
-        "description": "GDAL metadata (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "XML"
-        }
-    },
-    {
-        "tag": "0xA481",
-        "name": "GDAL_NODATA",
-        "description": "GDAL background/nodata (private tag)",
-        "long_description": "",
-        "references": "",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC580",
-        "name": "USPTOOriginalContentType",
-        "description": "USPTO Original Content Type (private tag)",
-        "long_description": "The USPTO OriginalContentType field describes the original content type of the image.",
-        "references": "<a href=\"#YB2\">YB2</a>, p. 7",
+        "tag": "0xA401",
+        "name": "CustomRendered",
+        "description": "Exif picture custom rendering",
+        "long_description": "The CustomRendering field describes whether the picture data has been custom rendered for the output.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
         "count": "1",
         "dtype": [
             "SHORT"
@@ -2918,89 +701,17 @@
         "interpretation": {
             "kind": "ENUMERATED",
             "values": {
-                "TextOrDrawing (Text or black and white drawing (default))": "0",
-                "Grayscale (Grayscale drawing or photograph)": "1",
-                "Color (Color drawing or photograph)": "2"
+                "NormalProcess": "0",
+                "CustomProcess": "1"
             }
         }
     },
     {
-        "tag": "0xC612",
-        "name": "DNGVersion",
-        "description": "DNG version",
-        "long_description": "The DNGVersion contains four bytes containing the numeric value of the file's conformance version level to the DNG (Digital Negative) specification.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 15",
-        "count": "4",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "FOURBYTEDIGITS"
-        }
-    },
-    {
-        "tag": "0xC613",
-        "name": "DNGBackwardVersion",
-        "description": "DNG backwards compatible version",
-        "long_description": "The DNGBackwardsVersion field contains four bytes containing the numeric value of the file's conformance version level to a DNG (Digital Negative) specification.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 15",
-        "count": "4",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "FOURBYTEDIGITS"
-        }
-    },
-    {
-        "tag": "0xC614",
-        "name": "UniqueCameraModel",
-        "description": "DNG unique camera model",
-        "long_description": "The UniqueCameraModel field contains a null-terminated ASCII string noting the camera model.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 16",
-        "count": "N",
-        "dtype": [
-            "ASCII"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC615",
-        "name": "LocalizedCameraModel",
-        "description": "DNG localized camera model",
-        "long_description": "The LocalizedCameraModel field contains a null-terminated ASCII string or a Unicode string noting the camera model.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 17",
-        "count": "N",
-        "dtype": [
-            "ASCII",
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC616",
-        "name": "CFAPlaneColor",
-        "description": "DNG CFA plane color",
-        "long_description": "The CFAPlaneColor fields contains a list of zero-based digits indicating the order of the color planes of the color filter array pattern for the LinearRaw photometric interpretation.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 17",
-        "count": "N",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC617",
-        "name": "CFALayout",
-        "description": "DNG CFA spatial layout",
-        "long_description": "The CFALayout field denotes the spatial layout of the color filter array.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 18",
+        "tag": "0xA402",
+        "name": "ExposureMode",
+        "description": "Exif picture exposure mode",
+        "long_description": "The ExposureMode field describes the exposure mode (auto exposure, manual exposure, auto bracketing) of the picture or picture sequence.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
         "count": "1",
         "dtype": [
             "SHORT"
@@ -3008,21 +719,51 @@
         "interpretation": {
             "kind": "ENUMERATED",
             "values": {
-                "Rectangular": "1",
-                "Staggered_A": "2",
-                "Staggered_B": "3",
-                "Staggered_C": "4",
-                "Staggered_D": "5"
+                "AutoExposure": "0",
+                "ManualExposure": "1",
+                "AutoBracket": "2"
             }
         }
     },
     {
-        "tag": "0xC618",
-        "name": "LinearizationTable",
-        "description": "DNG linearization table",
-        "long_description": "The LinearizationTable field contains a lookup table (LUT) that maps data values of the samples of the image to non-linear values.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 18",
-        "count": "N",
+        "tag": "0xA403",
+        "name": "WhiteBalance",
+        "description": "Exif picture white balance mode",
+        "long_description": "The WhiteBalance field describes the white balance mode of the picture, auto or manual.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "AutoWhiteBalance": "0",
+                "ManualWhiteBalance": "1"
+            }
+        }
+    },
+    {
+        "tag": "0xA404",
+        "name": "DigitalZoomRatio",
+        "description": "Exif picture digital zoom ratio",
+        "long_description": "The DigitalZoomRatio field contains the digital zoom ratio of the picture.  If the numerator of the field value is zero then digital zoom was not used.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xA405",
+        "name": "FocalLengthIn35mmFilm",
+        "description": "Exif picture 35mm lens focal length",
+        "long_description": "The FocalLengthIn35mmFilm field contains the equivalent of the lens focal length to a 35mm film camera lens.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
         "dtype": [
             "SHORT"
         ],
@@ -3031,12 +772,124 @@
         }
     },
     {
-        "tag": "0xC619",
-        "name": "BlackLevelRepeatDim",
-        "description": "DNG black level repeat dimensions",
-        "long_description": "The BlackLevelRepeatDim field contains two values, one each for rows and columns of the black level tag.",
-        "references": "See also<a href=\"#BlackLevel\">BlackLevel</a>. <a href=\"#DNG1000\">DNG1000</a>, p. 19",
-        "count": "2",
+        "tag": "0xA406",
+        "name": "SceneCaptureType",
+        "description": "Exif picture scene capture type",
+        "long_description": "The SceneCaptureType field describes the scene type in terms of standard, landscape, portrait, night scene, etcetera.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "Standard": "0",
+                "Portrait": "1",
+                "Landscape": "2",
+                "Night": "3"
+            }
+        }
+    },
+    {
+        "tag": "0xA407",
+        "name": "GainControl",
+        "description": "Exif picture gain control",
+        "long_description": "The GainControl field describes the image gain adjustment of the picture.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "NoGainControl": "0",
+                "LowGainUp": "1",
+                "HighGainUp": "2",
+                "LowGainDown": "3",
+                "HighGainDown": "4"
+            }
+        }
+    },
+    {
+        "tag": "0xA408",
+        "name": "Contrast",
+        "description": "Exif picture contrast adjustment",
+        "long_description": "The Contrast field describes the contrast adjustment on the picture.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "Normal": "0",
+                "Soft": "1",
+                "Hard": "2"
+            }
+        }
+    },
+    {
+        "tag": "0xA409",
+        "name": "Saturation",
+        "description": "Exif picture saturation processing",
+        "long_description": "The Saturation field describes the saturation processing on the picture.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "Normal": "0",
+                "LowSaturation": "1",
+                "HighSaturation": "2"
+            }
+        }
+    },
+    {
+        "tag": "0xA40A",
+        "name": "Sharpness",
+        "description": "Exif picture sharpness processing",
+        "long_description": "The Sharpness field describes the sharpness processing on the picture.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "Normal": "0",
+                "Soft": "1",
+                "Hard": "2"
+            }
+        }
+    },
+    {
+        "tag": "0xA40B",
+        "name": "DeviceSettingDescription",
+        "description": "Exif picture device conditions",
+        "long_description": "The DeviceSettingDesciption field contains a list of device setting descriptions of the picture-taking condition of the camera.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a> \n <a href=\"#EXIF221\">EXIF221</a>",
+        "count": "N",
+        "dtype": [
+            "UNDEFINED"
+        ],
+        "interpretation": {
+            "kind": "EXIFDEVSETDESC"
+        }
+    },
+    {
+        "tag": "0xA40C",
+        "name": "SubjectDistanceRange",
+        "description": "Exif picture subject distance range",
+        "long_description": "The SubjectDistanceRange field describes the distance range of the picture subject.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
         "dtype": [
             "SHORT"
         ],
@@ -3045,314 +898,12 @@
         }
     },
     {
-        "tag": "0xC61A",
-        "name": "BlackLevel",
-        "description": "DNG black level",
-        "long_description": "The BlackLevel field contains the \"zero light\" or thermal black encoding level, as a repeating pattern. The values are stored in row-column-sample scan order.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 19",
-        "count": "N",
-        "dtype": [
-            "SHORT",
-            "LONG",
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC61B",
-        "name": "BlackLevelDeltaH",
-        "description": "DNG black level delta - horizontal",
-        "long_description": "The BlackLevelDeltaH field encodes the per-column difference of the \"zero light\" level.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 20",
-        "count": "N\nWidth",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC61C",
-        "name": "BlackLevelDeltaV",
-        "description": "DNG black level delta - vertical",
-        "long_description": "The BlackLevelDeltaV field encodes the per-row difference of the \"zero light\" level.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 20",
-        "count": "Length",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC61D",
-        "name": "WhiteLevel",
-        "description": "DNG white level",
-        "long_description": "The WhiteLevel field contains the fully-saturated encoding level for the raw samples, per sample.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 21",
-        "count": "SPP",
-        "dtype": [
-            "SHORT",
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC61E",
-        "name": "DefaultScale",
-        "description": "DNG default scale",
-        "long_description": "The DefaultScale field contains a pair of scale factors for cameras with non-square pixels.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 21",
-        "count": "2",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC61F",
-        "name": "DefaultCropOrigin",
-        "description": "DNG default crop origin",
-        "long_description": "The DefaultCropOrigin field contains a pair of coordinates the mark the origin, in raw image coordinates.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 22",
-        "count": "2",
-        "dtype": [
-            "SHORT",
-            "LONG",
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC620",
-        "name": "DefaultCropSize",
-        "description": "DNG default crop size",
-        "long_description": "The DefaultCropSize field contains a pair of coordinates that mark the extent, in raw image coordinates.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 23",
-        "count": "2",
-        "dtype": [
-            "SHORT",
-            "LONG",
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC621",
-        "name": "ColorMatrix1",
-        "description": "DNG color matrix, set one",
-        "long_description": "The ColorMatrix1 field contains a transformation matrix to convert CIE XYZ values to reference camera native color space values, under the illuminant specified as CalibrationIlluminant1. The matrix values are stored in row scan order.",
-        "references": "See also<a href=\"#CalibrationIlluminant1\">CalibrationIlluminant1</a>. <a href=\"#DNG1000\">DNG1000</a>, p. 24",
-        "count": "N",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC622",
-        "name": "ColorMatrix2",
-        "description": "DNG color matrix, set two",
-        "long_description": "The ColorMatrix2 field contains a transformation matrix to convert CIE XYZ values to reference camera native color space values, under the illuminant specified as CalibrationIlluminant2. The matrix values are stored in row scan order.",
-        "references": "See also<a href=\"#CalibrationIlluminant2\">CalibrationIlluminant2</a>. <a href=\"#DNG1000\">DNG1000</a>, p. 25",
-        "count": "N",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC623",
-        "name": "CameraCalibration1",
-        "description": "DNG camera calibration, set one",
-        "long_description": "The CameraCalibration1 field contains a transformation matrix to convert reference camera native color space values to individual camera native color space samples, under the illuminant specified as CalibrationIlluminant1. The matrix is stored in row scan order.",
-        "references": "See also<a href=\"#CalibrationIlluminant1\">CalibrationIlluminant1</a>. <a href=\"#DNG1000\">DNG1000</a>, p. 25",
-        "count": "N",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC624",
-        "name": "CameraCalibration2",
-        "description": "DNG camera calibration, set two",
-        "long_description": "The CameraCalibration2 field contains a transformation matrix to convert reference camera native color space values to individual camera native color space samples, under the illuminant specified as CalibrationIlluminant2. The matrix is stored in row scan order.",
-        "references": "See also<a href=\"#CalibrationIlluminant2\">CalibrationIlluminant2</a>. <a href=\"#DNG1000\">DNG1000</a>, p. 26",
-        "count": "N",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC625",
-        "name": "ReductionMatrix1",
-        "description": "DNG reduction matrix, set one",
-        "long_description": "The ReductionMatrix1 contains a dimensionality reduction matrix for use as the first stage of converting camera native color space values to CIE XYZ, under the illuminant specified as CalibrationIlluminant1.",
-        "references": "See also<a href=\"#CalibrationIlluminant1\">CalibrationIlluminant1</a>. <a href=\"#DNG1000\">DNG1000</a>, p. 27",
-        "count": "N",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC626",
-        "name": "ReductionMatrix2",
-        "description": "DNG reduction matrix, set two",
-        "long_description": "The ReductionMatrix2 contains a dimensionality reduction matrix for use as the first stage of converting camera native color space values to CIE XYZ, under the illuminant specified as CalibrationIlluminant2.",
-        "references": "See also<a href=\"#CalibrationIlluminant2\">CalibrationIlluminant2</a>. <a href=\"#DNG1000\">DNG1000</a>, p. 27",
-        "count": "N",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC627",
-        "name": "AnalogBalance",
-        "description": "DNG analog balance",
-        "long_description": "The AnalogBalance field contains the gain values applied to white balance.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 28",
-        "count": "N",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC628",
-        "name": "AsShotNeutral",
-        "description": "DNG neutral white balance value",
-        "long_description": "The AsShotNeutral fields contains the neutral white balance color in linear reference color space values.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 28",
-        "count": "N",
-        "dtype": [
-            "SHORT",
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC629",
-        "name": "AsShotWhiteXY",
-        "description": "DNG selected white balance",
-        "long_description": "The AsShotWhiteXY field contains xy chromaticity coordinates of the white balance.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 29",
-        "count": "2",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC62A",
-        "name": "BaselineExposure",
-        "description": "DNG baseline exposure",
-        "long_description": "The BaselineExposure field contains the zero point for footroom, in EV units.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 29",
-        "count": "1",
-        "dtype": [
-            "SRATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC62B",
-        "name": "BaselineNoise",
-        "description": "DNG baseline noise",
-        "long_description": "The BaselineNoise fields contains the relative noise of a camera at ISO 100 compared to the noise of a reference camera model.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 30",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC62C",
-        "name": "BaselineSharpness",
-        "description": "DNG baseline sharpness",
-        "long_description": "The BaselineSharpness field contains the relative sharpening required for the camera model, compared to that of a reference camera model.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 30",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC62D",
-        "name": "BayerGreenSplit",
-        "description": "DNG Bayer green split",
-        "long_description": "The BayerGreenSplit field contains a value in arbitrary units relating the tracking of the green pixels of the blue/green rows to those in red/green rows, only in color filter arrays using a Bayer pattern filter array.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 31",
-        "count": "1",
-        "dtype": [
-            "LONG"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC62E",
-        "name": "LinearResponseLimit",
-        "description": "DNG linear response limit",
-        "long_description": "The LinearResponseLimit field specifies the range of linear sensor response.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 31",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC62F",
-        "name": "CameraSerialNumber",
-        "description": "DNG camera serial number",
-        "long_description": "The CameraSerialNumber contains the serial number of the camera or camera body.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 32",
-        "count": "N",
+        "tag": "0xA420",
+        "name": "ImageUniqueID",
+        "description": "Exif picture unique identifier",
+        "long_description": "The ImageUniqueID field contains a null terminated ASCII string of hexadecimal representation of an 128 bit unique identifier of the picture.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "33",
         "dtype": [
             "ASCII"
         ],
@@ -3361,176 +912,14 @@
         }
     },
     {
-        "tag": "0xC630",
-        "name": "LensInfo",
-        "description": "DNG lens information",
-        "long_description": "The LensInfo field contains values describing the focal length and F-stop of the lens used. The first and second values specify minimum and maximum focal length in millimeters, the third and fourth values specify minimum and maximum F-stop at minimum and maximum focal length and maximum and minimum aperture.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 32",
-        "count": "4",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC631",
-        "name": "ChromaBlurRadius",
-        "description": "DNG chroma blur radius",
-        "long_description": "The ChromaBlurRadius field contains a value specifying the chroma blur area.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 33",
+        "tag": "0xA500",
+        "name": "Gamma",
+        "description": "Exif Gamma",
+        "long_description": "The Gamma field contains an value between 0 and 1 indiciating the normalized gamma coefficient.",
+        "references": "<a href=\"#EXIF221\">EXIF221</a>",
         "count": "1",
         "dtype": [
             "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC632",
-        "name": "AntiAliasStrength",
-        "description": "DNG anti-alias strength",
-        "long_description": "The AntiAliasStrength field denotes the relative strength of the camera's anti-alias filter, from 0.0 (no anti-aliasing filter) to 1.0 (effective anti-alias filter).",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 33",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC634",
-        "name": "DNGPrivateData",
-        "description": "DNG private data field",
-        "long_description": "The DNGPrivateData field contains private data.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 34",
-        "count": "N",
-        "dtype": [
-            "BYTE"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC635",
-        "name": "MakerNoteSafety",
-        "description": "DNG makernote safety",
-        "long_description": "The MakerNoteSafety field denotes whether it is safe to copy the meaningful contents of the MakerNote in editing the file.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 35",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Unsafe": "0",
-                "Safe": "1"
-            }
-        }
-    },
-    {
-        "tag": "0xC65A",
-        "name": "CalibrationIlluminant1",
-        "description": "DNG calibration illuminant, set one",
-        "long_description": "The CalibrationIlluminantField1 field denotes the light source for the first calibration set.",
-        "references": "See also<a href=\"#LightSource\">LightSource</a>, <a href=\"#ColorMatrix1\">ColorMatrix1</a>, <a href=\"#CameraCalibration1\">CameraCalibration1</a>, <a href=\"#ReductionMatrix1\">ReductionMatrix1</a>. <a href=\"#DNG1000\">DNG1000</a>, p. 23",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Unidentified": "0",
-                "Daylight": "1",
-                "Fluorescent": "2",
-                "Tungsten": "3",
-                "Flash": "4",
-                "FineWeather": "9",
-                "CloudyWeather": "10",
-                "Shady": "11",
-                "DaylightFluorescent": "12",
-                "DayWhiteFluorescent": "13",
-                "CoolWhiteFluorescent": "14",
-                "WhiteFluorescent": "15",
-                "StandardIlluminantA": "17",
-                "StandardIlluminantB": "18",
-                "StandardIlluminantC": "19",
-                "D55Illuminant": "20",
-                "D65Illuminant": "21",
-                "D75Illuminant": "22",
-                "D50Illuminant": "23",
-                "ISOStudioTungsten": "24",
-                "Other": "255"
-            }
-        }
-    },
-    {
-        "tag": "0xC65B",
-        "name": "CalibrationIlluminant2",
-        "description": "DNG calibration illuminant, set two",
-        "long_description": "The CalibrationIlluminantField1 field denotes the light source for the second calibration set.",
-        "references": "See also<a href=\"#LightSource\">LightSource</a>, <a href=\"#ColorMatrix2\">ColorMatrix2</a>, <a href=\"#CameraCalibration2\">CameraCalibration2</a>, <a href=\"#ReductionMatrix2\">ReductionMatrix2</a>. <a href=\"#DNG1000\">DNG1000</a>, p. 24",
-        "count": "1",
-        "dtype": [
-            "SHORT"
-        ],
-        "interpretation": {
-            "kind": "ENUMERATED",
-            "values": {
-                "Unidentified": "0",
-                "Daylight": "1",
-                "Fluorescent": "2",
-                "Tungsten": "3",
-                "Flash": "4",
-                "FineWeather": "9",
-                "CloudyWeather": "10",
-                "Shady": "11",
-                "DaylightFluorescent": "12",
-                "DayWhiteFluorescent": "13",
-                "CoolWhiteFluorescent": "14",
-                "WhiteFluorescent": "15",
-                "StandardIlluminantA": "17",
-                "StandardIlluminantB": "18",
-                "StandardIlluminantC": "19",
-                "D55Illuminant": "20",
-                "D65Illuminant": "21",
-                "D75Illuminant": "22",
-                "D50Illuminant": "23",
-                "ISOStudioTungsten": "24",
-                "Other": "255"
-            }
-        }
-    },
-    {
-        "tag": "0xC65C",
-        "name": "BestQualityScale",
-        "description": "DNG best-quality scale factor",
-        "long_description": "The BestQualityScale field contains a value to scale the default scale factors for improved quality.",
-        "references": "<a href=\"#DNG1000\">DNG1000</a>, p. 22",
-        "count": "1",
-        "dtype": [
-            "RATIONAL"
-        ],
-        "interpretation": {
-            "kind": "DEFAULT"
-        }
-    },
-    {
-        "tag": "0xC660",
-        "name": "AliasLayerMetadata",
-        "description": "Alias/Wavefront layer metadata (private tag)",
-        "long_description": "The AliasLayerMetadata field contains information per the Alias Systems Multi-Layer TIFF specification.",
-        "references": "See also<a href=\"#Software\">Software</a>, <a href=\"#HostComputer\">HostComputer</a>, <a href=\"#PageName\">PageName</a>, <a href=\"#XPosition\">XPosition</a>, <a href=\"#YPosition\">YPosition</a>.",
-        "count": "N",
-        "dtype": [
-            "ASCII"
         ],
         "interpretation": {
             "kind": "DEFAULT"

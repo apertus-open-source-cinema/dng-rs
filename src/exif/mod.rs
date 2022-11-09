@@ -1,28 +1,49 @@
-pub mod exif_yaml;
 pub mod tag_info_parser;
 
+use self::tag_info_parser::MaybeExifTypeInterpretation;
 use num_derive::FromPrimitive;
 use once_cell::sync::Lazy;
 use serde::{de, Deserialize, Serialize};
-use std::{collections::HashMap, fmt};
+use std::fmt;
 use tag_info_parser::ExifFieldDescriptor;
 
-use self::tag_info_parser::MaybeExifTypeInterpretation;
-
+const IFD_JSON: &str = include_str!("ifd.json");
 const EXIF_JSON: &str = include_str!("exif.json");
-const EXIF_IFD_JSON: &str = include_str!("exif_ifd.json");
-const GPS_INFO_IFD_JSON: &str = include_str!("gps_info_ifd.json");
+const GPS_INFO_JSON: &str = include_str!("gps_info.json");
 
+static IFD_TAGS: Lazy<Vec<ExifFieldDescriptor>> =
+    Lazy::new(|| serde_json::from_str(&IFD_JSON).unwrap());
 static EXIF_TAGS: Lazy<Vec<ExifFieldDescriptor>> =
     Lazy::new(|| serde_json::from_str(&EXIF_JSON).unwrap());
-static EXIF_IFD_TAGS: Lazy<Vec<ExifFieldDescriptor>> =
-    Lazy::new(|| serde_json::from_str(&EXIF_IFD_JSON).unwrap());
-static GPS_INFO_IFD_TAGS: Lazy<Vec<ExifFieldDescriptor>> =
-    Lazy::new(|| serde_json::from_str(&GPS_INFO_IFD_JSON).unwrap());
+static GPS_INFO_TAGS: Lazy<Vec<ExifFieldDescriptor>> =
+    Lazy::new(|| serde_json::from_str(&GPS_INFO_JSON).unwrap());
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum IfdType {
+    Ifd,
+    Exif,
+    GpsInfo,
+}
+impl IfdType {
+    pub fn get_namespace(&self) -> &Vec<ExifFieldDescriptor> {
+        match self {
+            IfdType::Ifd => &IFD_TAGS,
+            IfdType::Exif => &EXIF_TAGS,
+            IfdType::GpsInfo => &GPS_INFO_TAGS,
+        }
+    }
+    pub fn combined_namespace() -> impl Iterator<Item = &'static ExifFieldDescriptor> {
+        IFD_TAGS
+            .iter()
+            .chain(EXIF_TAGS.iter())
+            .chain(GPS_INFO_TAGS.iter())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 #[serde(transparent)]
-pub struct ExifMetadata(pub HashMap<ExifTag, ExifValue>);
+pub struct ExifMetadata(Vec<(ExifTag, ExifValue)>);
 impl ExifMetadata {
     pub fn pretty_yaml(&self, writer: &mut dyn fmt::Write) -> Result<(), fmt::Error> {
         for (tag, value) in self.0.iter() {
@@ -33,16 +54,19 @@ impl ExifMetadata {
         }
         Ok(())
     }
+    pub fn insert(&mut self, tag: ExifTag, value: ExifValue) {
+        self.0.push((tag, value))
+    }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum ExifTag {
     Known(ExifFieldDescriptor),
     Unknown(u16),
 }
 impl ExifTag {
-    pub fn from_number(tag: u16) -> Self {
-        if let Some(description) = EXIF_TAGS.iter().find(|x| x.tag == tag) {
+    pub fn from_number(tag: u16, ifd_kind: IfdType) -> Self {
+        if let Some(description) = ifd_kind.get_namespace().iter().find(|x| x.tag == tag) {
             Self::Known(description.clone())
         } else {
             Self::Unknown(tag)
@@ -52,7 +76,7 @@ impl ExifTag {
     where
         D: serde::Deserializer<'de>,
     {
-        if let Some(description) = EXIF_TAGS.iter().find(|x| x.name == name) {
+        if let Some(description) = IfdType::combined_namespace().find(|x| x.name == name) {
             Ok(Self::Known(description.clone()))
         } else {
             Err(de::Error::custom(format!("No Tag named '{}' known", name)))
@@ -89,6 +113,7 @@ impl<'de> Deserialize<'de> for ExifTag {
             let without_prefix = s.trim_start_matches("0x");
             Ok(Self::from_number(
                 u16::from_str_radix(without_prefix, 16).map_err(de::Error::custom)?,
+                IfdType::Ifd, // TODO: this might be wrong in the future; additional context is needed here
             ))
         } else {
             Self::from_name::<D>(&s)
@@ -124,11 +149,12 @@ pub enum ExifValue {
     Double(f64),
 
     List(Vec<ExifValue>),
+    Ifd(ExifMetadata),
 }
 impl ExifValue {
     fn pretty_yaml_plain(&self, writer: &mut dyn fmt::Write) -> Result<(), fmt::Error> {
         match &self {
-            ExifValue::Byte(x) => writer.write_fmt(format_args!("{x:#02X}"))?,
+            ExifValue::Byte(x) => writer.write_fmt(format_args!("{x}"))?,
             ExifValue::Ascii(x) => writer.write_fmt(format_args!("\"{x}\""))?,
             ExifValue::Short(x) => writer.write_fmt(format_args!("{x}"))?,
             ExifValue::Long(x) => writer.write_fmt(format_args!("{x}"))?,
@@ -141,14 +167,41 @@ impl ExifValue {
             ExifValue::Float(x) => writer.write_fmt(format_args!("{x}"))?,
             ExifValue::Double(x) => writer.write_fmt(format_args!("{x}"))?,
             ExifValue::List(l) => {
-                writer.write_char('[')?;
-                for (i, x) in l.iter().enumerate() {
-                    x.pretty_yaml_plain(writer)?;
-                    if i < l.len() - 1 {
-                        writer.write_str(", ")?;
+                if let ExifValue::Ifd(_) = l[0] {
+                    for x in l.iter() {
+                        if let ExifValue::Ifd(ifd) = x {
+                            let mut string = String::new();
+                            ifd.pretty_yaml(&mut string)?;
+                            let first_line: String = string.lines().take(1).collect();
+                            let rest: String = string
+                                .lines()
+                                .skip(1)
+                                .fold(String::new(), |a, b| a + b + "\n");
+
+                            writer.write_fmt(format_args!(
+                                "\n- {}\n{}",
+                                first_line,
+                                textwrap::indent(&rest.trim(), "  ")
+                            ))?;
+                        } else {
+                            unreachable!();
+                        }
                     }
+                } else {
+                    writer.write_char('[')?;
+                    for (i, x) in l.iter().enumerate() {
+                        x.pretty_yaml_plain(writer)?;
+                        if i < l.len() - 1 {
+                            writer.write_str(", ")?;
+                        }
+                    }
+                    writer.write_char(']')?;
                 }
-                writer.write_char(']')?;
+            }
+            ExifValue::Ifd(ifd) => {
+                let mut string = String::new();
+                ifd.pretty_yaml(&mut string)?;
+                writer.write_fmt(format_args!("\n{}", textwrap::indent(&string.trim(), "  ")))?;
             }
         };
         Ok(())
@@ -157,18 +210,13 @@ impl ExifValue {
     pub fn as_u32(&self) -> Option<u32> {
         match self {
             ExifValue::Byte(x) => Some(*x as u32),
-            ExifValue::Ascii(_) => None,
             ExifValue::Short(x) => Some(*x as u32),
             ExifValue::Long(x) => Some(*x as u32),
-            ExifValue::Rational(_, _) => None,
             ExifValue::SByte(x) => Some(*x as u32),
             ExifValue::Undefined(x) => Some(*x as u32),
             ExifValue::SShort(x) => Some(*x as u32),
             ExifValue::SLong(x) => Some(*x as u32),
-            ExifValue::SRational(_, _) => None,
-            ExifValue::Float(_) => None,
-            ExifValue::Double(_) => None,
-            ExifValue::List(_) => None,
+            _ => None,
         }
     }
 }

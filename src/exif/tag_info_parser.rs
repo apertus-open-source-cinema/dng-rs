@@ -1,4 +1,4 @@
-use super::{ExifValue, ExifValueType};
+use super::{ExifValue, ExifValueType, IfdType};
 use core::fmt;
 use serde::{de, Deserialize, Deserializer};
 use serde_hex::{SerHex, StrictPfx};
@@ -66,6 +66,9 @@ pub enum ExifTypeInterpretation {
     },
     CfaPattern,
     Default,
+    IfdOffset {
+        ifd_type: IfdType,
+    },
 }
 impl ExifTypeInterpretation {
     pub fn pretty_yaml_value(

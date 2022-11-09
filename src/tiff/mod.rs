@@ -1,8 +1,5 @@
-use crate::exif::{tag_info_parser::ExifFieldDescriptor, ExifMetadata, ExifTag};
-use std::{
-    collections::HashMap,
-    io::{self, Read, Seek, SeekFrom},
-};
+use crate::exif::{ExifMetadata, ExifTag, IfdType};
+use std::io::{self, Read, Seek, SeekFrom};
 
 use self::{byte_order_reader::ByteOrderReader, ifd::Ifd};
 use derivative::Derivative;
@@ -52,13 +49,13 @@ impl<R: Read + Seek> TiffFile<R> {
     }
 
     pub fn get_exif_metadata(&mut self) -> Result<ExifMetadata, io::Error> {
-        let mut metadata = HashMap::new();
-        let idf = &self.ifds[0];
+        let mut metadata = ExifMetadata::default();
+        let ifd = &self.ifds[0];
 
-        for entry in &idf.entries {
-            let tag = ExifTag::from_number(entry.tag);
-            metadata.insert(tag, entry.get_value(&mut self.reader)?);
+        for entry in &ifd.entries {
+            let tag = ExifTag::from_number(entry.tag, IfdType::Ifd);
+            metadata.insert(tag.clone(), entry.get_value(&mut self.reader, &tag)?);
         }
-        Ok(ExifMetadata(metadata))
+        Ok(metadata)
     }
 }
