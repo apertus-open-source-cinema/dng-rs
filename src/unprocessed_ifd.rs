@@ -1,21 +1,21 @@
-use super::byte_order_reader::ByteOrderReader;
-use crate::exif::{
-    tag_info_parser::{ExifFieldDescriptor, ExifTypeInterpretation, MaybeExifTypeInterpretation},
-    ExifMetadata, ExifTag, ExifValue, ExifValueType,
+use crate::ifd::{Ifd, IfdValue};
+use crate::ifd_tag_data::tag_info_parser::{
+    IfdFieldDescriptor, IfdTypeInterpretation, MaybeIfdTypeInterpretation,
 };
+use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdValueType};
+use crate::util::byte_order_reader::ByteOrderReader;
 use num_traits::FromPrimitive;
 use std::io::{self, Read, Seek, SeekFrom};
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct Ifd {
-    pub entries: Vec<IfdEntry>,
+pub struct UnprocessedIfd {
+    pub entries: Vec<UnprocessedIfdEntry>,
 }
-
-impl Ifd {
+impl UnprocessedIfd {
     pub fn read(reader: &mut ByteOrderReader<impl Read + Seek>) -> Result<Self, io::Error> {
         let count = reader.read_u16()?;
         let entries: Result<Vec<_>, _> = (0..count)
-            .map(|_| IfdEntry::read(reader))
+            .map(|_| UnprocessedIfdEntry::read(reader))
             .filter(|x| x.is_ok())
             .collect();
         Ok(Self { entries: entries? })
@@ -23,20 +23,19 @@ impl Ifd {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct IfdEntry {
+pub struct UnprocessedIfdEntry {
     pub tag: u16,
-    pub dtype: ExifValueType,
+    pub dtype: IfdValueType,
     pub count: u32,
     offset: u32,
     own_offset: u32,
 }
-
-impl IfdEntry {
+impl UnprocessedIfdEntry {
     pub fn read(reader: &mut ByteOrderReader<impl Read + Seek>) -> Result<Self, io::Error> {
         let own_offset = reader.seek(SeekFrom::Current(0))? as u32;
         let tag = reader.read_u16()?;
         let dtype = reader.read_u16()?;
-        let dtype = ExifValueType::from_u16(dtype).ok_or(io::Error::new(
+        let dtype = IfdValueType::from_u16(dtype).ok_or(io::Error::new(
             io::ErrorKind::InvalidData,
             format!(
                 "encountered unknown value '{}' in IFD type field (tag {:#04X})",
@@ -62,8 +61,8 @@ impl IfdEntry {
     pub fn get_value(
         &self,
         reader: &mut ByteOrderReader<impl Read + Seek>,
-        tag: &ExifTag,
-    ) -> Result<ExifValue, io::Error> {
+        tag: &IfdTagDescriptor,
+    ) -> Result<IfdValue, io::Error> {
         if self.fits_inline() {
             reader.seek(SeekFrom::Start((self.own_offset + 8) as u64))?;
         } else {
@@ -71,45 +70,45 @@ impl IfdEntry {
         }
 
         fn get_value_inner(
-            dtype: ExifValueType,
+            dtype: IfdValueType,
             reader: &mut ByteOrderReader<impl Read + Seek>,
-            tag: &ExifTag,
-        ) -> Result<ExifValue, io::Error> {
+            tag: &IfdTagDescriptor,
+        ) -> Result<IfdValue, io::Error> {
             let parsed = match dtype {
-                ExifValueType::Byte => ExifValue::Byte(reader.read_u8()?),
-                ExifValueType::Ascii => ExifValue::Ascii((reader.read_u8()? as char).to_string()),
-                ExifValueType::Short => ExifValue::Short(reader.read_u16()?),
-                ExifValueType::Long => ExifValue::Long(reader.read_u32()?),
-                ExifValueType::Rational => {
-                    ExifValue::Rational(reader.read_u32()?, reader.read_u32()?)
+                IfdValueType::Byte => IfdValue::Byte(reader.read_u8()?),
+                IfdValueType::Ascii => IfdValue::Ascii((reader.read_u8()? as char).to_string()),
+                IfdValueType::Short => IfdValue::Short(reader.read_u16()?),
+                IfdValueType::Long => IfdValue::Long(reader.read_u32()?),
+                IfdValueType::Rational => {
+                    IfdValue::Rational(reader.read_u32()?, reader.read_u32()?)
                 }
-                ExifValueType::SByte => ExifValue::SByte(reader.read_i8()?),
-                ExifValueType::Undefined => ExifValue::Undefined(reader.read_u8()?),
-                ExifValueType::SShort => ExifValue::SByte(reader.read_i8()?),
-                ExifValueType::SLong => ExifValue::SLong(reader.read_i32()?),
-                ExifValueType::SRational => {
-                    ExifValue::SRational(reader.read_i32()?, reader.read_i32()?)
+                IfdValueType::SByte => IfdValue::SByte(reader.read_i8()?),
+                IfdValueType::Undefined => IfdValue::Undefined(reader.read_u8()?),
+                IfdValueType::SShort => IfdValue::SByte(reader.read_i8()?),
+                IfdValueType::SLong => IfdValue::SLong(reader.read_i32()?),
+                IfdValueType::SRational => {
+                    IfdValue::SRational(reader.read_i32()?, reader.read_i32()?)
                 }
-                ExifValueType::Float => ExifValue::Float(reader.read_f32()?),
-                ExifValueType::Double => ExifValue::Double(reader.read_f64()?),
+                IfdValueType::Float => IfdValue::Float(reader.read_f32()?),
+                IfdValueType::Double => IfdValue::Double(reader.read_f64()?),
             };
 
-            if let ExifTag::Known(ExifFieldDescriptor {
+            if let IfdTagDescriptor::Known(IfdFieldDescriptor {
                 interpretation:
-                    MaybeExifTypeInterpretation::Known(ExifTypeInterpretation::IfdOffset { ifd_type }),
+                    MaybeIfdTypeInterpretation::Known(IfdTypeInterpretation::IfdOffset { ifd_type }),
                 ..
             }) = tag
             {
                 let current = reader.seek(SeekFrom::Current(0))?;
                 reader.seek(SeekFrom::Start(parsed.as_u32().unwrap() as u64))?;
-                let ifd = Ifd::read(reader)?;
-                let mut metadata = ExifMetadata::default();
+                let ifd = UnprocessedIfd::read(reader)?;
+                let mut metadata = Ifd::new(*ifd_type);
                 for entry in &ifd.entries {
-                    let tag = ExifTag::from_number(entry.tag, *ifd_type);
+                    let tag = IfdTagDescriptor::from_number(entry.tag, *ifd_type);
                     metadata.insert(tag.clone(), entry.get_value(reader, &tag)?);
                 }
                 reader.seek(SeekFrom::Start(current))?;
-                return Ok(ExifValue::Ifd(metadata));
+                return Ok(IfdValue::Ifd(metadata));
             } else {
                 Ok(parsed)
             }
@@ -121,7 +120,7 @@ impl IfdEntry {
             let vec: Result<Vec<_>, _> = (0..self.count)
                 .map(|_| get_value_inner(self.dtype, reader, tag))
                 .collect();
-            if self.dtype == ExifValueType::Ascii {
+            if self.dtype == IfdValueType::Ascii {
                 let vec = vec?;
                 let len = vec.len();
                 let string: String = vec
@@ -131,16 +130,16 @@ impl IfdEntry {
                         if i >= len - 1 {
                             return None;
                         }
-                        if let ExifValue::Ascii(s) = x {
+                        if let IfdValue::Ascii(s) = x {
                             Some(s.chars().next().unwrap())
                         } else {
                             unreachable!()
                         }
                     })
                     .collect();
-                Ok(ExifValue::Ascii(string))
+                Ok(IfdValue::Ascii(string))
             } else {
-                Ok(ExifValue::List(vec?))
+                Ok(IfdValue::List(vec?))
             }
         }
     }

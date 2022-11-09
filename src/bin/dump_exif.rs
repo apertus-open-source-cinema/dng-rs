@@ -1,5 +1,5 @@
 use clap::Parser;
-use dng::tiff::TiffFile;
+use dng::DngFile;
 
 use std::fs::File;
 
@@ -9,17 +9,19 @@ use std::fs::File;
 struct Args {
     /// input file to get the metadata from
     file: String,
+    #[arg(short = 'f', long, action)]
+    dump_rational_as_float: bool,
 }
 
 fn main() {
     let args = Args::parse();
     let img_file = File::open(args.file).expect("Cannot find test image!");
-    let mut tiff = TiffFile::new(img_file).expect("Couldnt parse TIFF file!");
+    let mut tiff = DngFile::new(img_file).expect("Couldnt parse TIFF file!");
 
     let mut string = String::new();
-    tiff.get_exif_metadata()
+    tiff.read_ifd()
         .unwrap()
-        .pretty_yaml(&mut string)
+        .pretty_yaml(&mut string, args.dump_rational_as_float)
         .unwrap();
     print!("{}", string);
 }

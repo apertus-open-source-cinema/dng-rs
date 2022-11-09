@@ -1,6 +1,7 @@
 /target
 /Cargo.lock
 .DS_Store
+*.yml
 *.dng
 *.DNG
-*.yml
+*.dcp

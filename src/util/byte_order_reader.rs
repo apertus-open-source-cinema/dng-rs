@@ -9,7 +9,6 @@ pub struct ByteOrderReader<R: Read> {
     reader: R,
     is_ilttle_endian: bool,
 }
-
 impl<R: Read> ByteOrderReader<R> {
     pub fn new(reader: R, is_ilttle_endian: bool) -> Self {
         Self {
