@@ -3609,5 +3609,54 @@
         "interpretation": {
             "kind": "DEFAULT"
         }
+    },
+    {
+        "tag": "0xC6F8",
+        "name": "ProfileName",
+        "description": "name of the camera profile",
+        "long_description": "A UTF-8 encoded string containing the name of the camera profile. This tag is optional if there is only a single camera profile stored in the file but is required for all camera profiles if there is more than one camera profile stored in the file.",
+        "references": "DNG specification 1.4.0 p53",
+        "count": "N",
+        "dtype": [
+            "ASCII",
+            "BYTE"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xC6FC",
+        "name": "ProfileToneCurve",
+        "description": "tone curve that can be applied while processing the image as a starting point for user adjustments",
+        "long_description": "This tag contains a default tone curve that can be applied while processing the image as a starting point for user adjustments. The curve is specified as a list of 32-bit IEEE floating- point value pairs in linear gamma. Each sample has an input value in the range of 0.0 to 1.0, and an output value in the range of 0.0 to 1.0. The first sample is required to be (0.0, 0.0), and the last sample is required to be (1.0, 1.0). Interpolated the curve using a cubic spline.",
+        "references": "DNG specification 1.4.0 p56",
+        "count": "N",
+        "dtype": [
+            "FLOAT"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0xC6FD",
+        "name": "ProfileEmbedPolicy",
+        "description": "usage rules for the associated camera profile",
+        "long_description": "\nThis tag contains information about the usage rules for the associated camera profile. The valid values and meanings are:\n• 0 = “allow copying”. The camera profile can be used to process, or be embedded in, any DNG file. It can be copied from DNG files to other DNG files, or copied from DNG files and stored on the user’s system for use in processing or embedding in any DNG file. The camera profile may not be used to process non-DNG files.\n• 1 = “embed if used”. This value applies the same rules as “allow copying”, except it does not allow copying the camera profile from a DNG file for use in processing any image other than the image in which it is embedded, unless the profile is already stored on the user’s system.\n• 2 = “embed never”. This value only applies to profiles stored on a user’s system but not already embedded in DNG files. These stored profiles can be used to process images but cannot be embedded in files. If a camera profile is already embedded in a DNG file, then this value has the same restrictions as “embed if used”.\n• 3 = “no restrictions”. The camera profile creator has not placed any restrictions on the use of the camera profile.",
+        "references": "DNG specification 1.4.0 p57",
+        "count": "1",
+        "dtype": [
+            "LONG"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "allow copying": "0",
+                "embed if used": "1",
+                "embed never": "2",
+                "no restrictions": "3"
+            }
+        }
     }
 ]

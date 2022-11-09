@@ -10,10 +10,13 @@ use crate::util::byte_order_reader::ByteOrderReader;
 use derivative::Derivative;
 use std::io;
 use std::io::{Read, Seek, SeekFrom};
+use num_traits::FromPrimitive;
+use num_derive::FromPrimitive;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct DngFile<R: Read + Seek> {
+    file_type: FileType,
     #[derivative(Debug = "ignore")]
     reader: ByteOrderReader<R>,
     ifds: Vec<UnprocessedIfd>,
@@ -33,12 +36,10 @@ impl<R: Read + Seek> DngFile<R> {
         }?;
         let mut reader = ByteOrderReader::new(reader, is_little_endian);
         let magic = reader.read_u16()?;
-        if magic != 42 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("invalid magic byte sequence (expected 42, got {}", magic),
-            ));
-        }
+        let file_type = FileType::from_u16(magic).ok_or(io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("invalid magic byte sequence (expected 42, got {}", magic),
+        ))?;
 
         let mut next_ifd_offset = reader.read_u32()?;
         let mut ifds = Vec::new();
@@ -49,7 +50,7 @@ impl<R: Read + Seek> DngFile<R> {
             next_ifd_offset = reader.read_u32()?;
         }
 
-        Ok(Self { reader, ifds })
+        Ok(Self { reader, ifds, file_type })
     }
     pub fn read_ifd(&mut self) -> Result<Ifd, io::Error> {
         let mut metadata = Ifd::new(IfdType::Ifd);
@@ -61,4 +62,10 @@ impl<R: Read + Seek> DngFile<R> {
         }
         Ok(metadata)
     }
+}
+
+#[derive(FromPrimitive, Clone, Copy, Eq, PartialEq, Debug)]
+pub enum FileType {
+    Dng = 42,
+    Dcp = 0x4352,
 }
