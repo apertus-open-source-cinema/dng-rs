@@ -1,0 +1,438 @@
+[
+    {
+        "tag": "0x0000",
+        "name": "GPSVersionID",
+        "description": "GPSInfo Version of GPSInfoIFD",
+        "long_description": "The GPSVersionID fields contains four bytes that represent a version number x.x.x.x.  The values are the numeric values of the bytes.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "4",
+        "dtype": [
+            "BYTE"
+        ],
+        "interpretation": {
+            "kind": "FOURBYTEDIGITS"
+        }
+    },
+    {
+        "tag": "0x0001",
+        "name": "GPSLatitudeRef",
+        "description": "GPSInfo north or south latitude",
+        "long_description": "The GPSLatitudeRef field contains an ASCII null-terminated string of \"N\" for north or \"S\" for south.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0002",
+        "name": "GPSLatitude",
+        "description": "GPSInfo latitude",
+        "long_description": "The GPSLatitude field contains three values, one each for degrees, minutes, and seconds.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "3",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "GPSDMS"
+        }
+    },
+    {
+        "tag": "0x0003",
+        "name": "GPSLongitudeRef",
+        "description": "GPSInfo east or west longitude",
+        "long_description": "The GPSLongitudeRef field contains an ASCII null-terminated string of \"E\" for east or \"W\" for west.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0004",
+        "name": "GPSLongitude",
+        "description": "GPSInfo longitude",
+        "long_description": "The GPSLongitude field contains three values, one each for degrees, minutes, and seconds.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "3",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "GPSDMS"
+        }
+    },
+    {
+        "tag": "0x0005",
+        "name": "GPSAltitudeRef",
+        "description": "GPSInfo altitude reference",
+        "long_description": "The GPSAltitudeRef contains a value that describes the altitude reference.  The default and only defined value is SeaLevel == 0.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "BYTE"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0006",
+        "name": "GPSAltitude",
+        "description": "GPSInfo altitude",
+        "long_description": "The GPSAltitude field contains the value in meters of altitude from the altitude reference.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0007",
+        "name": "GPSTimeStamp",
+        "description": "GPSInfo time stamp",
+        "long_description": "The GPSTimeStamp field contains three values representing hours, minutes, and seconds of a UTC timestamp.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "3",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "GPSUTC"
+        }
+    },
+    {
+        "tag": "0x0008",
+        "name": "GPSSatellites",
+        "description": "GPSInfo satellites",
+        "long_description": "The GPSSatellites field contains information about the satellites that provided the GPS information.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "N",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0009",
+        "name": "GPSStatus",
+        "description": "GPSInfo receiver status",
+        "long_description": "The GPSStatus field contains an ASCII null-terminated string of \"A\" for acquisition or \"V\" for received.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x000A",
+        "name": "GPSMeasureMode",
+        "description": "GPSInfo measure mode",
+        "long_description": "The GPSMeasureMode field contains an ASCII null-terminated string of \"2\" for 2-dimensional measurement or \"3\" for 3-dimensional measurement.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x000B",
+        "name": "GPSDOP",
+        "description": "GPSInfo data degree of precision",
+        "long_description": "The GPSDOP field contains an HDOP for 2-dimensional precision or a PDOP for 3-dimensional precisio.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x000C",
+        "name": "GPSSpeedRef",
+        "description": "GPSInfo speed reference",
+        "long_description": "The GPSSpeedRef field contains an ASCII null-terminated string of \"K\" for kilometers per hour, \"M\" for miles per hour, or \"N\" for knots.  The default is \"K\".",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x000D",
+        "name": "GPSSpeed",
+        "description": "GPSInfo receiver speed",
+        "long_description": "The GPSSpeed field contains the speed of the receiver movement.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x000E",
+        "name": "GPSTrackRef",
+        "description": "GPSInfo tracking reference",
+        "long_description": "The GPSTrackRef field contains an ASCII null-terminated string of \"T\" for true direction or \"M\" for magnetic direction.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x000F",
+        "name": "GPSTrack",
+        "description": "GPSInfo tracking direction",
+        "long_description": "The GPSTrack field contains a value between 0 and 359.99 indicating the direction of GPS receiver movement.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0010",
+        "name": "GPSImgDirectionRef",
+        "description": "GPSInfo image capture direction reference",
+        "long_description": "The GPSImgDirectionRef field contains an ASCII null-terminated string of \"T\" for true direction or \"M\" for magnetic direction.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0011",
+        "name": "GPSImgDirection",
+        "description": "GPS image capture direction",
+        "long_description": "The GPSImgDirection field contains a value between 0 and 359.99 indicating the direction of GPS receiver movement.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0012",
+        "name": "GPSMapDatum",
+        "description": "GPSInfo geodetic survey",
+        "long_description": "The GPSMapDatum field contains the geodetic survey data used by the GPS receiver.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "N",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0013",
+        "name": "GPSDestLatitudeRef",
+        "description": "GPSInfo destination north or south latitude",
+        "long_description": "The GPSDestLatitudeRef field contains an ASCII null-terminated string of \"N\" for north or \"S\" for south.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0014",
+        "name": "GPSDestLatitude",
+        "description": "GPSInfo destination latitude",
+        "long_description": "The GPSDestLatitude field contains three values, one each for degrees, minutes, and seconds.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "3",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "GPSDMS"
+        }
+    },
+    {
+        "tag": "0x0015",
+        "name": "GPSDestLongitudeRef",
+        "description": "GPSInfo destination east or west longitude",
+        "long_description": "The GPSDestLongitudeRef field contains an ASCII null-terminated string of \"E\" for east or \"W\" for west.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0016",
+        "name": "GPSDestLongitude",
+        "description": "GPSInfo destination longitude",
+        "long_description": "The GPSDestLongitude field contains three values, one each for degrees, minutes, and seconds.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "3",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "GPSDMS"
+        }
+    },
+    {
+        "tag": "0x0017",
+        "name": "GPSDestBearingRef",
+        "description": "GPSInfo destination bearing reference",
+        "long_description": "The GPSDestBearingRef field contains an ASCII null-terminated string of \"T\" for true direction or \"M\" for magnetic direction.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0018",
+        "name": "GPSDestBearing",
+        "description": "GPSInfo destination bearing",
+        "long_description": "The GPSDestBearing field contains a value between 0 and 359.99 indicating the direction of the destination bearing.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x0019",
+        "name": "GPSDestDistanceRef",
+        "description": "GPSInfo destination distance reference",
+        "long_description": "The GPSDestDistanceRef field contains an ASCII null-terminated string of \"K\" for kilometers, \"M\" for miles, or \"N\" for knots.  The default is \"K\".",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "2",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x001A",
+        "name": "GPSDestDistance",
+        "description": "GPSInfo destination distance",
+        "long_description": "The GPSDestDistance field contains the distance to the destination point.",
+        "references": "<a href=\"#EXIF21\">EXIF21</a>",
+        "count": "1",
+        "dtype": [
+            "RATIONAL"
+        ],
+        "interpretation": {
+            "kind": "DEFAULT"
+        }
+    },
+    {
+        "tag": "0x001B",
+        "name": "GPSProcessingMethod",
+        "description": "GPSInfo processing method",
+        "long_description": "The GPSProcessingMethod field contains a character string recording the name of the GPS area.  The first byte is a code reflecting the character set, the remaining bytes represent the string content, there is no necessary null termination.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "N",
+        "dtype": [
+            "UNDEFINED"
+        ],
+        "interpretation": {
+            "kind": "GPSSTR"
+        }
+    },
+    {
+        "tag": "0x001C",
+        "name": "GPSAreaInformation",
+        "description": "GPSInfo area information",
+        "long_description": "The GPSAreaInformation field contains a character string recording the name of the GPS area.  The first byte is a code reflecting the character set, the remaining bytes represent the string content, there is no necessary null termination.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "N",
+        "dtype": [
+            "UNDEFINED"
+        ],
+        "interpretation": {
+            "kind": "GPSSTR"
+        }
+    },
+    {
+        "tag": "0x001D",
+        "name": "GPSDateStamp",
+        "description": "GPSInfo date stamp",
+        "long_description": "The GPSDateStamp field contains an ASCII string representing a UTC time in the form \"YYYY:MM:DD\".",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "11",
+        "dtype": [
+            "ASCII"
+        ],
+        "interpretation": {
+            "kind": "GPSDATESTAMP"
+        }
+    },
+    {
+        "tag": "0x001E",
+        "name": "GPSDifferential",
+        "description": "GPSInfo differential correction",
+        "long_description": "The GPSDifferential field describes whether differential correction is applied to the GPS receiver.",
+        "references": "<a href=\"#EXIF22\">EXIF22</a>",
+        "count": "1",
+        "dtype": [
+            "SHORT"
+        ],
+        "interpretation": {
+            "kind": "ENUMERATED",
+            "values": {
+                "NoDifferentialCorrection (Measurement without differential correction)": "0",
+                "WithDifferentialCorrection (Differential correction applied)": "1"
+            }
+        }
+    }
+]
