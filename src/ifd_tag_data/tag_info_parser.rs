@@ -1,5 +1,3 @@
-use crate::ifd::IfdValue;
-use core::fmt;
 use num_derive::FromPrimitive;
 use once_cell::sync::Lazy;
 use serde::{de, Deserialize, Deserializer, Serialize};
@@ -105,36 +103,10 @@ pub enum IfdTypeInterpretation {
     IfdOffset {
         ifd_type: IfdType,
     },
-}
-impl IfdTypeInterpretation {
-    pub fn pretty_yaml_value(
-        &self,
-        value: &IfdValue,
-        writer: &mut dyn fmt::Write,
-        dump_rational_as_float: bool,
-    ) -> Result<(), fmt::Error> {
-        match self {
-            IfdTypeInterpretation::Enumerated { values } => {
-                if let Some(v) = value.as_u32() {
-                    if let Some(v) = values.get(&v) {
-                        writer.write_str(v)?;
-                    } else {
-                        writer.write_str("UNKNOWN (")?;
-                        value.pretty_yaml_plain(writer, dump_rational_as_float)?;
-                        writer.write_str(")")?
-                    }
-                } else {
-                    eprintln!(
-                        "value {:?} couldn't be made into number (this is illegal for enums",
-                        value
-                    );
-                    value.pretty_yaml_plain(writer, dump_rational_as_float)?;
-                }
-            }
-            _ => value.pretty_yaml_plain(writer, dump_rational_as_float)?,
-        };
-        Ok(())
-    }
+    Offsets {
+        lengths: String,
+    },
+    Blob,
 }
 fn deserialize_enumerated_values<'de, D>(deserializer: D) -> Result<HashMap<u32, String>, D::Error>
 where
@@ -192,26 +164,6 @@ impl IfdTagDescriptor {
             Ok(Self::Known(description.clone()))
         } else {
             Err(de::Error::custom(format!("No Tag named '{}' known", name)))
-        }
-    }
-    pub fn pretty_yaml(&self, writer: &mut dyn fmt::Write) -> Result<(), fmt::Error> {
-        match &self {
-            IfdTagDescriptor::Known(tag) => writer.write_str(&tag.name),
-            IfdTagDescriptor::Unknown(tag) => writer.write_fmt(format_args!("{:#02X}", &tag)),
-        }
-    }
-    pub fn pretty_yaml_value(
-        &self,
-        value: &IfdValue,
-        writer: &mut dyn fmt::Write,
-        dump_rational_as_float: bool,
-    ) -> Result<(), fmt::Error> {
-        match self {
-            IfdTagDescriptor::Known(IfdFieldDescriptor {
-                interpretation: MaybeIfdTypeInterpretation::Known(interpretation),
-                ..
-            }) => interpretation.pretty_yaml_value(value, writer, dump_rational_as_float),
-            _ => value.pretty_yaml_plain(writer, dump_rational_as_float),
         }
     }
 }
@@ -285,18 +237,18 @@ mod tests {
     use std::fs;
 
     #[test]
+    fn parse_ifd_json() {
+        parse_json_file("src/ifd_tag_data/ifd.json")
+    }
+
+    #[test]
     fn parse_exif_json() {
-        parse_json_file("src/ifd_tag_data/ifd_tag_data.json")
+        parse_json_file("src/ifd_tag_data/exif.json")
     }
 
     #[test]
-    fn parse_exif_ifd_json() {
-        parse_json_file("src/ifd_tag_data/exif_ifd.json")
-    }
-
-    #[test]
-    fn parse_gps_info_ifd_json() {
-        parse_json_file("src/ifd_tag_data/gps_info_ifd.json")
+    fn parse_gps_info_json() {
+        parse_json_file("src/ifd_tag_data/gps_info.json")
     }
 
     fn parse_json_file(path: &str) {

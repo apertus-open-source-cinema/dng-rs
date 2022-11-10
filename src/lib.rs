@@ -2,16 +2,18 @@ pub mod ifd;
 pub mod ifd_tag_data;
 mod unprocessed_ifd;
 mod util;
+#[allow(unstable_name_collisions)]
+pub mod yaml_dumper;
 
 use crate::ifd::Ifd;
 use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdType};
 use crate::unprocessed_ifd::UnprocessedIfd;
 use crate::util::byte_order_reader::ByteOrderReader;
 use derivative::Derivative;
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use std::io;
 use std::io::{Read, Seek, SeekFrom};
-use num_traits::FromPrimitive;
-use num_derive::FromPrimitive;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
@@ -50,7 +52,11 @@ impl<R: Read + Seek> DngFile<R> {
             next_ifd_offset = reader.read_u32()?;
         }
 
-        Ok(Self { reader, ifds, file_type })
+        Ok(Self {
+            reader,
+            ifds,
+            file_type,
+        })
     }
     pub fn read_ifd(&mut self) -> Result<Ifd, io::Error> {
         let mut metadata = Ifd::new(IfdType::Ifd);

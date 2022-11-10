@@ -290,7 +290,8 @@
             "SHORT"
         ],
         "interpretation": {
-            "kind": "OFFSETS"
+            "kind": "OFFSETS",
+            "lengths": "StripByteCounts"
         }
     },
     {
@@ -489,7 +490,8 @@
             "LONG"
         ],
         "interpretation": {
-            "kind": "OFFSETS"
+            "kind": "OFFSETS",
+            "lengths": "FreeByteCounts"
         }
     },
     {
@@ -816,7 +818,8 @@
             "LONG"
         ],
         "interpretation": {
-            "kind": "OFFSETS"
+            "kind": "OFFSETS",
+            "lengths": "TileByteCounts"
         }
     },
     {
@@ -1338,7 +1341,8 @@
             "LONG"
         ],
         "interpretation": {
-            "kind": "OFFSETS"
+            "kind": "OFFSETS",
+            "lengths": "JPEGInterchangeFormatLength"
         }
     },
     {
@@ -1524,7 +1528,7 @@
             "BYTE"
         ],
         "interpretation": {
-            "kind": "XMP"
+            "kind": "BLOB"
         }
     },
     {
@@ -2196,7 +2200,7 @@
             "LONG"
         ],
         "interpretation": {
-            "kind": "OFFSETS"
+            "kind": "DEFAULT"
         }
     },
     {
@@ -3417,7 +3421,7 @@
             "BYTE"
         ],
         "interpretation": {
-            "kind": "DEFAULT"
+            "kind": "BLOB"
         }
     },
     {
