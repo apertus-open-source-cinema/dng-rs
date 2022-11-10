@@ -1,68 +1,58 @@
-use crate::ifd::IfdValue;
-use crate::ifd_tag_data::tag_info_parser::{
-    IfdFieldDescriptor, IfdTypeInterpretation, MaybeIfdTypeInterpretation,
-};
-use crate::{Ifd, IfdTagDescriptor};
+use crate::ifd::{IfdEntry, IfdValue};
+use crate::ifd_tag_data::tag_info_parser::IfdTypeInterpretation;
+use crate::Ifd;
 use itertools::Itertools;
+use std::sync::Arc;
 
 pub struct YamlDumper {
     pub dump_rational_as_float: bool,
+    pub visitor: Option<Arc<dyn Fn(IfdEntry) -> Option<String>>>,
 }
 impl YamlDumper {
     pub fn dump_ifd(&self, ifd: &Ifd) -> String {
         ifd.entries
             .iter()
-            .map(|(tag, value)| {
-                format!(
-                    "{}: {}",
-                    self.dump_tag(tag),
-                    self.dump_ifd_value(value, tag)
-                )
-            })
+            .map(|entry| format!("{}: {}", entry.tag, self.dump_ifd_value(&entry)))
             .intersperse("\n".to_string())
             .collect()
     }
-    pub fn dump_tag(&self, tag: &IfdTagDescriptor) -> String {
-        match &tag {
-            IfdTagDescriptor::Known(tag) => tag.name.to_string(),
-            IfdTagDescriptor::Unknown(tag) => format!("{:#02X}", &tag),
+    fn dump_ifd_value(&self, entry: &IfdEntry) -> String {
+        if entry.tag.get_known_type_interpretation().is_some() {
+            self.dump_ifd_value_with_type_interpretation(entry)
+        } else {
+            self.dump_ifd_value_plain(entry)
         }
     }
-    pub fn dump_ifd_value(&self, value: &IfdValue, tag: &IfdTagDescriptor) -> String {
-        match tag {
-            IfdTagDescriptor::Known(IfdFieldDescriptor {
-                interpretation: MaybeIfdTypeInterpretation::Known(interpretation),
-                ..
-            }) => self.dump_ifd_value_with_type_interpretation(value, interpretation),
-            _ => self.dump_ifd_value_plain(value),
+    fn dump_ifd_value_with_type_interpretation(&self, entry: &IfdEntry) -> String {
+        if let Some(s) = self
+            .visitor
+            .clone()
+            .and_then(|visitor| visitor(entry.clone()))
+        {
+            return s.clone();
         }
-    }
-    pub fn dump_ifd_value_with_type_interpretation(
-        &self,
-        value: &IfdValue,
-        ifd_type_interpretation: &IfdTypeInterpretation,
-    ) -> String {
-        match ifd_type_interpretation {
+
+        match entry.tag.get_known_type_interpretation().unwrap() {
             IfdTypeInterpretation::Enumerated { values } => {
-                if let Some(v) = value.as_u32() {
+                if let Some(v) = entry.value.as_u32() {
                     if let Some(v) = values.get(&v) {
                         v.to_string()
                     } else {
-                        format!("UNKNOWN ({})", self.dump_ifd_value_plain(value))
+                        format!("UNKNOWN ({})", self.dump_ifd_value_plain(entry))
                     }
                 } else {
                     eprintln!(
-                        "value {:?} couldn't be made into number (this is illegal for enums",
-                        value
+                        "value {:?} couldn't be made into number (this is illegal for enums)",
+                        entry.value
                     );
-                    self.dump_ifd_value_plain(value)
+                    self.dump_ifd_value_plain(entry)
                 }
             }
-            _ => self.dump_ifd_value_plain(value),
+            _ => self.dump_ifd_value_plain(entry),
         }
     }
-    pub fn dump_ifd_value_plain(&self, value: &IfdValue) -> String {
-        match &value {
+    fn dump_ifd_value_plain(&self, entry: &IfdEntry) -> String {
+        match &entry.value {
             IfdValue::Byte(x) => format!("{x}"),
             IfdValue::Ascii(x) => format!("\"{x}\""),
             IfdValue::Short(x) => format!("{x}"),
@@ -88,10 +78,11 @@ impl YamlDumper {
             IfdValue::Float(x) => format!("{x}"),
             IfdValue::Double(x) => format!("{x}"),
             IfdValue::List(l) => {
-                if let IfdValue::Ifd(_) = l[0] {
+                if let IfdValue::Ifd(_) = l[0].value {
                     l.iter()
-                        .map(|x| {
-                            if let IfdValue::Ifd(ifd) = x {
+                        .enumerate()
+                        .map(|(_i, x)| {
+                            if let IfdValue::Ifd(ifd) = &x.value {
                                 Self::indent_yaml_list_item(self.dump_ifd(ifd))
                             } else {
                                 unreachable!()
@@ -102,8 +93,8 @@ impl YamlDumper {
                 } else {
                     let comma_separated: String = l
                         .iter()
-                        .map(|x| self.dump_ifd_value_plain(x))
-                        .intersperse(",".to_string())
+                        .map(|x| self.dump_ifd_value(x))
+                        .intersperse(", ".to_string())
                         .collect();
                     format!("[{comma_separated}]")
                 }

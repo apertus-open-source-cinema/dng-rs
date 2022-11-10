@@ -2,7 +2,8 @@ use num_derive::FromPrimitive;
 use once_cell::sync::Lazy;
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_hex::{SerHex, StrictPfx};
-use std::{collections::HashMap, hash::Hash};
+use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 
 const IFD_JSON: &str = include_str!("ifd.json");
 const EXIF_JSON: &str = include_str!("exif.json");
@@ -38,7 +39,7 @@ impl IfdType {
     }
 }
 
-#[derive(Deserialize, Eq, PartialEq, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Eq)]
 pub struct IfdFieldDescriptor {
     pub name: String,
     #[serde(with = "SerHex::<StrictPfx>")]
@@ -50,9 +51,9 @@ pub struct IfdFieldDescriptor {
     pub long_description: String,
     pub references: String,
 }
-impl Hash for IfdFieldDescriptor {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        state.write_u16(self.tag)
+impl PartialEq for IfdFieldDescriptor {
+    fn eq(&self, other: &Self) -> bool {
+        self.tag == other.tag
     }
 }
 
@@ -143,7 +144,7 @@ where
     Ok(mapped?)
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, Clone, Eq)]
 pub enum IfdTagDescriptor {
     Known(IfdFieldDescriptor),
     Unknown(u16),
@@ -156,15 +157,40 @@ impl IfdTagDescriptor {
             Self::Unknown(tag)
         }
     }
-    pub fn from_name<'de, D>(name: &str) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
+    pub fn from_name(name: &str) -> Result<Self, String> {
         if let Some(description) = IfdType::combined_namespace().find(|x| x.name == name) {
             Ok(Self::Known(description.clone()))
         } else {
-            Err(de::Error::custom(format!("No Tag named '{}' known", name)))
+            Err(format!("No Tag named '{}' known", name))
         }
+    }
+    pub fn get_known_type_interpretation(&self) -> Option<&IfdTypeInterpretation> {
+        match self {
+            IfdTagDescriptor::Known(IfdFieldDescriptor {
+                interpretation: MaybeIfdTypeInterpretation::Known(interpretation),
+                ..
+            }) => Some(interpretation),
+            _ => None,
+        }
+    }
+    pub fn get_tag(&self) -> u16 {
+        match self {
+            IfdTagDescriptor::Known(descriptor) => descriptor.tag,
+            IfdTagDescriptor::Unknown(tag) => *tag,
+        }
+    }
+}
+impl Display for IfdTagDescriptor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            IfdTagDescriptor::Known(tag) => tag.name.fmt(f),
+            IfdTagDescriptor::Unknown(tag) => f.write_fmt(format_args!("{:#02X}", &tag)),
+        }
+    }
+}
+impl PartialEq for IfdTagDescriptor {
+    fn eq(&self, other: &Self) -> bool {
+        self.get_tag() == other.get_tag()
     }
 }
 impl<'de> Deserialize<'de> for IfdTagDescriptor {
@@ -180,7 +206,7 @@ impl<'de> Deserialize<'de> for IfdTagDescriptor {
                 IfdType::Ifd, // TODO: this might be wrong in the future; additional context is needed here
             ))
         } else {
-            Self::from_name::<D>(&s)
+            Self::from_name(&s).map_err(serde::de::Error::custom)
         }
     }
 }

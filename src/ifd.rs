@@ -1,9 +1,13 @@
 use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdType};
+use itertools::Itertools;
 use serde::Serialize;
+use std::fmt::{Debug, Display, Formatter};
+use std::iter;
+use std::iter::once;
 
 #[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct Ifd {
-    pub entries: Vec<(IfdTagDescriptor, IfdValue)>,
+    pub entries: Vec<IfdEntry>,
     #[serde(skip)]
     pub ifd_type: IfdType,
 }
@@ -14,8 +18,95 @@ impl Ifd {
             ifd_type,
         }
     }
-    pub fn insert(&mut self, tag: IfdTagDescriptor, value: IfdValue) {
-        self.entries.push((tag, value))
+    pub fn insert(&mut self, value: IfdEntry) {
+        self.entries.push(value)
+    }
+    pub fn get_entry_by_tag(&self, tag: IfdTagDescriptor) -> Option<&IfdEntry> {
+        self.entries.iter().find(|x| x.tag == tag)
+    }
+    pub fn flat_entries<'a>(&'a self) -> impl Iterator<Item = &'a IfdEntry> + 'a {
+        self.entries
+            .iter()
+            .flat_map(|entry| once(entry).chain(entry.value.iter_children()))
+    }
+}
+
+#[derive(Clone, PartialEq, Default)]
+pub struct IfdPath(Vec<IfdPathElement>);
+impl IfdPath {
+    pub fn chain_list_index(&self, n: u16) -> Self {
+        Self(
+            self.0
+                .iter()
+                .cloned()
+                .chain(once(IfdPathElement::ListIndex(n)))
+                .collect(),
+        )
+    }
+    pub fn chain_tag(&self, tag: IfdTagDescriptor) -> Self {
+        Self(
+            self.0
+                .iter()
+                .cloned()
+                .chain(once(IfdPathElement::Tag(tag)))
+                .collect(),
+        )
+    }
+    pub fn parent(&self) -> Self {
+        let mut new = self.0.clone();
+        new.pop();
+        Self(new)
+    }
+    pub fn string_with_separator(&self, separator: &str) -> String {
+        self.0.iter().map(|x| x.to_string()).join(separator)
+    }
+    pub fn as_vec(&self) -> &Vec<IfdPathElement> {
+        &self.0
+    }
+    pub fn with_last_tag_replaced(&self, replacement: IfdTagDescriptor) -> Self {
+        let mut new_vec = self.as_vec().clone();
+        for elem in new_vec.iter_mut().rev() {
+            if matches!(elem, IfdPathElement::Tag(_)) {
+                *elem = IfdPathElement::Tag(replacement);
+                break;
+            }
+        }
+        Self(new_vec)
+    }
+}
+impl Debug for IfdPath {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.string_with_separator("."))
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum IfdPathElement {
+    Tag(IfdTagDescriptor),
+    ListIndex(u16),
+}
+impl Display for IfdPathElement {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IfdPathElement::Tag(tag) => f.write_fmt(format_args!("{tag}")),
+            IfdPathElement::ListIndex(n) => f.write_fmt(format_args!("{n}")),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(into = "IfdValue")]
+pub struct IfdEntry {
+    pub value: IfdValue,
+    /// the offset at which the IFD structure of the entry is
+    /// this is different from the data location
+    pub offset: u32,
+    pub path: IfdPath,
+    pub tag: IfdTagDescriptor,
+}
+impl Into<IfdValue> for IfdEntry {
+    fn into(self) -> IfdValue {
+        self.value
     }
 }
 
@@ -34,7 +125,7 @@ pub enum IfdValue {
     Float(f32),
     Double(f64),
 
-    List(Vec<IfdValue>),
+    List(Vec<IfdEntry>),
     Ifd(Ifd),
 }
 impl IfdValue {
@@ -48,6 +139,28 @@ impl IfdValue {
             IfdValue::SShort(x) => Some(*x as u32),
             IfdValue::SLong(x) => Some(*x as u32),
             _ => None,
+        }
+    }
+    pub fn as_bytes(&self) -> Option<Vec<u8>> {
+        match self {
+            IfdValue::Byte(b) => Some(vec![*b]),
+            IfdValue::List(l) => {
+                let all: Option<Vec<Vec<u8>>> = l.iter().map(|x| x.value.as_bytes()).collect();
+                all.map(|all| all.into_iter().flatten().collect())
+            }
+            _ => None,
+        }
+    }
+    pub fn iter_children<'a>(&'a self) -> impl Iterator<Item = &'a IfdEntry> + 'a {
+        match self {
+            IfdValue::List(list) => Box::new(
+                list.iter()
+                    .flat_map(|entry| once(entry).chain(entry.value.iter_children())),
+            ) as Box<dyn Iterator<Item = &'a IfdEntry> + 'a>,
+            IfdValue::Ifd(ifd) => {
+                Box::new(ifd.flat_entries()) as Box<dyn Iterator<Item = &'a IfdEntry> + 'a>
+            }
+            _ => Box::new(iter::empty()) as Box<dyn Iterator<Item = &'a IfdEntry> + 'a>,
         }
     }
 }
