@@ -16,7 +16,7 @@ impl YamlDumper {
             .intersperse("\n".to_string())
             .collect()
     }
-    fn dump_ifd_value(&self, entry: &IfdEntry) -> String {
+    pub fn dump_ifd_value(&self, entry: &IfdEntry) -> String {
         if entry.tag.get_known_type_interpretation().is_some() {
             self.dump_ifd_value_with_type_interpretation(entry)
         } else {

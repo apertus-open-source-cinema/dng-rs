@@ -173,6 +173,12 @@ impl IfdTagDescriptor {
             _ => None,
         }
     }
+    pub fn get_known_name(&self) -> Option<&str> {
+        match self {
+            Self::Known(descriptor) => Some(&descriptor.name),
+            Self::Unknown(_) => None,
+        }
+    }
     pub fn get_tag(&self) -> u16 {
         match self {
             IfdTagDescriptor::Known(descriptor) => descriptor.tag,
