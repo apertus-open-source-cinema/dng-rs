@@ -3,7 +3,7 @@ pub mod ifd_tag_data;
 mod unprocessed_ifd;
 mod util;
 #[allow(unstable_name_collisions)]
-pub mod yaml_dumper;
+pub mod yaml;
 
 use crate::ifd::{Ifd, IfdEntry, IfdPath};
 use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdType, IfdTypeInterpretation};

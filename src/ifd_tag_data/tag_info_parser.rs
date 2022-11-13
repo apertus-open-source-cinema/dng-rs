@@ -1,6 +1,6 @@
 use num_derive::FromPrimitive;
 use once_cell::sync::Lazy;
-use serde::{de, Deserialize, Deserializer, Serialize};
+use serde::{de, Deserialize, Deserializer};
 use serde_hex::{SerHex, StrictPfx};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
@@ -213,17 +213,6 @@ impl<'de> Deserialize<'de> for IfdTagDescriptor {
             ))
         } else {
             Self::from_name(&s).map_err(serde::de::Error::custom)
-        }
-    }
-}
-impl Serialize for IfdTagDescriptor {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match &self {
-            IfdTagDescriptor::Known(tag) => serializer.serialize_str(&tag.name),
-            IfdTagDescriptor::Unknown(tag) => serializer.serialize_str(&tag.to_string()),
         }
     }
 }

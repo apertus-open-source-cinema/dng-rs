@@ -1,14 +1,12 @@
 use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdType};
 use itertools::Itertools;
-use serde::Serialize;
 use std::fmt::{Debug, Display, Formatter};
 use std::iter;
 use std::iter::once;
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Ifd {
     pub entries: Vec<IfdEntry>,
-    #[serde(skip)]
     pub ifd_type: IfdType,
 }
 impl Ifd {
@@ -94,8 +92,7 @@ impl Display for IfdPathElement {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
-#[serde(into = "IfdValue")]
+#[derive(Clone, Debug, PartialEq)]
 pub struct IfdEntry {
     pub value: IfdValue,
     /// the offset at which the IFD structure of the entry is
@@ -110,7 +107,7 @@ impl Into<IfdValue> for IfdEntry {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum IfdValue {
     Byte(u8),
     Ascii(String),

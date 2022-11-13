@@ -15,5 +15,4 @@ paste = "1.0.9"
 serde = { version = "1.0.147", features = ["derive"] }
 serde-hex = "0.1.0"
 serde_json = "1.0.87"
-serde_yaml = "0.9.14"
 textwrap = "0.16.0"

@@ -1,7 +1,7 @@
 use clap::Parser;
 use dng::ifd::{IfdEntry, IfdValue};
 use dng::ifd_tag_data::tag_info_parser::IfdTypeInterpretation;
-use dng::yaml_dumper::YamlDumper;
+use dng::yaml::dumper::YamlDumper;
 use dng::DngFile;
 use itertools::Itertools;
 use std::fs;
