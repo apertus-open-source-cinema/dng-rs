@@ -1,5 +1,4 @@
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
-use paste::paste;
 use std::{
     io::{self, Read},
     ops::{Deref, DerefMut},
@@ -7,27 +6,25 @@ use std::{
 
 pub struct ByteOrderReader<R: Read> {
     reader: R,
-    is_ilttle_endian: bool,
+    is_little_endian: bool,
 }
 impl<R: Read> ByteOrderReader<R> {
-    pub fn new(reader: R, is_ilttle_endian: bool) -> Self {
+    pub fn new(reader: R, is_little_endian: bool) -> Self {
         Self {
             reader,
-            is_ilttle_endian,
+            is_little_endian,
         }
     }
 }
 
 macro_rules! generate_read_function {
-    ($kind:ty) => {
-        paste! {
-            #[allow(unused)]
-            pub fn [<read_ $kind>](&mut self) -> Result<$kind, io::Error> {
-                if self.is_ilttle_endian {
-                    self.reader.[<read_ $kind>]::<LittleEndian>()
-                } else {
-                    self.reader.[<read_ $kind>]::<BigEndian>()
-                }
+    ($name:ident, $kind:ty) => {
+        #[allow(unused)]
+        pub fn $name(&mut self) -> Result<$kind, io::Error> {
+            if self.is_little_endian {
+                self.reader.$name::<LittleEndian>()
+            } else {
+                self.reader.$name::<BigEndian>()
             }
         }
     };
@@ -39,14 +36,14 @@ impl<R: Read> ByteOrderReader<R> {
     pub fn read_i8(&mut self) -> Result<i8, io::Error> {
         self.reader.read_i8()
     }
-    generate_read_function!(u16);
-    generate_read_function!(i16);
-    generate_read_function!(u32);
-    generate_read_function!(i32);
-    generate_read_function!(u64);
-    generate_read_function!(i64);
-    generate_read_function!(f32);
-    generate_read_function!(f64);
+    generate_read_function!(read_u16, u16);
+    generate_read_function!(read_i16, i16);
+    generate_read_function!(read_u32, u32);
+    generate_read_function!(read_i32, i32);
+    generate_read_function!(read_u64, u64);
+    generate_read_function!(read_i64, i64);
+    generate_read_function!(read_f32, f32);
+    generate_read_function!(read_f64, f64);
 }
 
 impl<R: Read> Deref for ByteOrderReader<R> {
