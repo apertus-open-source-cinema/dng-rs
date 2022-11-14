@@ -1,20 +1,19 @@
 use crate::ifd::{Ifd, IfdEntry, IfdPath, IfdValue};
-use crate::ifd_tag_data::tag_info_parser::IfdTypeInterpretation;
 use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdValueType};
+use crate::ifd_tag_data::tag_info_parser::{IfdType, IfdTypeInterpretation};
 use crate::util::byte_order_reader::ByteOrderReader;
-use crate::IfdType;
 use num_traits::FromPrimitive;
 use std::io::{self, Read, Seek, SeekFrom};
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct UnprocessedIfd {
-    pub entries: Vec<UnprocessedIfdEntry>,
+pub struct IfdReader {
+    pub entries: Vec<IfdEntryReader>,
 }
-impl UnprocessedIfd {
+impl IfdReader {
     pub fn read(reader: &mut ByteOrderReader<impl Read + Seek>) -> Result<Self, io::Error> {
         let count = reader.read_u16()?;
         let entries: Result<Vec<_>, _> = (0..count)
-            .map(|_| UnprocessedIfdEntry::read(reader))
+            .map(|_| IfdEntryReader::read(reader))
             .filter(|x| x.is_ok())
             .collect();
         Ok(Self { entries: entries? })
@@ -35,14 +34,14 @@ impl UnprocessedIfd {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct UnprocessedIfdEntry {
+pub struct IfdEntryReader {
     pub tag: u16,
     pub dtype: IfdValueType,
     pub count: u32,
     value_or_offset: u32,
     own_offset: u32,
 }
-impl UnprocessedIfdEntry {
+impl IfdEntryReader {
     pub fn read(reader: &mut ByteOrderReader<impl Read + Seek>) -> Result<Self, io::Error> {
         let own_offset = reader.seek(SeekFrom::Current(0))? as u32;
         let tag = reader.read_u16()?;
@@ -110,7 +109,7 @@ impl UnprocessedIfdEntry {
             {
                 let current = reader.seek(SeekFrom::Current(0))?;
                 reader.seek(SeekFrom::Start(parsed.as_u32().unwrap() as u64))?;
-                let unprocessed_ifd = UnprocessedIfd::read(reader)?;
+                let unprocessed_ifd = IfdReader::read(reader)?;
                 let ifd = unprocessed_ifd.process(*ifd_type, path, reader)?;
                 reader.seek(SeekFrom::Start(current))?;
                 return Ok(IfdValue::Ifd(ifd));

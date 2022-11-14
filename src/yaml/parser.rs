@@ -1,8 +1,7 @@
-use crate::ifd::IfdEntry;
 use crate::ifd::{Ifd, IfdValue};
-use crate::ifd_tag_data::tag_info_parser::IfdType;
+use crate::ifd::{IfdEntry, IfdPath};
 use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdValueType};
-use crate::{IfdPath, IfdTypeInterpretation};
+use crate::ifd_tag_data::tag_info_parser::{IfdType, IfdTypeInterpretation};
 use fraction::Ratio;
 use lazy_regex::regex_captures;
 use std::fmt::{Display, Formatter};

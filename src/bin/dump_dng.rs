@@ -1,8 +1,8 @@
 use clap::Parser;
+use dng::dng_reader::DngReader;
 use dng::ifd::{IfdEntry, IfdValue};
 use dng::ifd_tag_data::tag_info_parser::IfdTypeInterpretation;
 use dng::yaml::dumper::IfdYamlDumper;
-use dng::DngFile;
 use itertools::Itertools;
 use std::fs;
 use std::fs::{File, OpenOptions};
@@ -28,7 +28,7 @@ fn main() {
     let args = Args::parse();
     let img_file_path = Path::new(&args.file);
     let img_file = File::open(img_file_path).expect("Cannot find test image!");
-    let dng = Arc::new(DngFile::new(img_file).expect("Couldnt parse TIFF file!"));
+    let dng = Arc::new(DngReader::read(img_file).expect("Couldnt parse TIFF file!"));
 
     let matrix_prettify_visitor = move |entry: IfdEntry| -> Option<String> {
         if entry
