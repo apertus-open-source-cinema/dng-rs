@@ -5,23 +5,22 @@ use itertools::Itertools;
 use std::sync::Arc;
 
 #[derive(Default)]
-pub struct YamlDumper {
+pub struct IfdYamlDumper {
     pub dump_rational_as_float: bool,
     pub visitor: Option<Arc<dyn Fn(IfdEntry) -> Option<String>>>,
 }
-impl YamlDumper {
+impl IfdYamlDumper {
     pub fn dump_ifd(&self, ifd: &Ifd) -> String {
         ifd.entries
             .iter()
             .map(|entry| {
                 format!(
-                    "{}: {}{}",
+                    "{}: {}{}\n",
                     entry.tag,
                     self.dump_tag_if_needed(&entry),
                     self.dump_ifd_value(&entry)
                 )
             })
-            .intersperse("\n".to_string())
             .collect()
     }
     pub fn dump_ifd_value(&self, entry: &IfdEntry) -> String {

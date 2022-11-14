@@ -1,7 +1,7 @@
 use clap::Parser;
 use dng::ifd::{IfdEntry, IfdValue};
 use dng::ifd_tag_data::tag_info_parser::IfdTypeInterpretation;
-use dng::yaml::dumper::YamlDumper;
+use dng::yaml::dumper::IfdYamlDumper;
 use dng::DngFile;
 use itertools::Itertools;
 use std::fs;
@@ -39,7 +39,7 @@ fn main() {
             return None;
         }
         if let IfdValue::List(list) = entry.value {
-            let dumper = YamlDumper {
+            let dumper = IfdYamlDumper {
                 dump_rational_as_float: args.dump_rational_as_float,
                 visitor: None,
             };
@@ -126,7 +126,7 @@ fn main() {
                 matrix_prettify_visitor(entry)
             }
         };
-        let yaml_dumper = YamlDumper {
+        let yaml_dumper = IfdYamlDumper {
             dump_rational_as_float: args.dump_rational_as_float,
             visitor: Some(Arc::new(extract_visitor)),
         };
@@ -141,11 +141,11 @@ fn main() {
             .write(ifd_yaml.as_bytes())
             .unwrap();
     } else {
-        let yaml_dumper = YamlDumper {
+        let yaml_dumper = IfdYamlDumper {
             dump_rational_as_float: args.dump_rational_as_float,
             visitor: Some(Arc::new(matrix_prettify_visitor)),
         };
         let ifd_yaml = yaml_dumper.dump_ifd(&dng.get_ifd0());
-        println!("{ifd_yaml}")
+        print!("{ifd_yaml}")
     }
 }

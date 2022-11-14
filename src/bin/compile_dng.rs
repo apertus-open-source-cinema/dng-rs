@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use dng::yaml::dumper::YamlDumper;
+use dng::yaml::dumper::IfdYamlDumper;
 use dng::yaml::parser::IfdYamlParser;
 use std::fs::File;
 use std::io::Read;
@@ -36,7 +36,7 @@ fn main() {
 
             let ifd = IfdYamlParser::parse_from_str(&contents);
             match ifd {
-                Ok(ifd) => println!("{}", YamlDumper::default().dump_ifd(&ifd)),
+                Ok(ifd) => println!("{}", IfdYamlDumper::default().dump_ifd(&ifd)),
                 Err(e) => println!("{e}"),
             }
         }
