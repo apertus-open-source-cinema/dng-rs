@@ -1,6 +1,6 @@
 use num_derive::FromPrimitive;
 use once_cell::sync::Lazy;
-use serde::{de, Deserialize, Deserializer};
+use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_hex::{SerHex, StrictPfx};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
@@ -157,8 +157,8 @@ impl IfdTagDescriptor {
             Self::Unknown(tag)
         }
     }
-    pub fn from_name(name: &str) -> Result<Self, String> {
-        if let Some(description) = IfdType::combined_namespace().find(|x| x.name == name) {
+    pub fn from_name(name: &str, ifd_kind: IfdType) -> Result<Self, String> {
+        if let Some(description) = ifd_kind.get_namespace().iter().find(|x| x.name == name) {
             Ok(Self::Known(description.clone()))
         } else {
             Err(format!("No Tag named '{}' known", name))
@@ -171,6 +171,12 @@ impl IfdTagDescriptor {
                 ..
             }) => Some(interpretation),
             _ => None,
+        }
+    }
+    pub fn get_known_value_type(&self) -> Option<&Vec<IfdValueType>> {
+        match self {
+            IfdTagDescriptor::Known(known) => Some(&known.dtype),
+            IfdTagDescriptor::Unknown(_) => None,
         }
     }
     pub fn get_known_name(&self) -> Option<&str> {
@@ -199,25 +205,8 @@ impl PartialEq for IfdTagDescriptor {
         self.get_tag() == other.get_tag()
     }
 }
-impl<'de> Deserialize<'de> for IfdTagDescriptor {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let s: String = Deserialize::deserialize(deserializer)?;
-        if s.starts_with("0x") {
-            let without_prefix = s.trim_start_matches("0x");
-            Ok(Self::from_number(
-                u16::from_str_radix(without_prefix, 16).map_err(de::Error::custom)?,
-                IfdType::Ifd, // TODO: this might be wrong in the future; additional context is needed here
-            ))
-        } else {
-            Self::from_name(&s).map_err(serde::de::Error::custom)
-        }
-    }
-}
 
-#[derive(Clone, Copy, Debug, FromPrimitive, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Copy, Debug, FromPrimitive, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum IfdValueType {
     Byte = 1,

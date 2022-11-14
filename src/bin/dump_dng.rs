@@ -48,8 +48,8 @@ fn main() {
                 .map(|chunk| {
                     chunk
                         .iter()
-                        .map(|entry| dumper.dump_ifd_value(entry))
-                        .join(", ")
+                        .map(|entry| format!("{},", dumper.dump_ifd_value(entry)))
+                        .join(" ")
                 })
                 .join("\n");
             return Some(format!(
@@ -146,6 +146,6 @@ fn main() {
             visitor: Some(Arc::new(matrix_prettify_visitor)),
         };
         let ifd_yaml = yaml_dumper.dump_ifd(&dng.get_ifd0());
-        print!("{ifd_yaml}")
+        println!("{ifd_yaml}")
     }
 }

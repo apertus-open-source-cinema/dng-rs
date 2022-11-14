@@ -25,7 +25,7 @@ impl UnprocessedIfd {
         path: &IfdPath,
         reader: &mut ByteOrderReader<impl Read + Seek>,
     ) -> Result<Ifd, io::Error> {
-        let mut ifd = Ifd::new(ifd_type);
+        let mut ifd = Ifd::new(ifd_type, path.clone());
         for entry in &self.entries {
             let tag = IfdTagDescriptor::from_number(entry.tag, ifd_type);
             ifd.insert(entry.process(reader, &tag, path)?);
@@ -132,7 +132,6 @@ impl UnprocessedIfdEntry {
                     Ok(IfdEntry {
                         value: get_value(&path)?,
                         path: path.clone(),
-                        offset: self.own_offset,
                         tag: tag.clone(),
                     })
                 })
@@ -142,7 +141,6 @@ impl UnprocessedIfdEntry {
         Ok(IfdEntry {
             value,
             tag: tag.clone(),
-            offset: self.own_offset,
             path: path.clone(),
         })
     }

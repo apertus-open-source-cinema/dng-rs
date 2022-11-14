@@ -78,7 +78,7 @@ impl<R: Read + Seek> DngFile<R> {
             entry.tag.get_known_type_interpretation()
         {
             let lengths_paths = entry.path.with_last_tag_replaced(
-                IfdTagDescriptor::from_name(lengths)
+                IfdTagDescriptor::from_name(lengths, IfdType::Ifd)
                     .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?,
             );
             let lengths_value = self.get_entry_by_path(&lengths_paths);

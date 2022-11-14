@@ -1,4 +1,4 @@
-use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdType};
+use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdType, IfdValueType};
 use itertools::Itertools;
 use std::fmt::{Debug, Display, Formatter};
 use std::iter;
@@ -8,12 +8,14 @@ use std::iter::once;
 pub struct Ifd {
     pub entries: Vec<IfdEntry>,
     pub ifd_type: IfdType,
+    pub path: IfdPath,
 }
 impl Ifd {
-    pub fn new(ifd_type: IfdType) -> Self {
+    pub fn new(ifd_type: IfdType, path: IfdPath) -> Self {
         Self {
             entries: Vec::new(),
             ifd_type,
+            path,
         }
     }
     pub fn insert(&mut self, value: IfdEntry) {
@@ -95,9 +97,6 @@ impl Display for IfdPathElement {
 #[derive(Clone, Debug, PartialEq)]
 pub struct IfdEntry {
     pub value: IfdValue,
-    /// the offset at which the IFD structure of the entry is
-    /// this is different from the data location
-    pub offset: u32,
     pub path: IfdPath,
     pub tag: IfdTagDescriptor,
 }
@@ -158,6 +157,24 @@ impl IfdValue {
                 Box::new(ifd.flat_entries()) as Box<dyn Iterator<Item = &'a IfdEntry> + 'a>
             }
             _ => Box::new(iter::empty()) as Box<dyn Iterator<Item = &'a IfdEntry> + 'a>,
+        }
+    }
+    pub fn get_ifd_value_type(&self) -> IfdValueType {
+        match self {
+            IfdValue::Byte(_) => IfdValueType::Byte,
+            IfdValue::Ascii(_) => IfdValueType::Ascii,
+            IfdValue::Short(_) => IfdValueType::Short,
+            IfdValue::Long(_) => IfdValueType::Long,
+            IfdValue::Rational(_, _) => IfdValueType::Rational,
+            IfdValue::SByte(_) => IfdValueType::SByte,
+            IfdValue::Undefined(_) => IfdValueType::Undefined,
+            IfdValue::SShort(_) => IfdValueType::SShort,
+            IfdValue::SLong(_) => IfdValueType::SLong,
+            IfdValue::SRational(_, _) => IfdValueType::SRational,
+            IfdValue::Float(_) => IfdValueType::Float,
+            IfdValue::Double(_) => IfdValueType::Double,
+            IfdValue::List(list) => list[0].value.get_ifd_value_type(),
+            IfdValue::Ifd(_) => IfdValueType::Long,
         }
     }
 }

@@ -4,6 +4,7 @@ use crate::Ifd;
 use itertools::Itertools;
 use std::sync::Arc;
 
+#[derive(Default)]
 pub struct YamlDumper {
     pub dump_rational_as_float: bool,
     pub visitor: Option<Arc<dyn Fn(IfdEntry) -> Option<String>>>,
@@ -12,7 +13,14 @@ impl YamlDumper {
     pub fn dump_ifd(&self, ifd: &Ifd) -> String {
         ifd.entries
             .iter()
-            .map(|entry| format!("{}: {}", entry.tag, self.dump_ifd_value(&entry)))
+            .map(|entry| {
+                format!(
+                    "{}: {}{}",
+                    entry.tag,
+                    self.dump_tag_if_needed(&entry),
+                    self.dump_ifd_value(&entry)
+                )
+            })
             .intersperse("\n".to_string())
             .collect()
     }
@@ -41,11 +49,7 @@ impl YamlDumper {
                         format!("UNKNOWN ({})", self.dump_ifd_value_plain(entry))
                     }
                 } else {
-                    eprintln!(
-                        "value {:?} couldn't be made into number (this is illegal for enums)",
-                        entry.value
-                    );
-                    self.dump_ifd_value_plain(entry)
+                    unreachable!()
                 }
             }
             _ => self.dump_ifd_value_plain(entry),
@@ -61,7 +65,7 @@ impl YamlDumper {
                 if self.dump_rational_as_float {
                     format!("{}", *x as f32 / *y as f32)
                 } else {
-                    format!("({x}, {y})")
+                    format!("{x}/{y}")
                 }
             }
             IfdValue::SByte(x) => format!("{x}"),
@@ -72,7 +76,7 @@ impl YamlDumper {
                 if self.dump_rational_as_float {
                     format!("{}", *x as f32 / *y as f32)
                 } else {
-                    format!("({x}, {y})")
+                    format!("{x}/{y}")
                 }
             }
             IfdValue::Float(x) => format!("{x}"),
@@ -103,6 +107,17 @@ impl YamlDumper {
                 format!("\n{}", textwrap::indent(&self.dump_ifd(ifd), "  "))
             }
         }
+    }
+    fn dump_tag_if_needed(&self, entry: &IfdEntry) -> String {
+        if let Some(types) = entry.tag.get_known_value_type() {
+            if types.contains(&entry.value.get_ifd_value_type()) {
+                return "".to_string();
+            }
+        }
+        format!(
+            "!{} ",
+            serde_plain::to_string(&entry.value.get_ifd_value_type()).unwrap()
+        )
     }
     fn indent_yaml_list_item(x: String) -> String {
         let first_line: String = x.lines().take(1).collect();
