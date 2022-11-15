@@ -1,8 +1,9 @@
 use clap::Parser;
+use dng::dng_writer::DngWriter;
 
-use dng::yaml::dumper::IfdYamlDumper;
 use dng::yaml::parser::IfdYamlParser;
-use std::fs::File;
+use dng::FileType;
+use std::fs::{File, OpenOptions};
 use std::io::Read;
 use std::path::Path;
 
@@ -35,10 +36,22 @@ fn main() {
             file.read_to_string(&mut contents).unwrap();
 
             let ifd = IfdYamlParser::parse_from_str(&contents);
-            match ifd {
-                Ok(ifd) => println!("{}", IfdYamlDumper::default().dump_ifd(&ifd)),
-                Err(e) => println!("{e}"),
-            }
+            let ifd = match ifd {
+                Ok(ifd) => ifd,
+                Err(e) => panic!("{e}"),
+            };
+
+            let dcp_file_path = yaml_path.parent().unwrap().join(format!(
+                "{}.dcp",
+                yaml_path.file_stem().unwrap().to_str().unwrap()
+            ));
+            let dcp_file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(dcp_file_path)
+                .unwrap();
+            DngWriter::write_dng(dcp_file, true, FileType::Dcp, vec![ifd]).unwrap();
         }
         Action::Dir => {}
     }

@@ -1,4 +1,4 @@
-use num_derive::FromPrimitive;
+use num_derive::{FromPrimitive, ToPrimitive};
 use once_cell::sync::Lazy;
 use serde::{de, Deserialize, Deserializer, Serialize};
 use serde_hex::{SerHex, StrictPfx};
@@ -185,7 +185,7 @@ impl IfdTagDescriptor {
             Self::Unknown(_) => None,
         }
     }
-    pub fn get_tag(&self) -> u16 {
+    pub fn numeric(&self) -> u16 {
         match self {
             IfdTagDescriptor::Known(descriptor) => descriptor.tag,
             IfdTagDescriptor::Unknown(tag) => *tag,
@@ -202,11 +202,11 @@ impl Display for IfdTagDescriptor {
 }
 impl PartialEq for IfdTagDescriptor {
     fn eq(&self, other: &Self) -> bool {
-        self.get_tag() == other.get_tag()
+        self.numeric() == other.numeric()
     }
 }
 
-#[derive(Clone, Copy, Debug, FromPrimitive, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize, FromPrimitive, ToPrimitive)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum IfdValueType {
     Byte = 1,
@@ -234,7 +234,7 @@ impl IfdValueType {
             IfdValueType::Undefined => 1,
             IfdValueType::SShort => 2,
             IfdValueType::SLong => 4,
-            IfdValueType::SRational => 4,
+            IfdValueType::SRational => 8,
             IfdValueType::Float => 4,
             IfdValueType::Double => 8,
         }

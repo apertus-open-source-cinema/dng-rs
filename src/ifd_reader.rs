@@ -54,12 +54,12 @@ impl IfdEntryReader {
             ),
         ))?;
         let count = reader.read_u32()?;
-        let offset = reader.read_u32()?;
+        let value_or_offset = reader.read_u32()?;
         Ok(Self {
             tag,
             dtype,
             count,
-            value_or_offset: offset,
+            value_or_offset,
             own_offset,
         })
     }

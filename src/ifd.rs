@@ -177,4 +177,11 @@ impl IfdValue {
             IfdValue::Ifd(_) => IfdValueType::Long,
         }
     }
+    pub fn get_count(&self) -> u32 {
+        match self {
+            IfdValue::List(list) => list.len() as u32,
+            IfdValue::Ascii(str) => str.len() as u32 + 1,
+            _ => 1,
+        }
+    }
 }
