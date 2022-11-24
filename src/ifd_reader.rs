@@ -1,7 +1,6 @@
 use crate::ifd::{Ifd, IfdEntry, IfdPath, IfdValue};
-use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdValueType};
-use crate::ifd_tag_data::tag_info_parser::{IfdType, IfdTypeInterpretation};
-use crate::util::byte_order_reader::ByteOrderReader;
+use crate::ifd_tags::{IfdTagDescriptor, IfdType, IfdTypeInterpretation, IfdValueType};
+use crate::util::ByteOrderReader;
 use num_traits::FromPrimitive;
 use std::io::{self, Read, Seek, SeekFrom};
 

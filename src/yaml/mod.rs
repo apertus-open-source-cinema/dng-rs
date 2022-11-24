@@ -1,5 +1,9 @@
-pub mod dumper;
-pub mod parser;
+mod dumper;
+mod parser;
+
+pub use dumper::IfdYamlDumper;
+pub use parser::IfdYamlParser;
+pub use parser::IfdYamlParserError;
 
 #[cfg(test)]
 mod tests {

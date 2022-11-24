@@ -1,7 +1,7 @@
 use crate::ifd::{Ifd, IfdEntry, IfdPath};
 use crate::ifd_reader::IfdReader;
-use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdType, IfdTypeInterpretation};
-use crate::util::byte_order_reader::ByteOrderReader;
+use crate::ifd_tags::{IfdTagDescriptor, IfdType, IfdTypeInterpretation};
+use crate::util::ByteOrderReader;
 use crate::FileType;
 use derivative::Derivative;
 use num_traits::FromPrimitive;

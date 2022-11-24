@@ -1,5 +1,5 @@
 use crate::ifd::{Ifd, IfdEntry, IfdValue};
-use crate::ifd_tag_data::tag_info_parser::IfdTypeInterpretation;
+use crate::ifd_tags::IfdTypeInterpretation;
 use itertools::Itertools;
 use std::sync::Arc;
 

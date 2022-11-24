@@ -1,13 +1,15 @@
-pub mod dng_reader;
-pub mod dng_writer;
+mod dng_reader;
+mod dng_writer;
 pub mod ifd;
-pub mod ifd_reader;
-pub mod ifd_tag_data;
+mod ifd_reader;
+pub mod ifd_tags;
 pub mod util;
-
 #[cfg(feature = "yaml")]
 #[allow(unstable_name_collisions)]
 pub mod yaml;
+
+pub use dng_reader::DngReader;
+pub use dng_writer::DngWriter;
 
 use num_derive::{FromPrimitive, ToPrimitive};
 

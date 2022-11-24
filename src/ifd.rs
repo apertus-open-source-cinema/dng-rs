@@ -1,4 +1,4 @@
-use crate::ifd_tag_data::tag_info_parser::{IfdTagDescriptor, IfdType, IfdValueType};
+use crate::ifd_tags::{IfdTagDescriptor, IfdType, IfdValueType};
 use derivative::Derivative;
 use itertools::Itertools;
 use std::fmt::{Debug, Display, Formatter};

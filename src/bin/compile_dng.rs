@@ -1,7 +1,6 @@
 use clap::{arg, Parser};
-use dng::dng_writer::DngWriter;
-
-use dng::yaml::parser::IfdYamlParser;
+use dng::yaml::IfdYamlParser;
+use dng::DngWriter;
 use dng::FileType;
 use std::fs::{File, OpenOptions};
 use std::io::Read;

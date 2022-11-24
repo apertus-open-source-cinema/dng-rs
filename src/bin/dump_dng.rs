@@ -1,10 +1,10 @@
 use clap::Parser;
-use dng::dng_reader::DngReader;
-use dng::dng_writer::DngWriter;
 use dng::ifd::{IfdEntry, IfdValue};
-use dng::ifd_tag_data::tag_info_parser::IfdTypeInterpretation;
-use dng::util::byte_order_writer::ByteOrderWriter;
-use dng::yaml::dumper::IfdYamlDumper;
+use dng::ifd_tags::IfdTypeInterpretation;
+use dng::util::ByteOrderWriter;
+use dng::yaml::IfdYamlDumper;
+use dng::DngReader;
+use dng::DngWriter;
 use itertools::Itertools;
 use std::fs;
 use std::fs::{File, OpenOptions};

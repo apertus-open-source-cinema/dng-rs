@@ -258,17 +258,17 @@ mod tests {
 
     #[test]
     fn parse_ifd_json() {
-        parse_json_file("src/ifd_tag_data/ifd.json")
+        parse_json_file("src/ifd_tags/ifd.json")
     }
 
     #[test]
     fn parse_exif_json() {
-        parse_json_file("src/ifd_tag_data/exif.json")
+        parse_json_file("src/ifd_tags/exif.json")
     }
 
     #[test]
     fn parse_gps_info_json() {
-        parse_json_file("src/ifd_tag_data/gps_info.json")
+        parse_json_file("src/ifd_tags/gps_info.json")
     }
 
     fn parse_json_file(path: &str) {

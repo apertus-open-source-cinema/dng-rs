@@ -1,5 +1,5 @@
 use crate::ifd::{Ifd, IfdEntry, IfdValue};
-use crate::util::byte_order_writer::ByteOrderWriter;
+use crate::util::ByteOrderWriter;
 use crate::FileType;
 use derivative::Derivative;
 use num_traits::ToPrimitive;
