@@ -1,7 +1,9 @@
 use clap::Parser;
 use dng::dng_reader::DngReader;
+use dng::dng_writer::DngWriter;
 use dng::ifd::{IfdEntry, IfdValue};
 use dng::ifd_tag_data::tag_info_parser::IfdTypeInterpretation;
+use dng::util::byte_order_writer::ByteOrderWriter;
 use dng::yaml::dumper::IfdYamlDumper;
 use itertools::Itertools;
 use std::fs;
@@ -83,14 +85,17 @@ fn main() {
                     Some(IfdTypeInterpretation::Blob)
                 ) {
                     let path = dir.join(entry.path.string_with_separator("_"));
-                    OpenOptions::new()
+                    let file = OpenOptions::new()
                         .write(true)
                         .create(true)
                         .truncate(true)
                         .open(path.clone())
-                        .unwrap()
-                        .write(&entry.value.as_bytes().unwrap())
                         .unwrap();
+                    DngWriter::write_primitive_value(
+                        &entry.value,
+                        &mut ByteOrderWriter::new(file, true),
+                    )
+                    .unwrap();
                     return Some(format!(
                         "file://{}",
                         path.strip_prefix(dir.clone()).unwrap().to_str().unwrap()

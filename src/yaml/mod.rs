@@ -29,8 +29,10 @@ mod tests {
 
     fn parse_serialize_parse(path: &str) {
         let data = fs::read_to_string(path).expect("Unable to read file");
-        let parsed = IfdYamlParser::parse_from_str(&data).unwrap();
+        let parsed = IfdYamlParser::default().parse_from_str(&data).unwrap();
         let serialized = IfdYamlDumper::default().dump_ifd(&parsed);
-        let _parsed_second = IfdYamlParser::parse_from_str(&serialized).unwrap();
+        let _parsed_second = IfdYamlParser::default()
+            .parse_from_str(&serialized)
+            .unwrap();
     }
 }

@@ -104,6 +104,7 @@ impl IfdYamlDumper {
             IfdValue::Ifd(ifd) => {
                 format!("\n{}", textwrap::indent(&self.dump_ifd(ifd), "  "))
             }
+            IfdValue::Offsets(_) => unimplemented!(),
         }
     }
     fn dump_tag_if_needed(&self, entry: &IfdEntry) -> String {

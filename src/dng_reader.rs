@@ -17,7 +17,6 @@ pub struct DngReader<R: Read + Seek> {
     reader: RefCell<ByteOrderReader<R>>,
     ifds: Vec<Ifd>,
 }
-
 impl<R: Read + Seek> DngReader<R> {
     pub fn read(mut reader: R) -> Result<Self, io::Error> {
         // the first two bytes set the byte order

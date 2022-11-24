@@ -91,6 +91,8 @@ pub enum MaybeIfdTypeInterpretation {
 #[serde(tag = "kind")]
 #[serde(rename_all = "UPPERCASE")]
 pub enum IfdTypeInterpretation {
+    Default,
+
     Enumerated {
         #[serde(deserialize_with = "deserialize_enumerated_values")]
         values: HashMap<u32, String>,
@@ -99,14 +101,22 @@ pub enum IfdTypeInterpretation {
         #[serde(deserialize_with = "deserialize_bitflags_values")]
         values: HashMap<u8, String>,
     },
+
     CfaPattern,
-    Default,
+
     IfdOffset {
         ifd_type: IfdType,
     },
+
+    /// This together with `Lengths` points to a buffer in the file that contains e.g. the actual
+    /// image data. The `lengths` field contains the name of the corresponding `Lengths` tag.
     Offsets {
         lengths: String,
     },
+    Lengths,
+
+    /// this is a made-up interpretation to flag, that it might be smart to not dump the value but
+    /// rather extract it to a file.
     Blob,
 }
 fn deserialize_enumerated_values<'de, D>(deserializer: D) -> Result<HashMap<u32, String>, D::Error>

@@ -5,6 +5,11 @@ use crate::ifd_tag_data::tag_info_parser::{IfdType, IfdTypeInterpretation};
 use fraction::Ratio;
 use lazy_regex::regex_captures;
 use std::fmt::{Display, Formatter};
+use std::fs::File;
+use std::io;
+use std::io::Read;
+use std::path::PathBuf;
+use std::sync::Arc;
 use yaml_peg::parser::parse;
 use yaml_peg::parser::PError;
 use yaml_peg::repr::RcRepr;
@@ -13,11 +18,17 @@ use yaml_peg::Node;
 #[derive(Debug)]
 pub enum IfdYamlParserError {
     PError(PError),
+    IoError(io::Error),
     Other(u64, String),
 }
 impl From<PError> for IfdYamlParserError {
     fn from(e: PError) -> Self {
         Self::PError(e)
+    }
+}
+impl From<io::Error> for IfdYamlParserError {
+    fn from(e: io::Error) -> Self {
+        Self::IoError(e)
     }
 }
 impl Display for IfdYamlParserError {
@@ -32,6 +43,7 @@ impl Display for IfdYamlParserError {
             IfdYamlParserError::Other(pos, e) => {
                 f.write_fmt(format_args!("Other Error '{}' at: {}", e, pos))
             }
+            IfdYamlParserError::IoError(e) => f.write_fmt(format_args!("IoError '{}'", e)),
         }
     }
 }
@@ -42,14 +54,22 @@ macro_rules! err {
     };
 }
 
-pub struct IfdYamlParser {}
+#[derive(Default)]
+pub struct IfdYamlParser {
+    path: PathBuf,
+}
 impl IfdYamlParser {
-    pub fn parse_from_str(source: &str) -> Result<Ifd, IfdYamlParserError> {
+    pub fn new(path: PathBuf) -> Self {
+        Self { path }
+    }
+
+    pub fn parse_from_str(&self, source: &str) -> Result<Ifd, IfdYamlParserError> {
         let parsed_yaml = parse(source)?;
-        Self::parse_ifd(&parsed_yaml[0], IfdType::Ifd, IfdPath::default())
+        self.parse_ifd(&parsed_yaml[0], IfdType::Ifd, IfdPath::default())
     }
 
     fn parse_ifd(
+        &self,
         source: &Node<RcRepr>,
         ifd_type: IfdType,
         path: IfdPath,
@@ -60,14 +80,88 @@ impl IfdYamlParser {
             .map_err(|pos| err!(pos, "cant read {source:?} as map (required for ifd)"))?
             .iter()
         {
-            let tag = Self::parse_ifd_tag(key, ifd_type)?;
-            ifd.insert(Self::parse_ifd_entry(value, tag, path.clone(), None)?)
+            let tag = self.parse_ifd_tag(key, ifd_type)?;
+
+            // if we have offsets we need to emit two tags (offsets and lengths), thus we need to handle this directly
+            if let Some(IfdTypeInterpretation::Offsets { lengths }) =
+                tag.get_known_type_interpretation()
+            {
+                let lengths_tag = IfdTagDescriptor::from_name(lengths, ifd_type)
+                    .map_err(|e| err!(value.pos(), "{}", e.to_string()))?;
+
+                let parse_offset_entry = |value: &Node<RcRepr>,
+                                          path: IfdPath|
+                 -> Result<
+                    Option<(IfdEntry, IfdEntry)>,
+                    IfdYamlParserError,
+                > {
+                    let str = value.as_str().map_err(|pos| {
+                        IfdYamlParserError::Other(pos, format!("{value:?} cant be made into str"))
+                    })?;
+                    if let Some((_whole, file_path)) = regex_captures!("file://(.*)", str) {
+                        let file_path = self.path.join(file_path);
+                        let mut file = File::open(file_path)?;
+                        let mut buffer = Vec::new();
+                        file.read_to_end(&mut buffer)?;
+                        let len = buffer.len();
+                        let offsets_entry = IfdEntry {
+                            value: IfdValue::Offsets(Arc::new(buffer)),
+                            path: path.clone(),
+                            tag: tag.clone(),
+                        };
+                        let lengths_entry = IfdEntry {
+                            value: IfdValue::Long(len as u32),
+                            path: path.with_last_tag_replaced(lengths_tag.clone()),
+                            tag: lengths_tag.clone(),
+                        };
+                        Ok(Some((offsets_entry, lengths_entry)))
+                    } else {
+                        Ok(None)
+                    }
+                };
+
+                match value.as_seq() {
+                    Ok(seq) => {
+                        let mapped: Result<Vec<_>, IfdYamlParserError> = seq
+                            .iter()
+                            .enumerate()
+                            .map(|(i, x)| parse_offset_entry(x, path.chain_list_index(i as u16)))
+                            .collect();
+                        let mapped = mapped?;
+                        if mapped.iter().all(|x| x.is_some()) {
+                            let (offsets, lengths): (Vec<_>, Vec<_>) =
+                                mapped.into_iter().map(|x| x.unwrap()).unzip();
+                            ifd.insert(IfdEntry {
+                                value: IfdValue::List(offsets),
+                                path: path.clone(),
+                                tag: tag.clone(),
+                            });
+                            ifd.insert(IfdEntry {
+                                value: IfdValue::List(lengths),
+                                path: path.with_last_tag_replaced(lengths_tag),
+                                tag: tag.clone(),
+                            });
+                            continue;
+                        }
+                    }
+                    Err(_) => {
+                        if let Some((offsets, lengths)) = parse_offset_entry(value, path.clone())? {
+                            ifd.insert(offsets);
+                            ifd.insert(lengths);
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            ifd.insert(self.parse_ifd_entry(value, tag, path.clone(), None)?)
         }
 
         Ok(ifd)
     }
 
     fn parse_ifd_tag(
+        &self,
         source: &Node<RcRepr>,
         ifd_type: IfdType,
     ) -> Result<IfdTagDescriptor, IfdYamlParserError> {
@@ -90,12 +184,13 @@ impl IfdYamlParser {
     }
 
     fn parse_ifd_entry(
+        &self,
         value: &Node<RcRepr>,
         tag: IfdTagDescriptor,
         path: IfdPath,
         parent_yaml_tag: Option<&str>,
     ) -> Result<IfdEntry, IfdYamlParserError> {
-        let value = if let Ok(_mapping) = value.as_map() {
+        let value = if let Ok(_) = value.as_map() {
             let ifd_type = if let Some(IfdTypeInterpretation::IfdOffset { ifd_type }) =
                 tag.get_known_type_interpretation()
             {
@@ -103,17 +198,13 @@ impl IfdYamlParser {
             } else {
                 IfdType::Ifd
             };
-            IfdValue::Ifd(Self::parse_ifd(
-                value,
-                ifd_type,
-                path.chain_tag(tag.clone()),
-            )?)
+            IfdValue::Ifd(self.parse_ifd(value, ifd_type, path.chain_tag(tag.clone()))?)
         } else if let Ok(seq) = value.as_seq() {
             let result: Result<Vec<_>, _> = seq
                 .iter()
                 .enumerate()
                 .map(|(i, node)| {
-                    Self::parse_ifd_entry(
+                    self.parse_ifd_entry(
                         node,
                         tag.clone(),
                         path.chain_list_index(i as u16),
@@ -123,8 +214,32 @@ impl IfdYamlParser {
                 .collect();
             IfdValue::List(result?)
         } else {
-            // we are dealing with a scalar
-            Self::parse_ifd_scalar_value(value, tag.clone(), parent_yaml_tag)?
+            loop {
+                // this is the 'well-known' loop hack
+                // we try to parse the value as a file
+                if let Ok(str) = value.as_str() {
+                    if let Some((_whole, file_path)) = regex_captures!("file://(.*)", str) {
+                        let file_path = self.path.join(file_path);
+                        let mut file = File::open(file_path)?;
+                        let mut buffer = Vec::new();
+                        file.read_to_end(&mut buffer)?;
+                        break IfdValue::List(
+                            buffer
+                                .iter()
+                                .enumerate()
+                                .map(|(i, b)| IfdEntry {
+                                    value: IfdValue::Byte(*b),
+                                    path: path.chain_list_index(i as u16),
+                                    tag: tag.clone(),
+                                })
+                                .collect(),
+                        );
+                    }
+                }
+
+                // we are dealing with a scalar
+                break self.parse_ifd_scalar_value(value, tag.clone(), parent_yaml_tag)?;
+            }
         };
 
         let path = path.chain_tag(tag.clone());
@@ -132,6 +247,7 @@ impl IfdYamlParser {
     }
 
     fn parse_ifd_scalar_value(
+        &self,
         value: &Node<RcRepr>,
         tag: IfdTagDescriptor,
         parent_yaml_tag: Option<&str>,
@@ -147,43 +263,45 @@ impl IfdYamlParser {
             Err(err!(value.pos(), "couldnt determine dtype of tag '{tag}'. if the IFD tag is unknown, the dtype must be specified explicitly with a YAML tag"))
         }?;
 
-        if let Some(IfdTypeInterpretation::Enumerated { values }) =
-            tag.get_known_type_interpretation()
-        {
-            let str = value
-                .as_str()
-                .map_err(|pos| err!(pos, "cant read {value:?} as a string"))?;
-            let matching_values: Vec<_> = values
-                .iter()
-                .filter(|(_, v)| v.to_lowercase().contains(&str.to_lowercase()))
-                .collect();
-            let (numeric, _) = match matching_values.len() {
-                0 => Err(err!(value.pos(), "{str} didnt match any enum variant for field {tag}.\nPossible variants are: {values:?}"))?,
-                1 => matching_values[0],
-                _ => Err(err!(value.pos(), "{str} is ambiguous for tag {tag}. Disambiguate between: {matching_values:?}"))?,
-            };
-            for dtype in dtypes {
-                return Ok(match dtype {
-                    IfdValueType::Byte => IfdValue::Byte(*numeric as u8),
-                    IfdValueType::Short => IfdValue::Short(*numeric as u16),
-                    IfdValueType::Long => IfdValue::Long(*numeric as u32),
-                    IfdValueType::Undefined => IfdValue::Undefined(*numeric as u8),
-                    _ => unreachable!(),
-                });
+        match tag.get_known_type_interpretation() {
+            Some(IfdTypeInterpretation::Enumerated { values }) => {
+                let str = value
+                    .as_str()
+                    .map_err(|pos| err!(pos, "cant read {value:?} as a string"))?;
+                let matching_values: Vec<_> = values
+                    .iter()
+                    .filter(|(_, v)| v.to_lowercase().contains(&str.to_lowercase()))
+                    .collect();
+                let (numeric, _) = match matching_values.len() {
+                    0 => Err(err!(value.pos(), "{str} didnt match any enum variant for field {tag}.\nPossible variants are: {values:?}"))?,
+                    1 => matching_values[0],
+                    _ => Err(err!(value.pos(), "{str} is ambiguous for tag {tag}. Disambiguate between: {matching_values:?}"))?,
+                };
+                for dtype in dtypes {
+                    return Ok(match dtype {
+                        IfdValueType::Byte => IfdValue::Byte(*numeric as u8),
+                        IfdValueType::Short => IfdValue::Short(*numeric as u16),
+                        IfdValueType::Long => IfdValue::Long(*numeric as u32),
+                        IfdValueType::Undefined => IfdValue::Undefined(*numeric as u8),
+                        _ => unreachable!(),
+                    });
+                }
+                Err(err!(value.pos(), "No dtype worked"))
             }
-            return Err(err!(value.pos(), "No dtype worked"));
-        }
-
-        for dtype in dtypes {
-            match Self::parse_ifd_primitive_value(value, dtype) {
-                Ok(v) => return Ok(v),
-                Err(_err) => {} // eprintln!("{err:#?}"),
+            _ => {
+                for dtype in dtypes {
+                    match self.parse_ifd_primitive_value(value, dtype) {
+                        Ok(v) => return Ok(v),
+                        Err(_err) => {} // eprintln!("{err:#?}"),
+                    }
+                }
+                Err(err!(value.pos(), "No dtype worked for tag {tag}"))
             }
         }
-        Err(err!(value.pos(), "No dtype worked for tag {tag}"))
     }
 
     fn parse_ifd_primitive_value(
+        &self,
         value: &Node<RcRepr>,
         dtype: IfdValueType,
     ) -> Result<IfdValue, IfdYamlParserError> {

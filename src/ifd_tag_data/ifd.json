@@ -2326,7 +2326,7 @@
         ],
         "interpretation": {
             "kind": "IFDOFFSET",
-            "ifd_type": "GPS_INFO"
+            "ifd_type": "GPSINFO"
         }
     },
     {

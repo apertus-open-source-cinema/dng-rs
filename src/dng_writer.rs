@@ -138,51 +138,9 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
         writer.write_u16(dtype.to_u16().unwrap())?;
         writer.write_u32(count)?;
 
-        fn write_value<W: Write + Seek + 'static>(
-            value: IfdValue,
-            writer: &mut ByteOrderWriter<W>,
-            dng_writer: &DngWriter<W>,
-        ) -> io::Result<()> {
-            match value {
-                IfdValue::Byte(v) => writer.write_u8(v),
-                IfdValue::Ascii(v) => {
-                    for b in v.bytes() {
-                        writer.write_u8(b)?;
-                    }
-                    writer.write_u8(0)
-                }
-                IfdValue::Short(v) => writer.write_u16(v),
-                IfdValue::Long(v) => writer.write_u32(v),
-                IfdValue::Rational(num, denom) => {
-                    writer.write_u32(num)?;
-                    writer.write_u32(denom)
-                }
-                IfdValue::SByte(v) => writer.write_i8(v),
-                IfdValue::Undefined(v) => writer.write_u8(v),
-                IfdValue::SShort(v) => writer.write_i16(v),
-                IfdValue::SLong(v) => writer.write_i32(v),
-                IfdValue::SRational(num, denom) => {
-                    writer.write_i32(num)?;
-                    writer.write_i32(denom)
-                }
-                IfdValue::Float(v) => writer.write_f32(v),
-                IfdValue::Double(v) => writer.write_f64(v),
-                IfdValue::List(list) => {
-                    for v in list {
-                        write_value(v.value, writer, dng_writer)?;
-                    }
-                    Ok(())
-                }
-                IfdValue::Ifd(ifd) => {
-                    let ifd_offset = dng_writer.write_ifds(vec![ifd]);
-                    writer.write_u32(ifd_offset)
-                }
-            }
-        }
-
         let required_bytes = count * dtype.needed_bytes();
         if required_bytes <= 4 {
-            write_value(entry.value, writer, self)?;
+            Self::write_value(entry.value, writer, self)?;
             for _ in 0..(4 - required_bytes) {
                 writer.write_u8(0)?;
             }
@@ -190,9 +148,78 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
         } else {
             let self_clone = self.clone();
             let value_pointer = self.plan.add_entry(required_bytes, move |writer| {
-                write_value(entry.value, writer, &self_clone)
+                Self::write_value(entry.value, writer, &self_clone)
             });
             writer.write_u32(value_pointer)
+        }
+    }
+
+    pub fn write_value(
+        value: IfdValue,
+        writer: &mut ByteOrderWriter<W>,
+        dng_writer: &DngWriter<W>,
+    ) -> io::Result<()> {
+        match value {
+            IfdValue::Ifd(ifd) => {
+                let ifd_offset = dng_writer.write_ifds(vec![ifd]);
+                writer.write_u32(ifd_offset)
+            }
+            IfdValue::Offsets(blob) => {
+                let size = blob.len() as u32;
+                let offset = dng_writer.plan.add_entry(size, move |writer| {
+                    writer.write(&*blob)?;
+                    Ok(())
+                });
+                writer.write_u32(offset)
+            }
+            IfdValue::List(list) => {
+                for v in list {
+                    Self::write_value(v.value, writer, dng_writer)?;
+                }
+                Ok(())
+            }
+            _ => Self::write_primitive_value(&value, writer),
+        }
+    }
+
+    pub fn write_primitive_value(
+        value: &IfdValue,
+        writer: &mut ByteOrderWriter<W>,
+    ) -> io::Result<()> {
+        match value {
+            IfdValue::Byte(v) => writer.write_u8(*v),
+            IfdValue::Ascii(v) => {
+                for b in v.bytes() {
+                    writer.write_u8(b)?;
+                }
+                writer.write_u8(0)
+            }
+            IfdValue::Short(v) => writer.write_u16(*v),
+            IfdValue::Long(v) => writer.write_u32(*v),
+            IfdValue::Rational(num, denom) => {
+                writer.write_u32(*num)?;
+                writer.write_u32(*denom)
+            }
+            IfdValue::SByte(v) => writer.write_i8(*v),
+            IfdValue::Undefined(v) => writer.write_u8(*v),
+            IfdValue::SShort(v) => writer.write_i16(*v),
+            IfdValue::SLong(v) => writer.write_i32(*v),
+            IfdValue::SRational(num, denom) => {
+                writer.write_i32(*num)?;
+                writer.write_i32(*denom)
+            }
+            IfdValue::Float(v) => writer.write_f32(*v),
+            IfdValue::Double(v) => writer.write_f64(*v),
+            IfdValue::List(list) => {
+                for v in list {
+                    Self::write_primitive_value(&v.value, writer)?;
+                }
+                Ok(())
+            }
+            _ => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("value '{value:?} is not primitive"),
+            )),
         }
     }
 }
