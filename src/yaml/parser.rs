@@ -96,9 +96,11 @@ impl IfdYamlParser {
                     Option<(IfdEntry, IfdEntry)>,
                     IfdYamlParserError,
                 > {
-                    let str = value.as_str().map_err(|pos| {
-                        IfdYamlParserError::Other(pos, format!("{value:?} cant be made into str"))
-                    })?;
+                    let str = if let Ok(str) = value.as_str() {
+                        str
+                    } else {
+                        return Ok(None);
+                    };
                     if let Some((_whole, file_path)) = regex_captures!("file://(.*)", str) {
                         let file_path = self.path.join(file_path);
                         let mut file = File::open(file_path)?;
