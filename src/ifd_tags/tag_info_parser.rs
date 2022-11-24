@@ -16,6 +16,7 @@ static EXIF_TAGS: Lazy<Vec<IfdFieldDescriptor>> =
 static GPS_INFO_TAGS: Lazy<Vec<IfdFieldDescriptor>> =
     Lazy::new(|| serde_json::from_str(&GPS_INFO_JSON).unwrap());
 
+/// An enum indicating the context (and thus valid tags) of an IFD (normal / EXIF / GPSInfo)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum IfdType {
@@ -39,6 +40,8 @@ impl IfdType {
     }
 }
 
+/// A data structure describing one specific Field (2byte key) that can appear in an IFD
+/// Possible keys are defined in various specs, such ass the TIFF, TIFF-EP, DNG, ... spec.
 #[derive(Deserialize, Debug, Clone, Eq)]
 pub struct IfdFieldDescriptor {
     pub name: String,
@@ -57,6 +60,7 @@ impl PartialEq for IfdFieldDescriptor {
     }
 }
 
+/// An enum describing the amount of values we expect for a given Field
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum IfdCount {
     N,
@@ -80,6 +84,7 @@ impl<'de> Deserialize<'de> for IfdCount {
     }
 }
 
+/// The maybe not accurately parsed `IfdTypeInterpretation` of a `Field`
 #[derive(Deserialize, Debug, Eq, PartialEq, Clone)]
 #[serde(untagged)]
 pub enum MaybeIfdTypeInterpretation {
@@ -87,6 +92,7 @@ pub enum MaybeIfdTypeInterpretation {
     Other(serde_json::Value),
 }
 
+/// The high level interpretation of a `Field`. (i.e. Enum variants, Bitfields, IFD-pointer, ...)
 #[derive(Deserialize, Debug, Eq, PartialEq, Clone)]
 #[serde(tag = "kind")]
 #[serde(rename_all = "UPPERCASE")]
@@ -154,12 +160,13 @@ where
     Ok(mapped?)
 }
 
+/// Represents a 2-byte IFD key, that is either known or unknown
 #[derive(Debug, Clone, Eq)]
-pub enum IfdTagDescriptor {
+pub enum MaybeKnownIfdFieldDescriptor {
     Known(IfdFieldDescriptor),
     Unknown(u16),
 }
-impl IfdTagDescriptor {
+impl MaybeKnownIfdFieldDescriptor {
     pub fn from_number(tag: u16, ifd_kind: IfdType) -> Self {
         if let Some(description) = ifd_kind.get_namespace().iter().find(|x| x.tag == tag) {
             Self::Known(description.clone())
@@ -176,7 +183,7 @@ impl IfdTagDescriptor {
     }
     pub fn get_known_type_interpretation(&self) -> Option<&IfdTypeInterpretation> {
         match self {
-            IfdTagDescriptor::Known(IfdFieldDescriptor {
+            MaybeKnownIfdFieldDescriptor::Known(IfdFieldDescriptor {
                 interpretation: MaybeIfdTypeInterpretation::Known(interpretation),
                 ..
             }) => Some(interpretation),
@@ -185,8 +192,8 @@ impl IfdTagDescriptor {
     }
     pub fn get_known_value_type(&self) -> Option<&Vec<IfdValueType>> {
         match self {
-            IfdTagDescriptor::Known(known) => Some(&known.dtype),
-            IfdTagDescriptor::Unknown(_) => None,
+            MaybeKnownIfdFieldDescriptor::Known(known) => Some(&known.dtype),
+            MaybeKnownIfdFieldDescriptor::Unknown(_) => None,
         }
     }
     pub fn get_known_name(&self) -> Option<&str> {
@@ -197,25 +204,29 @@ impl IfdTagDescriptor {
     }
     pub fn numeric(&self) -> u16 {
         match self {
-            IfdTagDescriptor::Known(descriptor) => descriptor.tag,
-            IfdTagDescriptor::Unknown(tag) => *tag,
+            MaybeKnownIfdFieldDescriptor::Known(descriptor) => descriptor.tag,
+            MaybeKnownIfdFieldDescriptor::Unknown(tag) => *tag,
         }
     }
 }
-impl Display for IfdTagDescriptor {
+impl Display for MaybeKnownIfdFieldDescriptor {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self {
-            IfdTagDescriptor::Known(tag) => tag.name.fmt(f),
-            IfdTagDescriptor::Unknown(tag) => f.write_fmt(format_args!("{:#02X}", &tag)),
+            MaybeKnownIfdFieldDescriptor::Known(tag) => tag.name.fmt(f),
+            MaybeKnownIfdFieldDescriptor::Unknown(tag) => {
+                f.write_fmt(format_args!("{:#02X}", &tag))
+            }
         }
     }
 }
-impl PartialEq for IfdTagDescriptor {
+impl PartialEq for MaybeKnownIfdFieldDescriptor {
     fn eq(&self, other: &Self) -> bool {
         self.numeric() == other.numeric()
     }
 }
 
+/// The data-type of an IFD value
+/// This does not include the fact that it is possible to have a list of every type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize, FromPrimitive, ToPrimitive)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum IfdValueType {

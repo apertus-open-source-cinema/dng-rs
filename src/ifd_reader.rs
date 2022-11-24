@@ -1,6 +1,6 @@
+use crate::byte_order_rw::ByteOrderReader;
 use crate::ifd::{Ifd, IfdEntry, IfdPath, IfdValue};
-use crate::ifd_tags::{IfdTagDescriptor, IfdType, IfdTypeInterpretation, IfdValueType};
-use crate::util::ByteOrderReader;
+use crate::ifd_tags::{IfdType, IfdTypeInterpretation, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use num_traits::FromPrimitive;
 use std::io::{self, Read, Seek, SeekFrom};
 
@@ -23,9 +23,9 @@ impl IfdReader {
         path: &IfdPath,
         reader: &mut ByteOrderReader<impl Read + Seek>,
     ) -> Result<Ifd, io::Error> {
-        let mut ifd = Ifd::new(ifd_type, path.clone());
+        let mut ifd = Ifd::new(ifd_type);
         for entry in &self.entries {
-            let tag = IfdTagDescriptor::from_number(entry.tag, ifd_type);
+            let tag = MaybeKnownIfdFieldDescriptor::from_number(entry.tag, ifd_type);
             ifd.insert(entry.process(reader, &tag, path)?);
         }
         Ok(ifd)
@@ -71,7 +71,7 @@ impl IfdEntryReader {
     pub fn process(
         &self,
         reader: &mut ByteOrderReader<impl Read + Seek>,
-        tag: &IfdTagDescriptor,
+        tag: &MaybeKnownIfdFieldDescriptor,
         path: &IfdPath,
     ) -> Result<IfdEntry, io::Error> {
         let path = path.chain_tag(tag.clone());
@@ -112,7 +112,7 @@ impl IfdEntryReader {
                 }
             }
         } else {
-            read_primitive_ifd_value(self.dtype, self.count, path.clone(), tag, reader)
+            Self::read_primitive_ifd_value(self.dtype, self.count, path.clone(), tag, reader)
         }?;
         Ok(IfdEntry {
             value,
@@ -120,45 +120,49 @@ impl IfdEntryReader {
             path: path.clone(),
         })
     }
-}
 
-pub fn read_primitive_ifd_value(
-    dtype: IfdValueType,
-    count: u32,
-    path: IfdPath,
-    tag: &IfdTagDescriptor,
-    reader: &mut ByteOrderReader<impl Read>,
-) -> io::Result<IfdValue> {
-    Ok(if let IfdValueType::Ascii = dtype {
-        let mut buf = vec![0u8; (count - 1) as usize];
-        reader.read_exact(&mut buf)?;
-        IfdValue::Ascii(String::from_utf8_lossy(&buf).to_string())
-    } else if count > 1 {
-        let vec: Result<Vec<_>, _> = (0..count)
-            .map(|i| -> Result<_, io::Error> {
-                let path = path.chain_list_index(i as u16);
-                Ok(IfdEntry {
-                    value: read_primitive_ifd_value(dtype, 1, path.clone(), tag, reader)?,
-                    path: path.clone(),
-                    tag: tag.clone(),
+    fn read_primitive_ifd_value(
+        dtype: IfdValueType,
+        count: u32,
+        path: IfdPath,
+        tag: &MaybeKnownIfdFieldDescriptor,
+        reader: &mut ByteOrderReader<impl Read>,
+    ) -> io::Result<IfdValue> {
+        Ok(if let IfdValueType::Ascii = dtype {
+            let mut buf = vec![0u8; (count - 1) as usize];
+            reader.read_exact(&mut buf)?;
+            IfdValue::Ascii(String::from_utf8_lossy(&buf).to_string())
+        } else if count > 1 {
+            let vec: Result<Vec<_>, _> = (0..count)
+                .map(|i| -> Result<_, io::Error> {
+                    let path = path.chain_list_index(i as u16);
+                    Ok(IfdEntry {
+                        value: Self::read_primitive_ifd_value(dtype, 1, path.clone(), tag, reader)?,
+                        path: path.clone(),
+                        tag: tag.clone(),
+                    })
                 })
-            })
-            .collect();
-        IfdValue::List(vec?)
-    } else {
-        match dtype {
-            IfdValueType::Byte => IfdValue::Byte(reader.read_u8()?),
-            IfdValueType::Short => IfdValue::Short(reader.read_u16()?),
-            IfdValueType::Long => IfdValue::Long(reader.read_u32()?),
-            IfdValueType::Rational => IfdValue::Rational(reader.read_u32()?, reader.read_u32()?),
-            IfdValueType::SByte => IfdValue::SByte(reader.read_i8()?),
-            IfdValueType::Undefined => IfdValue::Undefined(reader.read_u8()?),
-            IfdValueType::SShort => IfdValue::SByte(reader.read_i8()?),
-            IfdValueType::SLong => IfdValue::SLong(reader.read_i32()?),
-            IfdValueType::SRational => IfdValue::SRational(reader.read_i32()?, reader.read_i32()?),
-            IfdValueType::Float => IfdValue::Float(reader.read_f32()?),
-            IfdValueType::Double => IfdValue::Double(reader.read_f64()?),
-            IfdValueType::Ascii => unreachable!(),
-        }
-    })
+                .collect();
+            IfdValue::List(vec?)
+        } else {
+            match dtype {
+                IfdValueType::Byte => IfdValue::Byte(reader.read_u8()?),
+                IfdValueType::Short => IfdValue::Short(reader.read_u16()?),
+                IfdValueType::Long => IfdValue::Long(reader.read_u32()?),
+                IfdValueType::Rational => {
+                    IfdValue::Rational(reader.read_u32()?, reader.read_u32()?)
+                }
+                IfdValueType::SByte => IfdValue::SByte(reader.read_i8()?),
+                IfdValueType::Undefined => IfdValue::Undefined(reader.read_u8()?),
+                IfdValueType::SShort => IfdValue::SByte(reader.read_i8()?),
+                IfdValueType::SLong => IfdValue::SLong(reader.read_i32()?),
+                IfdValueType::SRational => {
+                    IfdValue::SRational(reader.read_i32()?, reader.read_i32()?)
+                }
+                IfdValueType::Float => IfdValue::Float(reader.read_f32()?),
+                IfdValueType::Double => IfdValue::Double(reader.read_f64()?),
+                IfdValueType::Ascii => unreachable!(),
+            }
+        })
+    }
 }

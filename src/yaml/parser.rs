@@ -1,6 +1,6 @@
 use crate::ifd::{Ifd, IfdValue};
 use crate::ifd::{IfdEntry, IfdPath};
-use crate::ifd_tags::{IfdTagDescriptor, IfdType, IfdTypeInterpretation, IfdValueType};
+use crate::ifd_tags::{IfdType, IfdTypeInterpretation, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use fraction::Ratio;
 use lazy_regex::regex_captures;
 use std::fmt::{Display, Formatter};
@@ -14,6 +14,7 @@ use yaml_peg::parser::PError;
 use yaml_peg::repr::RcRepr;
 use yaml_peg::Node;
 
+/// The error-type produced by the `IfdYamlParser`
 #[derive(Debug)]
 pub enum IfdYamlParserError {
     PError(PError),
@@ -53,6 +54,7 @@ macro_rules! err {
     };
 }
 
+/// Parses an `IFD` struct from a friendly human readable text-representation as produced by the `IfdYamlDumper`
 #[derive(Default)]
 pub struct IfdYamlParser {
     path: PathBuf,
@@ -73,7 +75,7 @@ impl IfdYamlParser {
         ifd_type: IfdType,
         path: IfdPath,
     ) -> Result<Ifd, IfdYamlParserError> {
-        let mut ifd = Ifd::new(ifd_type, path.clone());
+        let mut ifd = Ifd::new(ifd_type);
         for (key, value) in source
             .as_map()
             .map_err(|pos| err!(pos, "cant read {source:?} as map (required for ifd)"))?
@@ -85,7 +87,7 @@ impl IfdYamlParser {
             if let Some(IfdTypeInterpretation::Offsets { lengths }) =
                 tag.get_known_type_interpretation()
             {
-                let lengths_tag = IfdTagDescriptor::from_name(lengths, ifd_type)
+                let lengths_tag = MaybeKnownIfdFieldDescriptor::from_name(lengths, ifd_type)
                     .map_err(|e| err!(value.pos(), "{}", e.to_string()))?;
 
                 let parse_offset_entry = |value: &Node<RcRepr>,
@@ -163,18 +165,20 @@ impl IfdYamlParser {
         &self,
         source: &Node<RcRepr>,
         ifd_type: IfdType,
-    ) -> Result<IfdTagDescriptor, IfdYamlParserError> {
+    ) -> Result<MaybeKnownIfdFieldDescriptor, IfdYamlParserError> {
         if let Ok(i) = source.as_int() {
-            Ok(IfdTagDescriptor::from_number(i as u16, ifd_type))
+            Ok(MaybeKnownIfdFieldDescriptor::from_number(
+                i as u16, ifd_type,
+            ))
         } else if let Ok(str) = source.as_str() {
             if str.starts_with("0x") {
                 if let Ok(tag) = u16::from_str_radix(&str[2..], 16) {
-                    Ok(IfdTagDescriptor::from_number(tag, ifd_type))
+                    Ok(MaybeKnownIfdFieldDescriptor::from_number(tag, ifd_type))
                 } else {
                     Err(err!(source.pos(), "couldnt parse hex string '{str}'"))
                 }
             } else {
-                IfdTagDescriptor::from_name(str, ifd_type)
+                MaybeKnownIfdFieldDescriptor::from_name(str, ifd_type)
                     .map_err(|e| IfdYamlParserError::Other(source.pos(), e))
             }
         } else {
@@ -185,7 +189,7 @@ impl IfdYamlParser {
     fn parse_ifd_entry(
         &self,
         value: &Node<RcRepr>,
-        tag: IfdTagDescriptor,
+        tag: MaybeKnownIfdFieldDescriptor,
         path: IfdPath,
         parent_yaml_tag: Option<&str>,
     ) -> Result<IfdEntry, IfdYamlParserError> {
@@ -248,7 +252,7 @@ impl IfdYamlParser {
     fn parse_ifd_scalar_value(
         &self,
         value: &Node<RcRepr>,
-        tag: IfdTagDescriptor,
+        tag: MaybeKnownIfdFieldDescriptor,
         parent_yaml_tag: Option<&str>,
     ) -> Result<IfdValue, IfdYamlParserError> {
         let yaml_tag = parent_yaml_tag.unwrap_or(value.tag());

@@ -1,7 +1,7 @@
 use clap::Parser;
+use dng::byte_order_rw::ByteOrderWriter;
 use dng::ifd::{IfdEntry, IfdValue};
 use dng::ifd_tags::IfdTypeInterpretation;
-use dng::util::ByteOrderWriter;
 use dng::yaml::IfdYamlDumper;
 use dng::DngReader;
 use dng::DngWriter;
@@ -30,7 +30,7 @@ fn main() {
     let args = Args::parse();
     let img_file_path = Path::new(&args.file);
     let img_file = File::open(img_file_path).expect("Cannot find test image!");
-    let dng = Arc::new(DngReader::read(img_file).expect("Couldnt parse TIFF file!"));
+    let dng = Arc::new(DngReader::read(img_file).expect("Couldnt parse DNG file!"));
 
     let matrix_prettify_visitor = move |entry: IfdEntry| -> Option<String> {
         if entry

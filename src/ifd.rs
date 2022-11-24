@@ -1,4 +1,4 @@
-use crate::ifd_tags::{IfdTagDescriptor, IfdType, IfdValueType};
+use crate::ifd_tags::{IfdType, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use derivative::Derivative;
 use itertools::Itertools;
 use std::fmt::{Debug, Display, Formatter};
@@ -8,23 +8,22 @@ use std::ops::Deref;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
+/// Represents an IFD-Tree that was read / can be written
 pub struct Ifd {
-    pub entries: Vec<IfdEntry>,
-    pub ifd_type: IfdType,
-    pub path: IfdPath,
+    pub(crate) entries: Vec<IfdEntry>,
+    pub(crate) ifd_type: IfdType,
 }
 impl Ifd {
-    pub fn new(ifd_type: IfdType, path: IfdPath) -> Self {
+    pub fn new(ifd_type: IfdType) -> Self {
         Self {
             entries: Vec::new(),
             ifd_type,
-            path,
         }
     }
     pub fn insert(&mut self, value: IfdEntry) {
         self.entries.push(value)
     }
-    pub fn get_entry_by_tag(&self, tag: IfdTagDescriptor) -> Option<&IfdEntry> {
+    pub fn get_entry_by_tag(&self, tag: MaybeKnownIfdFieldDescriptor) -> Option<&IfdEntry> {
         self.entries.iter().find(|x| x.tag == tag)
     }
     pub fn flat_entries<'a>(&'a self) -> impl Iterator<Item = &'a IfdEntry> + 'a {
@@ -32,9 +31,13 @@ impl Ifd {
             .iter()
             .flat_map(|entry| once(entry).chain(entry.value.iter_children()))
     }
+    pub fn get_type(&self) -> IfdType {
+        self.ifd_type
+    }
 }
 
 #[derive(Clone, PartialEq, Default)]
+/// The absolute path at which the entry is found in the IFD-tree
 pub struct IfdPath(Vec<IfdPathElement>);
 impl IfdPath {
     pub fn chain_list_index(&self, n: u16) -> Self {
@@ -46,7 +49,7 @@ impl IfdPath {
                 .collect(),
         )
     }
-    pub fn chain_tag(&self, tag: IfdTagDescriptor) -> Self {
+    pub fn chain_tag(&self, tag: MaybeKnownIfdFieldDescriptor) -> Self {
         Self(
             self.0
                 .iter()
@@ -66,7 +69,7 @@ impl IfdPath {
     pub fn as_vec(&self) -> &Vec<IfdPathElement> {
         &self.0
     }
-    pub fn with_last_tag_replaced(&self, replacement: IfdTagDescriptor) -> Self {
+    pub fn with_last_tag_replaced(&self, replacement: MaybeKnownIfdFieldDescriptor) -> Self {
         let mut new_vec = self.as_vec().clone();
         for elem in new_vec.iter_mut().rev() {
             if matches!(elem, IfdPathElement::Tag(_)) {
@@ -84,8 +87,9 @@ impl Debug for IfdPath {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+/// A segment of an `IfdPath`
 pub enum IfdPathElement {
-    Tag(IfdTagDescriptor),
+    Tag(MaybeKnownIfdFieldDescriptor),
     ListIndex(u16),
 }
 impl Display for IfdPathElement {
@@ -98,10 +102,11 @@ impl Display for IfdPathElement {
 }
 
 #[derive(Clone, Debug)]
+/// A singular entry in an IFD (that knows its tag and path)
 pub struct IfdEntry {
     pub value: IfdValue,
     pub path: IfdPath,
-    pub tag: IfdTagDescriptor,
+    pub tag: MaybeKnownIfdFieldDescriptor,
 }
 impl Into<IfdValue> for IfdEntry {
     fn into(self) -> IfdValue {
@@ -111,6 +116,7 @@ impl Into<IfdValue> for IfdEntry {
 
 #[derive(Clone, Derivative)]
 #[derivative(Debug)]
+/// A singular Value in an IFD (that doesn't know its tag or path)
 pub enum IfdValue {
     Byte(u8),
     Ascii(String),

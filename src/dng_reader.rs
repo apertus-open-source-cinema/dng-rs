@@ -1,7 +1,7 @@
+use crate::byte_order_rw::ByteOrderReader;
 use crate::ifd::{Ifd, IfdEntry, IfdPath};
 use crate::ifd_reader::IfdReader;
-use crate::ifd_tags::{IfdTagDescriptor, IfdType, IfdTypeInterpretation};
-use crate::util::ByteOrderReader;
+use crate::ifd_tags::{IfdType, IfdTypeInterpretation, MaybeKnownIfdFieldDescriptor};
 use crate::FileType;
 use derivative::Derivative;
 use num_traits::FromPrimitive;
@@ -11,6 +11,7 @@ use std::io::{Read, Seek, SeekFrom};
 
 #[derive(Derivative)]
 #[derivative(Debug)]
+/// The main entrypoint for reading DNG / DCP files
 pub struct DngReader<R: Read + Seek> {
     file_type: FileType,
     #[derivative(Debug = "ignore")]
@@ -18,6 +19,9 @@ pub struct DngReader<R: Read + Seek> {
     ifds: Vec<Ifd>,
 }
 impl<R: Read + Seek> DngReader<R> {
+    /// reads and parses the DNG file IFD-tree eagerly
+    ///
+    /// NOTE: OFFSETS (where the image data is located) are not yet read.
     pub fn read(mut reader: R) -> Result<Self, io::Error> {
         // the first two bytes set the byte order
         let mut header = vec![0u8; 2];
@@ -56,6 +60,11 @@ impl<R: Read + Seek> DngReader<R> {
             file_type,
         })
     }
+
+    /// returns the first toplevel IFD of the DNG file.
+    ///
+    /// This does not read any imag data yet. For doing that, you need to use a combination of
+    /// `get_entry_by_path`, `needed_buffer_size_for_blob`, and `read_blob_to_buffer`
     pub fn get_ifd0(&self) -> &Ifd {
         &self.ifds[0]
     }
@@ -71,7 +80,7 @@ impl<R: Read + Seek> DngReader<R> {
             entry.tag.get_known_type_interpretation()
         {
             let lengths_paths = entry.path.with_last_tag_replaced(
-                IfdTagDescriptor::from_name(lengths, IfdType::Ifd)
+                MaybeKnownIfdFieldDescriptor::from_name(lengths, IfdType::Ifd)
                     .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?,
             );
             let lengths_value = self.get_entry_by_path(&lengths_paths);

@@ -1,5 +1,5 @@
+use crate::byte_order_rw::ByteOrderWriter;
 use crate::ifd::{Ifd, IfdEntry, IfdValue};
-use crate::util::ByteOrderWriter;
 use crate::FileType;
 use derivative::Derivative;
 use num_traits::ToPrimitive;
@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-pub struct WritePlanEntry<W: Write + Seek> {
+struct WritePlanEntry<W: Write + Seek> {
     offset: u32,
     size: u32,
     #[derivative(Debug = "ignore")]
@@ -20,7 +20,7 @@ pub struct WritePlanEntry<W: Write + Seek> {
 
 #[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
-pub struct WritePlan<W: Write + Seek> {
+struct WritePlan<W: Write + Seek> {
     to_write: RefCell<VecDeque<WritePlanEntry<W>>>,
     write_ptr: RefCell<u32>,
 }
@@ -67,6 +67,7 @@ impl<W: Write + Seek> WritePlan<W> {
 
 #[derive(Debug, Derivative)]
 #[derivative(Clone(bound = ""))]
+/// The main entrypoint for writing DNG / DCP files
 pub struct DngWriter<W: Write + Seek> {
     is_little_endian: bool,
     plan: Arc<WritePlan<W>>,

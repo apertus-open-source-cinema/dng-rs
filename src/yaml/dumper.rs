@@ -3,6 +3,7 @@ use crate::ifd_tags::IfdTypeInterpretation;
 use itertools::Itertools;
 use std::sync::Arc;
 
+/// Dumps an `IFD` struct into a friendly human readable text-representation
 #[derive(Default)]
 pub struct IfdYamlDumper {
     pub dump_rational_as_float: bool,
