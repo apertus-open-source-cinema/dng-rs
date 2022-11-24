@@ -4,6 +4,8 @@ pub mod ifd;
 pub mod ifd_reader;
 pub mod ifd_tag_data;
 pub mod util;
+
+#[cfg(feature = "yaml")]
 #[allow(unstable_name_collisions)]
 pub mod yaml;
 
