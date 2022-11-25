@@ -1,8 +1,14 @@
-# DNG-rs
+# DNG-rs &emsp; [![crates-shield]][crates.io] [![docs-shield]][docs.rs]
 
-A pure rust library for reading / writing DNG files providing access to the raw data in a zero-copy friendly way.
-It also contains code for reading / writing a human-readable YAML representation of DNG tags / the IFD structure.
-The library also supports interacting with DCP (Dng Camera Profile) files, but that is on a best-effort basis since I
+[crates-shield]: https://img.shields.io/crates/v/dng.svg
+[crates.io]: https://crates.io/crates/dng
+
+[docs-shield]: https://img.shields.io/docsrs/dng.svg
+[docs.rs]: https://docs.rs/dng
+
+**A pure rust library for reading / writing DNG files providing access to the raw data in a zero-copy friendly way.**
+Also containing code for reading / writing a human-readable YAML representation of DNG tags / the IFD structure.
+DNG-rs also supports interacting with DCP (Dng Camera Profile) files, but that is on a best-effort basis since I
 was unable to find official documentation on that.
 
 ## Tools
