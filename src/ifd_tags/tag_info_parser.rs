@@ -84,7 +84,7 @@ impl<'de> Deserialize<'de> for IfdCount {
     }
 }
 
-/// The maybe not accurately parsed `IfdTypeInterpretation` of a `Field`
+/// The maybe not accurately parsed [IfdTypeInterpretation] of a field
 #[derive(Deserialize, Debug, Eq, PartialEq, Clone)]
 #[serde(untagged)]
 pub enum MaybeIfdTypeInterpretation {
@@ -92,7 +92,7 @@ pub enum MaybeIfdTypeInterpretation {
     Other(serde_json::Value),
 }
 
-/// The high level interpretation of a `Field`. (i.e. Enum variants, Bitfields, IFD-pointer, ...)
+/// The high level interpretation of a field. (i.e. Enum variants, Bitfields, IFD-pointer, ...)
 #[derive(Deserialize, Debug, Eq, PartialEq, Clone)]
 #[serde(tag = "kind")]
 #[serde(rename_all = "UPPERCASE")]
@@ -114,9 +114,10 @@ pub enum IfdTypeInterpretation {
         ifd_type: IfdType,
     },
 
-    /// This together with `Lengths` points to a buffer in the file that contains e.g. the actual
-    /// image data. The `lengths` field contains the name of the corresponding `Lengths` tag.
+    /// This together with LENGTHS points to a buffer in the file that contains e.g. the actual
+    /// image data.
     Offsets {
+        /// contains the name of the corresponding LENGTHS tag.
         lengths: String,
     },
     Lengths,

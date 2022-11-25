@@ -87,7 +87,7 @@ impl Debug for IfdPath {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-/// A segment of an `IfdPath`
+/// A segment of an [IfdPath]
 pub enum IfdPathElement {
     Tag(MaybeKnownIfdFieldDescriptor),
     ListIndex(u16),
@@ -135,7 +135,7 @@ pub enum IfdValue {
     Ifd(Ifd),
 
     /// this value is not produced by the reader but rather there to insert image data into the writer
-    /// The contents will be written somewhere in the file and the tag will be replaced by a `Long`
+    /// The contents will be written somewhere in the file and the tag will be replaced by a [IfdValue::Long]
     /// pointing to that data. You are responsible for setting the corresponding length tag yourself.
     Offsets(#[derivative(Debug = "ignore")] Arc<dyn Deref<Target = [u8]>>),
 }
@@ -190,6 +190,14 @@ impl IfdValue {
             IfdValue::List(list) => list.len() as u32,
             IfdValue::Ascii(str) => str.len() as u32 + 1,
             _ => 1,
+        }
+    }
+    pub fn as_list(&self) -> impl Iterator<Item = &IfdValue> {
+        match self {
+            Self::List(list) => {
+                Box::new(list.iter().map(|x| &x.value)) as Box<dyn Iterator<Item = &IfdValue>>
+            }
+            _ => Box::new(once(self)) as Box<dyn Iterator<Item = &IfdValue>>,
         }
     }
 }

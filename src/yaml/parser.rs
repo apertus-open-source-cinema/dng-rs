@@ -14,7 +14,7 @@ use yaml_peg::parser::PError;
 use yaml_peg::repr::RcRepr;
 use yaml_peg::Node;
 
-/// The error-type produced by the `IfdYamlParser`
+/// The error-type produced by the [IfdYamlParser]
 #[derive(Debug)]
 pub enum IfdYamlParserError {
     PError(PError),
@@ -54,7 +54,7 @@ macro_rules! err {
     };
 }
 
-/// Parses an `IFD` struct from a friendly human readable text-representation as produced by the `IfdYamlDumper`
+/// Parses an [Ifd] struct from a friendly human readable text-representation as produced by the [crate::yaml::IfdYamlDumper]
 #[derive(Default)]
 pub struct IfdYamlParser {
     path: PathBuf,

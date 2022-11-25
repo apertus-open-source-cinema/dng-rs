@@ -1,5 +1,4 @@
 use clap::Parser;
-use dng::byte_order_rw::ByteOrderWriter;
 use dng::ifd::{IfdEntry, IfdValue};
 use dng::ifd_tags::IfdTypeInterpretation;
 use dng::yaml::IfdYamlDumper;
@@ -91,11 +90,7 @@ fn main() {
                         .truncate(true)
                         .open(path.clone())
                         .unwrap();
-                    DngWriter::write_primitive_value(
-                        &entry.value,
-                        &mut ByteOrderWriter::new(file, true),
-                    )
-                    .unwrap();
+                    DngWriter::write_primitive_value(&entry.value, file, true).unwrap();
                     return Some(format!(
                         "file://{}",
                         path.strip_prefix(dir.clone()).unwrap().to_str().unwrap()
@@ -107,14 +102,9 @@ fn main() {
                 ) && !matches!(entry.value, IfdValue::List(_))
                 {
                     let path = dir.join(entry.path.string_with_separator("_"));
-                    let buffer_size = dng
-                        .needed_buffer_size_for_blob(&entry)
-                        .unwrap()
-                        .value
-                        .as_u32()
-                        .unwrap();
+                    let buffer_size = dng.needed_buffer_size_for_offsets(&entry).unwrap();
                     let mut buffer = vec![0u8; buffer_size as usize];
-                    dng.read_blob_to_buffer(&entry, &mut buffer).unwrap();
+                    dng.read_offsets_to_buffer(&entry, &mut buffer).unwrap();
                     OpenOptions::new()
                         .write(true)
                         .create(true)

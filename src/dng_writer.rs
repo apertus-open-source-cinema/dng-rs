@@ -65,14 +65,27 @@ impl<W: Write + Seek> WritePlan<W> {
     }
 }
 
+/// The main entrypoint for writing DNG / DCP files
+///
+/// example:
+/// ```rust
+/// use std::fs::File;
+/// use dng::{DngWriter, FileType};
+/// use dng::ifd::{Ifd, IfdEntry};
+/// use dng::ifd_tags::IfdType;
+///
+/// let mut file = File::create("/tmp/foo").unwrap();
+/// let mut ifd = Ifd::new(IfdType::Ifd);
+/// DngWriter::write_dng(file, true, FileType::Dng, vec![ifd]).unwrap();
+/// ```
 #[derive(Debug, Derivative)]
 #[derivative(Clone(bound = ""))]
-/// The main entrypoint for writing DNG / DCP files
 pub struct DngWriter<W: Write + Seek> {
     is_little_endian: bool,
     plan: Arc<WritePlan<W>>,
 }
 impl<W: Write + Seek + 'static> DngWriter<W> {
+    /// Writes a DNG / DCP file given the endianness and a list of toplevel [Ifd]s
     pub fn write_dng(
         writer: W,
         is_little_endian: bool,
@@ -101,7 +114,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
         dng_writer.plan.execute(&mut writer)
     }
 
-    pub fn write_ifds(&self, mut ifds: Vec<Ifd>) -> u32 {
+    fn write_ifds(&self, mut ifds: Vec<Ifd>) -> u32 {
         if ifds.is_empty() {
             return 0; // we write a nullptr to signify that the IFD chain ends
         }
@@ -122,11 +135,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             writer.write_u32(next_ifd_address)
         })
     }
-    pub fn write_ifd_entry(
-        &self,
-        writer: &mut ByteOrderWriter<W>,
-        entry: IfdEntry,
-    ) -> io::Result<()> {
+    fn write_ifd_entry(&self, writer: &mut ByteOrderWriter<W>, entry: IfdEntry) -> io::Result<()> {
         // IFD entry layout:
         // * 2 byte tag
         // * 2 byte type
@@ -155,7 +164,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
         }
     }
 
-    pub fn write_value(
+    fn write_value(
         value: IfdValue,
         writer: &mut ByteOrderWriter<W>,
         dng_writer: &DngWriter<W>,
@@ -179,11 +188,19 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
                 }
                 Ok(())
             }
-            _ => Self::write_primitive_value(&value, writer),
+            _ => Self::write_primitive_value_internal(&value, writer),
         }
     }
 
     pub fn write_primitive_value(
+        value: &IfdValue,
+        writer: W,
+        little_endian: bool,
+    ) -> io::Result<()> {
+        let mut writer = ByteOrderWriter::new(writer, little_endian);
+        Self::write_primitive_value_internal(value, &mut writer)
+    }
+    fn write_primitive_value_internal(
         value: &IfdValue,
         writer: &mut ByteOrderWriter<W>,
     ) -> io::Result<()> {
@@ -213,7 +230,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             IfdValue::Double(v) => writer.write_f64(*v),
             IfdValue::List(list) => {
                 for v in list {
-                    Self::write_primitive_value(&v.value, writer)?;
+                    Self::write_primitive_value_internal(&v.value, writer)?;
                 }
                 Ok(())
             }
