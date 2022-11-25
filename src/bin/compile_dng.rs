@@ -45,7 +45,7 @@ fn main() {
     let dcp_file_path = yaml_path.parent().unwrap().join(format!(
         "{}.{}",
         yaml_path.file_stem().unwrap().to_str().unwrap(),
-        file_type.get_extension(),
+        file_type.extension(),
     ));
     let dcp_file = OpenOptions::new()
         .write(true)

@@ -1,5 +1,5 @@
 use crate::ifd::{Ifd, IfdEntry, IfdValue};
-use crate::ifd_tags::IfdTypeInterpretation;
+use crate::ifd_tags::{IfdTypeInterpretation, IfdValueType};
 use itertools::Itertools;
 use std::sync::Arc;
 
@@ -24,7 +24,7 @@ impl IfdYamlDumper {
             .collect()
     }
     pub fn dump_ifd_value(&self, entry: &IfdEntry) -> String {
-        if entry.tag.get_known_type_interpretation().is_some() {
+        if entry.tag.get_type_interpretation().is_some() {
             self.dump_ifd_value_with_type_interpretation(entry)
         } else {
             self.dump_ifd_value_plain(entry)
@@ -39,10 +39,10 @@ impl IfdYamlDumper {
             return s.clone();
         }
 
-        match entry.tag.get_known_type_interpretation().unwrap() {
+        match entry.tag.get_type_interpretation().unwrap() {
             IfdTypeInterpretation::Enumerated { values } => {
-                if let Some(v) = entry.value.as_u32() {
-                    if let Some(v) = values.get(&v) {
+                if let Some(num) = entry.value.as_u32() {
+                    if let Some((_, v)) = values.iter().find(|(k, _)| *k == num) {
                         v.to_string()
                     } else {
                         format!("UNKNOWN ({})", self.dump_ifd_value_plain(entry))
@@ -116,8 +116,24 @@ impl IfdYamlDumper {
         }
         format!(
             "!{} ",
-            serde_plain::to_string(&entry.value.get_ifd_value_type()).unwrap()
+            Self::dump_ifd_value_type(&entry.value.get_ifd_value_type())
         )
+    }
+    fn dump_ifd_value_type(v: &IfdValueType) -> &str {
+        match v {
+            IfdValueType::Byte => "BYTE",
+            IfdValueType::Ascii => "ASCII",
+            IfdValueType::Short => "SHORT",
+            IfdValueType::Long => "LONG",
+            IfdValueType::Rational => "RATIONAL",
+            IfdValueType::SByte => "SBYTE",
+            IfdValueType::Undefined => "UNDEFINED",
+            IfdValueType::SShort => "SSHORT",
+            IfdValueType::SLong => "SLONG",
+            IfdValueType::SRational => "SRATIONAL",
+            IfdValueType::Float => "FLOAT",
+            IfdValueType::Double => "DOUBLE",
+        }
     }
     fn indent_yaml_list_item(x: String) -> String {
         let first_line: String = x.lines().take(1).collect();

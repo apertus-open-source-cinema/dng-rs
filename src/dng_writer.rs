@@ -2,7 +2,6 @@ use crate::byte_order_rw::ByteOrderWriter;
 use crate::ifd::{Ifd, IfdEntry, IfdValue};
 use crate::FileType;
 use derivative::Derivative;
-use num_traits::ToPrimitive;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::io;
@@ -104,7 +103,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             } else {
                 writer.write(&[0x4D, 0x4D])?;
             }
-            writer.write_u16(file_type.to_u16().unwrap())?;
+            writer.write_u16(file_type.magic())?;
 
             let ifd_address = dng_writer_clone.write_ifds(ifds);
             writer.write_u32(ifd_address)
@@ -145,7 +144,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
         let dtype = entry.value.get_ifd_value_type();
 
         writer.write_u16(entry.tag.numeric())?;
-        writer.write_u16(dtype.to_u16().unwrap())?;
+        writer.write_u16(dtype.as_u16())?;
         writer.write_u32(count)?;
 
         let required_bytes = count * dtype.needed_bytes();

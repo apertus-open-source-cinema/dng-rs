@@ -7,6 +7,7 @@ use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::io;
 use std::io::Read;
+use std::iter::once;
 use std::path::PathBuf;
 use std::sync::Arc;
 use yaml_peg::parser::parse;
@@ -84,8 +85,7 @@ impl IfdYamlParser {
             let tag = self.parse_ifd_tag(key, ifd_type)?;
 
             // if we have offsets we need to emit two tags (offsets and lengths), thus we need to handle this directly
-            if let Some(IfdTypeInterpretation::Offsets { lengths }) =
-                tag.get_known_type_interpretation()
+            if let Some(IfdTypeInterpretation::Offsets { lengths }) = tag.get_type_interpretation()
             {
                 let lengths_tag = MaybeKnownIfdFieldDescriptor::from_name(lengths, ifd_type)
                     .map_err(|e| err!(value.pos(), "{}", e.to_string()))?;
@@ -197,7 +197,7 @@ impl IfdYamlParser {
     ) -> Result<IfdEntry, IfdYamlParserError> {
         let value = if let Ok(_) = value.as_map() {
             let ifd_type = if let Some(IfdTypeInterpretation::IfdOffset { ifd_type }) =
-                tag.get_known_type_interpretation()
+                tag.get_type_interpretation()
             {
                 *ifd_type
             } else {
@@ -258,17 +258,15 @@ impl IfdYamlParser {
         parent_yaml_tag: Option<&str>,
     ) -> Result<IfdValue, IfdYamlParserError> {
         let yaml_tag = parent_yaml_tag.unwrap_or(value.tag());
-        let dtypes: Vec<IfdValueType> = if let Ok(ty) =
-            serde_plain::from_str::<IfdValueType>(yaml_tag)
-        {
-            Ok(vec![ty])
+        let dtypes = if let Some(ty) = Self::parse_ifd_value_type(yaml_tag) {
+            Ok(Box::new(once(ty)) as Box<dyn Iterator<Item = IfdValueType>>)
         } else if let Some(types) = tag.get_known_value_type() {
-            Ok(types.clone())
+            Ok(Box::new(types.iter().cloned()) as Box<dyn Iterator<Item = IfdValueType>>)
         } else {
             Err(err!(value.pos(), "couldnt determine dtype of tag '{tag}'. if the IFD tag is unknown, the dtype must be specified explicitly with a YAML tag"))
         }?;
 
-        match tag.get_known_type_interpretation() {
+        match tag.get_type_interpretation() {
             Some(IfdTypeInterpretation::Enumerated { values }) => {
                 let str = value
                     .as_str()
@@ -302,6 +300,24 @@ impl IfdYamlParser {
                 }
                 Err(err!(value.pos(), "No dtype worked for tag {tag}"))
             }
+        }
+    }
+
+    fn parse_ifd_value_type(v: &str) -> Option<IfdValueType> {
+        match v {
+            "BYTE" => Some(IfdValueType::Byte),
+            "ASCII" => Some(IfdValueType::Ascii),
+            "SHORT" => Some(IfdValueType::Short),
+            "LONG" => Some(IfdValueType::Long),
+            "RATIONAL" => Some(IfdValueType::Rational),
+            "SBYTE" => Some(IfdValueType::SByte),
+            "UNDEFINED" => Some(IfdValueType::Undefined),
+            "SSHORT" => Some(IfdValueType::SShort),
+            "SLONG" => Some(IfdValueType::SLong),
+            "SRATIONAL" => Some(IfdValueType::SRational),
+            "FLOAT" => Some(IfdValueType::Float),
+            "DOUBLE" => Some(IfdValueType::Double),
+            _ => None,
         }
     }
 

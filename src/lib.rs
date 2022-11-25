@@ -24,18 +24,29 @@ pub mod yaml;
 pub use dng_reader::DngReader;
 pub use dng_writer::DngWriter;
 
-use num_derive::{FromPrimitive, ToPrimitive};
-
-#[derive(Debug, Clone, Copy, Eq, PartialEq, FromPrimitive, ToPrimitive)]
 /// An enumeration over DNG / DCP files
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum FileType {
     /// A normal DNG / TIFF file
-    Dng = 42,
+    Dng,
     /// A DNG Camera Profile file. This should not contain image data
-    Dcp = 0x4352,
+    Dcp,
 }
 impl FileType {
-    pub fn get_extension(&self) -> &str {
+    pub fn from_magic(magic: u16) -> Option<Self> {
+        match magic {
+            42 => Some(Self::Dng),
+            0x4352 => Some(Self::Dcp),
+            _ => None,
+        }
+    }
+    pub fn magic(&self) -> u16 {
+        match self {
+            FileType::Dng => 42,
+            FileType::Dcp => 0x4352,
+        }
+    }
+    pub fn extension(&self) -> &str {
         match self {
             FileType::Dng => "dng",
             FileType::Dcp => "dcp",

@@ -1,7 +1,6 @@
 use crate::byte_order_rw::ByteOrderReader;
 use crate::ifd::{Ifd, IfdEntry, IfdPath, IfdValue};
 use crate::ifd_tags::{IfdType, IfdTypeInterpretation, IfdValueType, MaybeKnownIfdFieldDescriptor};
-use num_traits::FromPrimitive;
 use std::io::{self, Read, Seek, SeekFrom};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -83,7 +82,7 @@ impl IfdEntryReader {
         }
 
         let value = if let Some(IfdTypeInterpretation::IfdOffset { ifd_type }) =
-            tag.get_known_type_interpretation()
+            tag.get_type_interpretation()
         {
             assert_eq!(self.dtype, IfdValueType::Long);
             let mut read_ifd = |path: &IfdPath| -> Result<IfdValue, io::Error> {

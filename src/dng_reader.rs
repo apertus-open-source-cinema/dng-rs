@@ -4,7 +4,6 @@ use crate::ifd_reader::IfdReader;
 use crate::ifd_tags::{IfdType, IfdTypeInterpretation, MaybeKnownIfdFieldDescriptor};
 use crate::FileType;
 use derivative::Derivative;
-use num_traits::FromPrimitive;
 use std::cell::RefCell;
 use std::fmt::{Display, Formatter};
 use std::io;
@@ -85,7 +84,7 @@ impl<R: Read + Seek> DngReader<R> {
         }?;
         let mut reader = ByteOrderReader::new(reader, is_little_endian);
         let magic = reader.read_u16()?;
-        let file_type = FileType::from_u16(magic).ok_or(DngReaderError::FormatError(format!(
+        let file_type = FileType::from_magic(magic).ok_or(DngReaderError::FormatError(format!(
             "invalid magic byte sequence (expected 42, got {}",
             magic
         )))?;
@@ -129,7 +128,7 @@ impl<R: Read + Seek> DngReader<R> {
         entry: &IfdEntry,
     ) -> Result<usize, DngReaderError> {
         if let Some(IfdTypeInterpretation::Offsets { lengths }) =
-            entry.tag.get_known_type_interpretation()
+            entry.tag.get_type_interpretation()
         {
             let lengths_paths = entry.path.with_last_tag_replaced(
                 MaybeKnownIfdFieldDescriptor::from_name(lengths, IfdType::Ifd)

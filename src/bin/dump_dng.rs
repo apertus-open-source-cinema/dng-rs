@@ -80,7 +80,7 @@ fn main() {
             let matrix_prettify_visitor = matrix_prettify_visitor.clone();
             move |entry: IfdEntry| -> Option<String> {
                 if matches!(
-                    entry.tag.get_known_type_interpretation(),
+                    entry.tag.get_type_interpretation(),
                     Some(IfdTypeInterpretation::Blob)
                 ) {
                     let path = dir.join(entry.path.string_with_separator("_"));
@@ -97,7 +97,7 @@ fn main() {
                     ));
                 }
                 if matches!(
-                    entry.tag.get_known_type_interpretation(),
+                    entry.tag.get_type_interpretation(),
                     Some(IfdTypeInterpretation::Offsets { .. })
                 ) && !matches!(entry.value, IfdValue::List(_))
                 {
