@@ -96,14 +96,14 @@ pub enum MaybeKnownIfdFieldDescriptor {
 impl MaybeKnownIfdFieldDescriptor {
     pub fn from_number(tag: u16, ifd_kind: IfdType) -> Self {
         if let Some(description) = ifd_kind.get_namespace().iter().find(|x| x.tag == tag) {
-            Self::Known(description.clone())
+            Self::Known(*description)
         } else {
             Self::Unknown(tag)
         }
     }
     pub fn from_name(name: &str, ifd_kind: IfdType) -> Result<Self, String> {
         if let Some(description) = ifd_kind.get_namespace().iter().find(|x| x.name == name) {
-            Ok(Self::Known(description.clone()))
+            Ok(Self::Known(*description))
         } else {
             Err(format!("No Tag named '{}' known", name))
         }
@@ -118,13 +118,13 @@ impl MaybeKnownIfdFieldDescriptor {
     }
     pub fn get_known_value_type(&self) -> Option<&[IfdValueType]> {
         match self {
-            MaybeKnownIfdFieldDescriptor::Known(known) => Some(&known.dtype),
+            MaybeKnownIfdFieldDescriptor::Known(known) => Some(known.dtype),
             MaybeKnownIfdFieldDescriptor::Unknown(_) => None,
         }
     }
     pub fn get_known_name(&self) -> Option<&str> {
         match self {
-            Self::Known(descriptor) => Some(&descriptor.name),
+            Self::Known(descriptor) => Some(descriptor.name),
             Self::Unknown(_) => None,
         }
     }

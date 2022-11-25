@@ -26,7 +26,7 @@ impl Ifd {
     pub fn get_entry_by_tag(&self, tag: MaybeKnownIfdFieldDescriptor) -> Option<&IfdEntry> {
         self.entries.iter().find(|x| x.tag == tag)
     }
-    pub fn flat_entries<'a>(&'a self) -> impl Iterator<Item = &'a IfdEntry> + 'a {
+    pub fn flat_entries(&self) -> impl Iterator<Item = &IfdEntry> {
         self.entries
             .iter()
             .flat_map(|entry| once(entry).chain(entry.value.iter_children()))
@@ -36,7 +36,7 @@ impl Ifd {
     }
 }
 
-#[derive(Clone, PartialEq, Default)]
+#[derive(Clone, PartialEq, Default, Eq)]
 /// The absolute path at which the entry is found in the IFD-tree
 pub struct IfdPath(Vec<IfdPathElement>);
 impl IfdPath {
@@ -86,7 +86,7 @@ impl Debug for IfdPath {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 /// A segment of an [IfdPath]
 pub enum IfdPathElement {
     Tag(MaybeKnownIfdFieldDescriptor),
@@ -107,11 +107,6 @@ pub struct IfdEntry {
     pub value: IfdValue,
     pub path: IfdPath,
     pub tag: MaybeKnownIfdFieldDescriptor,
-}
-impl Into<IfdValue> for IfdEntry {
-    fn into(self) -> IfdValue {
-        self.value
-    }
 }
 
 #[derive(Clone, Derivative)]

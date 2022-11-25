@@ -17,8 +17,8 @@ impl IfdYamlDumper {
                 format!(
                     "{}: {}{}\n",
                     entry.tag,
-                    self.dump_tag_if_needed(&entry),
-                    self.dump_ifd_value(&entry)
+                    self.dump_tag_if_needed(entry),
+                    self.dump_ifd_value(entry)
                 )
             })
             .collect()
@@ -36,7 +36,7 @@ impl IfdYamlDumper {
             .clone()
             .and_then(|visitor| visitor(entry.clone()))
         {
-            return s.clone();
+            return s;
         }
 
         match entry.tag.get_type_interpretation().unwrap() {
@@ -142,7 +142,7 @@ impl IfdYamlDumper {
         format!(
             "\n- {}\n{}",
             first_line,
-            textwrap::indent(&rest.trim(), "  ")
+            textwrap::indent(rest.trim(), "  ")
         )
     }
 }

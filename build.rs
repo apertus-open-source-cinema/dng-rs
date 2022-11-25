@@ -114,9 +114,9 @@ fn parse_single_dtype(json: JsonValue) -> String {
 }
 fn parse_count(json: JsonValue) -> String {
     let str = json.as_str().unwrap();
-    match u32::from_str_radix(str, 10) {
+    match str.parse::<u32>() {
         Ok(n) => format!("IfdCount::ConcreteValue({n})"),
-        Err(_) => format!("IfdCount::N"),
+        Err(_) => "IfdCount::N".to_string(),
     }
 }
 fn parse_interpretation(mut json: JsonValue) -> String {

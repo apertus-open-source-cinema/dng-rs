@@ -25,7 +25,7 @@ impl IfdReader {
         let mut ifd = Ifd::new(ifd_type);
         for entry in &self.entries {
             let tag = MaybeKnownIfdFieldDescriptor::from_number(entry.tag, ifd_type);
-            ifd.insert(entry.process(reader, &tag, path)?);
+            ifd.insert(entry.process(reader, tag, path)?);
         }
         Ok(ifd)
     }
@@ -44,13 +44,15 @@ impl IfdEntryReader {
         let own_offset = reader.seek(SeekFrom::Current(0))? as u32;
         let tag = reader.read_u16()?;
         let dtype = reader.read_u16()?;
-        let dtype = IfdValueType::from_u16(dtype).ok_or(io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!(
-                "encountered unknown value '{}' in IFD type field (tag {:#04X})",
-                dtype, tag
-            ),
-        ))?;
+        let dtype = IfdValueType::from_u16(dtype).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!(
+                    "encountered unknown value '{}' in IFD type field (tag {:#04X})",
+                    dtype, tag
+                ),
+            )
+        })?;
         let count = reader.read_u32()?;
         let value_or_offset = reader.read_u32()?;
         Ok(Self {
@@ -70,10 +72,10 @@ impl IfdEntryReader {
     pub fn process(
         &self,
         reader: &mut ByteOrderReader<impl Read + Seek>,
-        tag: &MaybeKnownIfdFieldDescriptor,
+        tag: MaybeKnownIfdFieldDescriptor,
         path: &IfdPath,
     ) -> Result<IfdEntry, io::Error> {
-        let path = path.chain_tag(tag.clone());
+        let path = path.chain_tag(tag);
 
         if self.fits_inline() {
             reader.seek(SeekFrom::Start((self.own_offset + 8) as u64))?;
@@ -92,7 +94,7 @@ impl IfdEntryReader {
                 let unprocessed_ifd = IfdReader::read(reader)?;
                 let ifd = unprocessed_ifd.process(*ifd_type, path, reader)?;
                 reader.seek(SeekFrom::Start(current))?;
-                return Ok(IfdValue::Ifd(ifd));
+                Ok(IfdValue::Ifd(ifd))
             };
             match self.count {
                 1 => read_ifd(&path),
@@ -103,7 +105,7 @@ impl IfdEntryReader {
                             Ok(IfdEntry {
                                 value: read_ifd(&path)?,
                                 path: path.clone(),
-                                tag: tag.clone(),
+                                tag,
                             })
                         })
                         .collect();
@@ -113,18 +115,14 @@ impl IfdEntryReader {
         } else {
             Self::read_primitive_ifd_value(self.dtype, self.count, path.clone(), tag, reader)
         }?;
-        Ok(IfdEntry {
-            value,
-            tag: tag.clone(),
-            path: path.clone(),
-        })
+        Ok(IfdEntry { value, tag, path })
     }
 
     fn read_primitive_ifd_value(
         dtype: IfdValueType,
         count: u32,
         path: IfdPath,
-        tag: &MaybeKnownIfdFieldDescriptor,
+        tag: MaybeKnownIfdFieldDescriptor,
         reader: &mut ByteOrderReader<impl Read>,
     ) -> io::Result<IfdValue> {
         Ok(if let IfdValueType::Ascii = dtype {
@@ -137,8 +135,8 @@ impl IfdEntryReader {
                     let path = path.chain_list_index(i as u16);
                     Ok(IfdEntry {
                         value: Self::read_primitive_ifd_value(dtype, 1, path.clone(), tag, reader)?,
-                        path: path.clone(),
-                        tag: tag.clone(),
+                        path,
+                        tag,
                     })
                 })
                 .collect();

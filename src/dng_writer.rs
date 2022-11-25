@@ -29,7 +29,7 @@ impl<W: Write + Seek> WritePlan<W> {
         size: u32,
         write_fn: impl FnOnce(&mut ByteOrderWriter<W>) -> io::Result<()> + 'static,
     ) -> u32 {
-        let offset = *self.write_ptr.borrow() + 3 & !3; // we align to word boundaries
+        let offset = (*self.write_ptr.borrow() + 3) & !3; // we align to word boundaries
         self.to_write.borrow_mut().push_back(WritePlanEntry {
             offset,
             size,
@@ -99,9 +99,9 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
         let dng_writer_clone = dng_writer.clone();
         dng_writer.plan.add_entry(8, move |writer| {
             if is_little_endian {
-                writer.write(&[0x49, 0x49])?;
+                writer.write_all(&[0x49, 0x49])?;
             } else {
-                writer.write(&[0x4D, 0x4D])?;
+                writer.write_all(&[0x4D, 0x4D])?;
             }
             writer.write_u16(file_type.magic())?;
 
@@ -176,7 +176,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             IfdValue::Offsets(blob) => {
                 let size = blob.len() as u32;
                 let offset = dng_writer.plan.add_entry(size, move |writer| {
-                    writer.write(&*blob)?;
+                    writer.write_all(&blob)?;
                     Ok(())
                 });
                 writer.write_u32(offset)

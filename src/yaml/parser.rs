@@ -107,12 +107,12 @@ impl IfdYamlParser {
                         let offsets_entry = IfdEntry {
                             value: IfdValue::Offsets(Arc::new(buffer)),
                             path: path.clone(),
-                            tag: tag.clone(),
+                            tag,
                         };
                         let lengths_entry = IfdEntry {
                             value: IfdValue::Long(len as u32),
                             path: path.with_last_tag_replaced(lengths.as_maybe()),
-                            tag: lengths.as_maybe(),
+                            tag,
                         };
                         Ok(Some((offsets_entry, lengths_entry)))
                     } else {
@@ -134,12 +134,12 @@ impl IfdYamlParser {
                             ifd.insert(IfdEntry {
                                 value: IfdValue::List(offsets),
                                 path: path.clone(),
-                                tag: tag.clone(),
+                                tag,
                             });
                             ifd.insert(IfdEntry {
                                 value: IfdValue::List(lengths_values),
                                 path: path.with_last_tag_replaced(lengths.as_maybe()),
-                                tag: tag.clone(),
+                                tag,
                             });
                             continue;
                         }
@@ -170,8 +170,8 @@ impl IfdYamlParser {
                 i as u16, ifd_type,
             ))
         } else if let Ok(str) = source.as_str() {
-            if str.starts_with("0x") {
-                if let Ok(tag) = u16::from_str_radix(&str[2..], 16) {
+            if let Some(str) = str.strip_prefix("0x") {
+                if let Ok(tag) = u16::from_str_radix(str, 16) {
                     Ok(MaybeKnownIfdFieldDescriptor::from_number(tag, ifd_type))
                 } else {
                     Err(err!(source.pos(), "couldnt parse hex string '{str}'"))
@@ -192,7 +192,7 @@ impl IfdYamlParser {
         path: IfdPath,
         parent_yaml_tag: Option<&str>,
     ) -> Result<IfdEntry, IfdYamlParserError> {
-        let value = if let Ok(_) = value.as_map() {
+        let value = if value.as_map().is_ok() {
             let ifd_type = if let Some(IfdTypeInterpretation::IfdOffset { ifd_type }) =
                 tag.get_type_interpretation()
             {
@@ -200,7 +200,7 @@ impl IfdYamlParser {
             } else {
                 IfdType::Ifd
             };
-            IfdValue::Ifd(self.parse_ifd(value, ifd_type, path.chain_tag(tag.clone()))?)
+            IfdValue::Ifd(self.parse_ifd(value, ifd_type, path.chain_tag(tag))?)
         } else if let Ok(seq) = value.as_seq() {
             let result: Result<Vec<_>, _> = seq
                 .iter()
@@ -208,7 +208,7 @@ impl IfdYamlParser {
                 .map(|(i, node)| {
                     self.parse_ifd_entry(
                         node,
-                        tag.clone(),
+                        tag,
                         path.chain_list_index(i as u16),
                         Some(value.tag()),
                     )
@@ -232,7 +232,7 @@ impl IfdYamlParser {
                                 .map(|(i, b)| IfdEntry {
                                     value: IfdValue::Byte(*b),
                                     path: path.chain_list_index(i as u16),
-                                    tag: tag.clone(),
+                                    tag,
                                 })
                                 .collect(),
                         );
@@ -240,11 +240,11 @@ impl IfdYamlParser {
                 }
 
                 // we are dealing with a scalar
-                break self.parse_ifd_scalar_value(value, tag.clone(), parent_yaml_tag)?;
+                break self.parse_ifd_scalar_value(value, tag, parent_yaml_tag)?;
             }
         };
 
-        let path = path.chain_tag(tag.clone());
+        let path = path.chain_tag(tag);
         Ok(IfdEntry { value, path, tag })
     }
 
@@ -254,7 +254,7 @@ impl IfdYamlParser {
         tag: MaybeKnownIfdFieldDescriptor,
         parent_yaml_tag: Option<&str>,
     ) -> Result<IfdValue, IfdYamlParserError> {
-        let yaml_tag = parent_yaml_tag.unwrap_or(value.tag());
+        let yaml_tag = parent_yaml_tag.unwrap_or_else(|| value.tag());
         let dtypes = if let Some(ty) = Self::parse_ifd_value_type(yaml_tag) {
             Ok(Box::new(once(ty)) as Box<dyn Iterator<Item = IfdValueType>>)
         } else if let Some(types) = tag.get_known_value_type() {
@@ -278,13 +278,13 @@ impl IfdYamlParser {
                     _ => Err(err!(value.pos(), "{str} is ambiguous for tag {tag}. Disambiguate between: {matching_values:?}"))?,
                 };
                 for dtype in dtypes {
-                    return Ok(match dtype {
-                        IfdValueType::Byte => IfdValue::Byte(*numeric as u8),
-                        IfdValueType::Short => IfdValue::Short(*numeric as u16),
-                        IfdValueType::Long => IfdValue::Long(*numeric as u32),
-                        IfdValueType::Undefined => IfdValue::Undefined(*numeric as u8),
-                        _ => unreachable!(),
-                    });
+                    match dtype {
+                        IfdValueType::Byte => return Ok(IfdValue::Byte(*numeric as u8)),
+                        IfdValueType::Short => return Ok(IfdValue::Short(*numeric as u16)),
+                        IfdValueType::Long => return Ok(IfdValue::Long(*numeric as u32)),
+                        IfdValueType::Undefined => return Ok(IfdValue::Undefined(*numeric as u8)),
+                        _ => {}
+                    };
                 }
                 Err(err!(value.pos(), "No dtype worked"))
             }

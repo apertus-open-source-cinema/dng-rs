@@ -73,7 +73,7 @@ impl<R: Read + Seek> DngReader<R> {
     pub fn read(mut reader: R) -> Result<Self, DngReaderError> {
         // the first two bytes set the byte order
         let mut header = vec![0u8; 2];
-        reader.read(&mut header)?;
+        reader.read_exact(&mut header)?;
         let is_little_endian = match (header[0], header[1]) {
             (0x49, 0x49) => Ok(true),
             (0x4D, 0x4D) => Ok(false),
@@ -84,10 +84,12 @@ impl<R: Read + Seek> DngReader<R> {
         }?;
         let mut reader = ByteOrderReader::new(reader, is_little_endian);
         let magic = reader.read_u16()?;
-        let file_type = FileType::from_magic(magic).ok_or(DngReaderError::FormatError(format!(
-            "invalid magic byte sequence (expected 42, got {}",
-            magic
-        )))?;
+        let file_type = FileType::from_magic(magic).ok_or_else(|| {
+            DngReaderError::FormatError(format!(
+                "invalid magic byte sequence (expected 42, got {}",
+                magic
+            ))
+        })?;
 
         let mut next_ifd_offset = reader.read_u32()?;
         let mut unprocessed_ifds = Vec::new();
@@ -161,10 +163,12 @@ impl<R: Read + Seek> DngReader<R> {
             )))
         } else {
             let mut reader = self.reader.borrow_mut();
-            reader.seek(SeekFrom::Start(entry.value.as_u32().ok_or(io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("entry {entry:?} cant be read into buffer. it is not a single OFFSETS"),
-            ))? as u64))?;
+            reader.seek(SeekFrom::Start(entry.value.as_u32().ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    format!("entry {entry:?} cant be read into buffer. it is not a single OFFSETS"),
+                )
+            })? as u64))?;
             reader.read_exact(buffer)?;
             Ok(())
         }
@@ -178,7 +182,7 @@ impl<R: Read + Seek> DngReader<R> {
                 entry.tag == ifd::NewSubfileType.as_maybe() && entry.value.as_u32() == Some(0)
             })
             .map(|entry| entry.path.parent())
-            .unwrap_or(IfdPath::default())
+            .unwrap_or_default()
     }
     fn load_ifd(
         &self,
@@ -187,11 +191,9 @@ impl<R: Read + Seek> DngReader<R> {
         let ifd = if ifd_path == &IfdPath::default() {
             self.get_ifd0()
         } else {
-            let entry = self
-                .get_entry_by_path(ifd_path)
-                .ok_or(DngReaderError::Other(format!(
-                    "entry with path {ifd_path:?} not found"
-                )))?;
+            let entry = self.get_entry_by_path(ifd_path).ok_or_else(|| {
+                DngReaderError::Other(format!("entry with path {ifd_path:?} not found"))
+            })?;
             if let IfdValue::Ifd(ifd) = &entry.value {
                 ifd
             } else {
@@ -213,9 +215,9 @@ impl<R: Read + Seek> DngReader<R> {
 
         if let Some(compression) = get_field(ifd::Compression) {
             if compression.value.as_u32() != Some(1) {
-                return Err(DngReaderError::Other(format!(
-                    "reading compressed images is not implemented"
-                )));
+                return Err(DngReaderError::Other(
+                    "reading compressed images is not implemented".to_string(),
+                ));
             }
         }
 
@@ -238,13 +240,13 @@ impl<R: Read + Seek> DngReader<R> {
         } else if let (Some(_offsets), Some(_lengths)) =
             (get_field(ifd::TileOffsets), get_field(ifd::TileByteCounts))
         {
-            Err(DngReaderError::Other(format!(
-                "reading tiled images is not implemented"
-            )))
+            Err(DngReaderError::Other(
+                "reading tiled images is not implemented".to_string(),
+            ))
         } else {
-            Err(DngReaderError::Other(format!(
-                "No image data was found in the specified IFD"
-            )))
+            Err(DngReaderError::Other(
+                "No image data was found in the specified IFD".to_string(),
+            ))
         }
     }
     /// Reads the image data from a given IFD into o given buffer
@@ -262,9 +264,9 @@ impl<R: Read + Seek> DngReader<R> {
         ) {
             let count = offsets.value.get_count();
             if count != lengths.value.get_count() {
-                return Err(DngReaderError::FormatError(format!(
-                    "the counts of OFFSETS and LENGTHS must be the same"
-                )));
+                return Err(DngReaderError::FormatError(
+                    "the counts of OFFSETS and LENGTHS must be the same".to_string(),
+                ));
             }
             let mut buffer_offset = 0;
             for (offset, length) in offsets.value.as_list().zip(lengths.value.as_list()) {
@@ -282,13 +284,13 @@ impl<R: Read + Seek> DngReader<R> {
         } else if let (Some(_offsets), Some(_lengths)) =
             (get_field(ifd::TileOffsets), get_field(ifd::TileByteCounts))
         {
-            Err(DngReaderError::Other(format!(
-                "reading tiled images is not implemented"
-            )))
+            Err(DngReaderError::Other(
+                "reading tiled images is not implemented".to_string(),
+            ))
         } else {
-            Err(DngReaderError::Other(format!(
-                "No image data was found in the specified IFD"
-            )))
+            Err(DngReaderError::Other(
+                "No image data was found in the specified IFD".to_string(),
+            ))
         }
     }
 }
