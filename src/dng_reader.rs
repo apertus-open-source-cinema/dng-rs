@@ -130,10 +130,7 @@ impl<R: Read + Seek> DngReader<R> {
         if let Some(IfdTypeInterpretation::Offsets { lengths }) =
             entry.tag.get_type_interpretation()
         {
-            let lengths_paths = entry.path.with_last_tag_replaced(
-                MaybeKnownIfdFieldDescriptor::from_name(lengths, IfdType::Ifd)
-                    .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?,
-            );
+            let lengths_paths = entry.path.with_last_tag_replaced(lengths.as_maybe());
             let lengths_value = self.get_entry_by_path(&lengths_paths);
             if let Some(entry) = lengths_value {
                 Ok(entry.value.as_u32().unwrap() as usize)

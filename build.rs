@@ -7,9 +7,9 @@ use std::path::Path;
 
 fn main() {
     let mut ifd_code = String::new();
-    ifd_code += &parse_ifd_file("src/ifd_tags/ifd.json", "IFD_TAGS");
-    ifd_code += &parse_ifd_file("src/ifd_tags/exif.json", "EXIF_TAGS");
-    ifd_code += &parse_ifd_file("src/ifd_tags/gps_info.json", "GPS_INFO_TAGS");
+    ifd_code += &parse_ifd_file("src/ifd_tags/ifd.json", "ifd");
+    ifd_code += &parse_ifd_file("src/ifd_tags/exif.json", "exif");
+    ifd_code += &parse_ifd_file("src/ifd_tags/gps_info.json", "gps_info");
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let path = Path::new(&out_dir).join("ifd_data.rs");
@@ -19,20 +19,33 @@ fn main() {
     println!("cargo:rustc-cfg=has_generated_feature");
 }
 
-fn parse_ifd_file(path: &str, var_name: &str) -> String {
+fn parse_ifd_file(path: &str, name: &str) -> String {
     println!("cargo:rerun-if-changed={path}");
     let contents = fs::read_to_string(path).expect("Unable to read file");
     let mut json: JsonValue = json::parse(&contents).expect("Unable to parse JSON");
     let entries: Vec<_> = json
         .members_mut()
-        .map(|entry| parse_ifd_field_descriptor(entry.take()) + ",\n")
+        .map(|entry| parse_ifd_field_descriptor(entry.take()))
+        .collect();
+    let definitions: String = entries.iter().map(|(_, code)| code.to_string()).collect();
+    let arr_contents: String = entries
+        .iter()
+        .map(|(name, _)| format!("{name}, "))
         .collect();
     let len = entries.len();
-    let entries_str: String = entries.into_iter().collect();
-    format!("const {var_name}: [IfdFieldDescriptor; {len}] = [{entries_str}];\n\n")
+    format!("
+        /// Tags contained in the {name} namespace
+        #[allow(non_upper_case_globals)]
+        pub mod {name} {{
+            #[allow(unused_imports)]
+            use super::{{IfdFieldDescriptor, IfdValueType, IfdCount, IfdTypeInterpretation, IfdType}};
+            pub(crate) const ALL: [IfdFieldDescriptor; {len}] = [{arr_contents}];
+            {definitions}
+        }}
+    ")
 }
 
-fn parse_ifd_field_descriptor(mut json: JsonValue) -> String {
+fn parse_ifd_field_descriptor(mut json: JsonValue) -> (String, String) {
     let name = json.remove("name").take_string().unwrap();
     let tag = u16::from_str_radix(&json.remove("tag").take_string().unwrap()[2..], 16).unwrap();
     let dtype = parse_dtype(json.remove("dtype"));
@@ -42,7 +55,7 @@ fn parse_ifd_field_descriptor(mut json: JsonValue) -> String {
     let long_description = json.remove("long_description").take_string().unwrap();
     let references = json.remove("references").take_string().unwrap();
 
-    format!(
+    let code = format!(
         r#"
         IfdFieldDescriptor {{
             name: {name:?},
@@ -55,7 +68,25 @@ fn parse_ifd_field_descriptor(mut json: JsonValue) -> String {
             references: {references:?},
         }}
     "#
-    )
+    );
+    let doc_description = doc_lines(description);
+    let doc_long_description = doc_lines(long_description);
+    let doc_references = doc_lines(references);
+    let definition = format!(
+        "
+        {doc_description}
+        ///
+        {doc_long_description}
+        ///
+        /// references:  \\
+        {doc_references}
+        pub const {name}: IfdFieldDescriptor = {code};\n
+    "
+    );
+    (name, definition)
+}
+fn doc_lines(lines: String) -> String {
+    lines.lines().map(|s| format!("/// {s}")).collect()
 }
 fn parse_dtype(mut json: JsonValue) -> String {
     let entrys: String = json
@@ -106,7 +137,7 @@ fn parse_interpretation(mut json: JsonValue) -> String {
         }
         "OFFSETS" => {
             let lengths = json.remove("lengths").take_string().unwrap();
-            format!("IfdTypeInterpretation::Offsets {{ lengths: {lengths:?} }}")
+            format!("IfdTypeInterpretation::Offsets {{ lengths: &{lengths} }}")
         }
         "LENGTHS" => "IfdTypeInterpretation::Lengths".to_string(),
         "BLOB" => "IfdTypeInterpretation::Blob".to_string(),

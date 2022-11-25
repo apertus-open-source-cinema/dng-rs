@@ -12,22 +12,22 @@ pub enum IfdType {
 impl IfdType {
     pub fn get_namespace(&self) -> &[IfdFieldDescriptor] {
         match self {
-            IfdType::Ifd => &IFD_TAGS,
-            IfdType::Exif => &EXIF_TAGS,
-            IfdType::GpsInfo => &GPS_INFO_TAGS,
+            IfdType::Ifd => &ifd::ALL,
+            IfdType::Exif => &exif::ALL,
+            IfdType::GpsInfo => &gps_info::ALL,
         }
     }
     pub fn combined_namespace() -> impl Iterator<Item = &'static IfdFieldDescriptor> {
-        IFD_TAGS
+        ifd::ALL
             .iter()
-            .chain(EXIF_TAGS.iter())
-            .chain(GPS_INFO_TAGS.iter())
+            .chain(exif::ALL.iter())
+            .chain(gps_info::ALL.iter())
     }
 }
 
 /// A data structure describing one specific Field (2byte key) that can appear in an IFD
 /// Possible keys are defined in various specs, such ass the TIFF, TIFF-EP, DNG, ... spec.
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Copy, Clone, Eq)]
 pub struct IfdFieldDescriptor {
     pub name: &'static str,
     pub tag: u16,
@@ -37,6 +37,11 @@ pub struct IfdFieldDescriptor {
     pub description: &'static str,
     pub long_description: &'static str,
     pub references: &'static str,
+}
+impl IfdFieldDescriptor {
+    pub fn as_maybe(&self) -> MaybeKnownIfdFieldDescriptor {
+        MaybeKnownIfdFieldDescriptor::Known(*self)
+    }
 }
 impl PartialEq for IfdFieldDescriptor {
     fn eq(&self, other: &Self) -> bool {
@@ -52,7 +57,7 @@ pub enum IfdCount {
 }
 
 /// The high level interpretation of a field. (i.e. Enum variants, Bitfields, IFD-pointer, ...)
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum IfdTypeInterpretation {
     Default,
 
@@ -73,7 +78,7 @@ pub enum IfdTypeInterpretation {
     /// image data.
     Offsets {
         /// contains the name of the corresponding LENGTHS tag.
-        lengths: &'static str,
+        lengths: &'static IfdFieldDescriptor,
     },
     Lengths,
 
@@ -83,7 +88,7 @@ pub enum IfdTypeInterpretation {
 }
 
 /// Represents a 2-byte IFD key, that is either known or unknown
-#[derive(Debug, Clone, Eq)]
+#[derive(Debug, Clone, Eq, Copy)]
 pub enum MaybeKnownIfdFieldDescriptor {
     Known(IfdFieldDescriptor),
     Unknown(u16),

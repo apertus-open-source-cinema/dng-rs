@@ -87,9 +87,6 @@ impl IfdYamlParser {
             // if we have offsets we need to emit two tags (offsets and lengths), thus we need to handle this directly
             if let Some(IfdTypeInterpretation::Offsets { lengths }) = tag.get_type_interpretation()
             {
-                let lengths_tag = MaybeKnownIfdFieldDescriptor::from_name(lengths, ifd_type)
-                    .map_err(|e| err!(value.pos(), "{}", e.to_string()))?;
-
                 let parse_offset_entry = |value: &Node<RcRepr>,
                                           path: IfdPath|
                  -> Result<
@@ -114,8 +111,8 @@ impl IfdYamlParser {
                         };
                         let lengths_entry = IfdEntry {
                             value: IfdValue::Long(len as u32),
-                            path: path.with_last_tag_replaced(lengths_tag.clone()),
-                            tag: lengths_tag.clone(),
+                            path: path.with_last_tag_replaced(lengths.as_maybe()),
+                            tag: lengths.as_maybe(),
                         };
                         Ok(Some((offsets_entry, lengths_entry)))
                     } else {
@@ -132,7 +129,7 @@ impl IfdYamlParser {
                             .collect();
                         let mapped = mapped?;
                         if mapped.iter().all(|x| x.is_some()) {
-                            let (offsets, lengths): (Vec<_>, Vec<_>) =
+                            let (offsets, lengths_values): (Vec<_>, Vec<_>) =
                                 mapped.into_iter().map(|x| x.unwrap()).unzip();
                             ifd.insert(IfdEntry {
                                 value: IfdValue::List(offsets),
@@ -140,8 +137,8 @@ impl IfdYamlParser {
                                 tag: tag.clone(),
                             });
                             ifd.insert(IfdEntry {
-                                value: IfdValue::List(lengths),
-                                path: path.with_last_tag_replaced(lengths_tag),
+                                value: IfdValue::List(lengths_values),
+                                path: path.with_last_tag_replaced(lengths.as_maybe()),
                                 tag: tag.clone(),
                             });
                             continue;
