@@ -1,7 +1,7 @@
 use crate::byte_order_rw::ByteOrderReader;
 use crate::ifd::{Ifd, IfdEntry, IfdPath, IfdValue};
 use crate::ifd_reader::IfdReader;
-use crate::ifd_tags::{ifd, IfdFieldDescriptor, IfdType, IfdTypeInterpretation};
+use crate::tags::{ifd, IfdFieldDescriptor, IfdType, IfdTypeInterpretation};
 use crate::FileType;
 use derivative::Derivative;
 use std::cell::RefCell;

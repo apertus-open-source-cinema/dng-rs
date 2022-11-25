@@ -7,9 +7,9 @@ use std::path::Path;
 
 fn main() {
     let mut ifd_code = String::new();
-    ifd_code += &parse_ifd_file("src/ifd_tags/ifd.json", "ifd");
-    ifd_code += &parse_ifd_file("src/ifd_tags/exif.json", "exif");
-    ifd_code += &parse_ifd_file("src/ifd_tags/gps_info.json", "gps_info");
+    ifd_code += &parse_ifd_file("src/tags/ifd.json", "ifd");
+    ifd_code += &parse_ifd_file("src/tags/exif.json", "exif");
+    ifd_code += &parse_ifd_file("src/tags/gps_info.json", "gps_info");
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let path = Path::new(&out_dir).join("ifd_data.rs");

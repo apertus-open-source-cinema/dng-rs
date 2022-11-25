@@ -1,6 +1,6 @@
 use crate::byte_order_rw::ByteOrderReader;
 use crate::ifd::{Ifd, IfdEntry, IfdPath, IfdValue};
-use crate::ifd_tags::{IfdType, IfdTypeInterpretation, IfdValueType, MaybeKnownIfdFieldDescriptor};
+use crate::tags::{IfdType, IfdTypeInterpretation, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use std::io::{self, Read, Seek, SeekFrom};
 
 #[derive(Debug, PartialEq, Eq)]

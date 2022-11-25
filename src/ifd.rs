@@ -1,4 +1,4 @@
-use crate::ifd_tags::{IfdType, IfdValueType, MaybeKnownIfdFieldDescriptor};
+use crate::tags::{IfdType, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use derivative::Derivative;
 use itertools::Itertools;
 use std::fmt::{Debug, Display, Formatter};

@@ -71,7 +71,7 @@ impl<W: Write + Seek> WritePlan<W> {
 /// use std::fs::File;
 /// use dng::{DngWriter, FileType};
 /// use dng::ifd::{Ifd, IfdEntry};
-/// use dng::ifd_tags::IfdType;
+/// use dng::tags::IfdType;
 ///
 /// let mut file = File::create("/tmp/foo").unwrap();
 /// let mut ifd = Ifd::new(IfdType::Ifd);

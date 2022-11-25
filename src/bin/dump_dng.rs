@@ -1,6 +1,6 @@
 use clap::Parser;
 use dng::ifd::{IfdEntry, IfdValue};
-use dng::ifd_tags::IfdTypeInterpretation;
+use dng::tags::IfdTypeInterpretation;
 use dng::yaml::IfdYamlDumper;
 use dng::DngReader;
 use dng::DngWriter;

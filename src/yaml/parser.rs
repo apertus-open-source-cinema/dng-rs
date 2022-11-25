@@ -1,6 +1,6 @@
 use crate::ifd::{Ifd, IfdValue};
 use crate::ifd::{IfdEntry, IfdPath};
-use crate::ifd_tags::{IfdType, IfdTypeInterpretation, IfdValueType, MaybeKnownIfdFieldDescriptor};
+use crate::tags::{IfdType, IfdTypeInterpretation, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use fraction::Ratio;
 use lazy_regex::regex_captures;
 use std::fmt::{Display, Formatter};

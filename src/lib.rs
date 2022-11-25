@@ -15,7 +15,7 @@ mod ifd_reader;
 /// Datastructures for representing an IFD of a read / to write DNG / DCP
 pub mod ifd;
 /// Datastructures and Data describing the interpretation of IFD / EXIF tags
-pub mod ifd_tags;
+pub mod tags;
 /// Code for reading / writing a human readable text representation of IFDs
 #[cfg(feature = "yaml")]
 #[allow(unstable_name_collisions)]
