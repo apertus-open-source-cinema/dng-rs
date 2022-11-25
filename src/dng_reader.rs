@@ -1,7 +1,7 @@
 use crate::byte_order_rw::ByteOrderReader;
 use crate::ifd::{Ifd, IfdEntry, IfdPath, IfdValue};
 use crate::ifd_reader::IfdReader;
-use crate::ifd_tags::{IfdType, IfdTypeInterpretation, MaybeKnownIfdFieldDescriptor};
+use crate::ifd_tags::{ifd, IfdFieldDescriptor, IfdType, IfdTypeInterpretation};
 use crate::FileType;
 use derivative::Derivative;
 use std::cell::RefCell;
@@ -175,10 +175,7 @@ impl<R: Read + Seek> DngReader<R> {
         self.get_ifd0()
             .flat_entries()
             .find(|entry| {
-                entry.tag
-                    == MaybeKnownIfdFieldDescriptor::from_name("NewSubfileType", IfdType::Ifd)
-                        .unwrap()
-                    && entry.value.as_u32() == Some(0)
+                entry.tag == ifd::NewSubfileType.as_maybe() && entry.value.as_u32() == Some(0)
             })
             .map(|entry| entry.path.parent())
             .unwrap_or(IfdPath::default())
@@ -186,7 +183,7 @@ impl<R: Read + Seek> DngReader<R> {
     fn load_ifd(
         &self,
         ifd_path: &IfdPath,
-    ) -> Result<impl Fn(&str) -> Option<IfdEntry> + '_, DngReaderError> {
+    ) -> Result<impl Fn(IfdFieldDescriptor) -> Option<IfdEntry> + '_, DngReaderError> {
         let ifd = if ifd_path == &IfdPath::default() {
             self.get_ifd0()
         } else {
@@ -204,21 +201,17 @@ impl<R: Read + Seek> DngReader<R> {
             }
         };
 
-        let get_field = move |name: &str| {
-            ifd.get_entry_by_tag(
-                MaybeKnownIfdFieldDescriptor::from_name(name, IfdType::Ifd).unwrap(),
-            )
-            .cloned()
-        };
+        let get_field =
+            move |tag: IfdFieldDescriptor| ifd.get_entry_by_tag(tag.as_maybe()).cloned();
         Ok(get_field)
     }
     fn ensure_uncompressed(
         &self,
         ifd_path: &IfdPath,
-    ) -> Result<impl Fn(&str) -> Option<IfdEntry> + '_, DngReaderError> {
+    ) -> Result<impl Fn(IfdFieldDescriptor) -> Option<IfdEntry> + '_, DngReaderError> {
         let get_field = self.load_ifd(ifd_path)?;
 
-        if let Some(compression) = get_field("Compression") {
+        if let Some(compression) = get_field(ifd::Compression) {
             if compression.value.as_u32() != Some(1) {
                 return Err(DngReaderError::Other(format!(
                     "reading compressed images is not implemented"
@@ -236,13 +229,14 @@ impl<R: Read + Seek> DngReader<R> {
         let get_field = self.ensure_uncompressed(ifd_path)?;
 
         // we try the different options one after another
-        if let (Some(_offsets), Some(lengths)) =
-            (get_field("StripOffsets"), get_field("StripByteCounts"))
-        {
+        if let (Some(_offsets), Some(lengths)) = (
+            get_field(ifd::StripOffsets),
+            get_field(ifd::StripByteCounts),
+        ) {
             let sum: u32 = lengths.value.as_list().map(|x| x.as_u32().unwrap()).sum();
             Ok(sum as usize)
         } else if let (Some(_offsets), Some(_lengths)) =
-            (get_field("TileOffsets"), get_field("TileByteCounts"))
+            (get_field(ifd::TileOffsets), get_field(ifd::TileByteCounts))
         {
             Err(DngReaderError::Other(format!(
                 "reading tiled images is not implemented"
@@ -262,9 +256,10 @@ impl<R: Read + Seek> DngReader<R> {
         let get_field = self.ensure_uncompressed(ifd_path)?;
 
         let mut reader = self.reader.borrow_mut();
-        if let (Some(offsets), Some(lengths)) =
-            (get_field("StripOffsets"), get_field("StripByteCounts"))
-        {
+        if let (Some(offsets), Some(lengths)) = (
+            get_field(ifd::StripOffsets),
+            get_field(ifd::StripByteCounts),
+        ) {
             let count = offsets.value.get_count();
             if count != lengths.value.get_count() {
                 return Err(DngReaderError::FormatError(format!(
@@ -285,7 +280,7 @@ impl<R: Read + Seek> DngReader<R> {
             }
             Ok(())
         } else if let (Some(_offsets), Some(_lengths)) =
-            (get_field("TileOffsets"), get_field("TileByteCounts"))
+            (get_field(ifd::TileOffsets), get_field(ifd::TileByteCounts))
         {
             Err(DngReaderError::Other(format!(
                 "reading tiled images is not implemented"
