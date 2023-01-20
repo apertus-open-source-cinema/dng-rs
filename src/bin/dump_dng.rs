@@ -1,5 +1,5 @@
 use clap::Parser;
-use dng::ifd::{IfdEntry, IfdValue};
+use dng::ifd::{IfdEntryRef, IfdValue};
 use dng::tags::IfdTypeInterpretation;
 use dng::yaml::IfdYamlDumper;
 use dng::DngReader;
@@ -31,7 +31,7 @@ fn main() {
     let img_file = File::open(img_file_path).expect("Cannot find test image!");
     let dng = Arc::new(DngReader::read(img_file).expect("Couldnt parse DNG file!"));
 
-    let matrix_prettify_visitor = move |entry: IfdEntry| -> Option<String> {
+    let matrix_prettify_visitor = move |entry: IfdEntryRef| -> Option<String> {
         if entry
             .tag
             .get_known_name()
@@ -49,7 +49,16 @@ fn main() {
                 .map(|chunk| {
                     chunk
                         .iter()
-                        .map(|entry| format!("{},", dumper.dump_ifd_value(entry)))
+                        .map(|value| {
+                            format!(
+                                "{},",
+                                dumper.dump_ifd_value(IfdEntryRef {
+                                    value,
+                                    path: &entry.path,
+                                    tag: &entry.tag,
+                                })
+                            )
+                        })
                         .join(" ")
                 })
                 .join("\n");
@@ -78,7 +87,7 @@ fn main() {
             let dir = dir.clone();
             let dng = dng.clone();
             let matrix_prettify_visitor = matrix_prettify_visitor.clone();
-            move |entry: IfdEntry| -> Option<String> {
+            move |entry: IfdEntryRef| -> Option<String> {
                 if matches!(
                     entry.tag.get_type_interpretation(),
                     Some(IfdTypeInterpretation::Blob)
@@ -102,9 +111,9 @@ fn main() {
                 ) && !matches!(entry.value, IfdValue::List(_))
                 {
                     let path = dir.join(entry.path.string_with_separator("_"));
-                    let buffer_size = dng.needed_buffer_size_for_offsets(&entry).unwrap();
+                    let buffer_size = dng.needed_buffer_size_for_offsets(entry).unwrap();
                     let mut buffer = vec![0u8; buffer_size as usize];
-                    dng.read_offsets_to_buffer(&entry, &mut buffer).unwrap();
+                    dng.read_offsets_to_buffer(entry, &mut buffer).unwrap();
                     OpenOptions::new()
                         .write(true)
                         .create(true)

@@ -70,7 +70,7 @@ impl<W: Write + Seek> WritePlan<W> {
 /// ```rust
 /// use std::fs::File;
 /// use dng::{DngWriter, FileType};
-/// use dng::ifd::{Ifd, IfdEntry};
+/// use dng::ifd::Ifd;
 /// use dng::tags::IfdType;
 ///
 /// let mut file = File::create("/tmp/foo").unwrap();
@@ -183,7 +183,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             }
             IfdValue::List(list) => {
                 for v in list {
-                    Self::write_value(v.value, writer, dng_writer)?;
+                    Self::write_value(v, writer, dng_writer)?;
                 }
                 Ok(())
             }
@@ -229,7 +229,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             IfdValue::Double(v) => writer.write_f64(*v),
             IfdValue::List(list) => {
                 for v in list {
-                    Self::write_primitive_value_internal(&v.value, writer)?;
+                    Self::write_primitive_value_internal(v, writer)?;
                 }
                 Ok(())
             }

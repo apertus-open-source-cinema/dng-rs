@@ -1,4 +1,4 @@
-use crate::ifd::{Ifd, IfdEntry, IfdValue};
+use crate::ifd::{Ifd, IfdEntryRef, IfdPath, IfdValue};
 use crate::tags::{IfdTypeInterpretation, IfdValueType};
 use itertools::Itertools;
 use std::sync::Arc;
@@ -7,7 +7,7 @@ use std::sync::Arc;
 #[derive(Default)]
 pub struct IfdYamlDumper {
     pub dump_rational_as_float: bool,
-    pub visitor: Option<Arc<dyn Fn(IfdEntry) -> Option<String>>>,
+    pub visitor: Option<Arc<dyn Fn(IfdEntryRef) -> Option<String>>>,
 }
 impl IfdYamlDumper {
     pub fn dump_ifd(&self, ifd: &Ifd) -> String {
@@ -17,25 +17,21 @@ impl IfdYamlDumper {
                 format!(
                     "{}: {}{}\n",
                     entry.tag,
-                    self.dump_tag_if_needed(entry),
-                    self.dump_ifd_value(entry)
+                    self.dump_tag_if_needed(entry.get_ref(&IfdPath::default())),
+                    self.dump_ifd_value(entry.get_ref(&IfdPath::default()))
                 )
             })
             .collect()
     }
-    pub fn dump_ifd_value(&self, entry: &IfdEntry) -> String {
+    pub fn dump_ifd_value(&self, entry: IfdEntryRef) -> String {
         if entry.tag.get_type_interpretation().is_some() {
             self.dump_ifd_value_with_type_interpretation(entry)
         } else {
             self.dump_ifd_value_plain(entry)
         }
     }
-    fn dump_ifd_value_with_type_interpretation(&self, entry: &IfdEntry) -> String {
-        if let Some(s) = self
-            .visitor
-            .clone()
-            .and_then(|visitor| visitor(entry.clone()))
-        {
+    fn dump_ifd_value_with_type_interpretation(&self, entry: IfdEntryRef) -> String {
+        if let Some(s) = self.visitor.clone().and_then(|visitor| visitor(entry)) {
             return s;
         }
 
@@ -54,7 +50,7 @@ impl IfdYamlDumper {
             _ => self.dump_ifd_value_plain(entry),
         }
     }
-    fn dump_ifd_value_plain(&self, entry: &IfdEntry) -> String {
+    fn dump_ifd_value_plain(&self, entry: IfdEntryRef) -> String {
         match &entry.value {
             IfdValue::Byte(x) => format!("{x}"),
             IfdValue::Ascii(x) => format!("\"{x}\""),
@@ -81,11 +77,11 @@ impl IfdYamlDumper {
             IfdValue::Float(x) => format!("{x}"),
             IfdValue::Double(x) => format!("{x}"),
             IfdValue::List(l) => {
-                if let IfdValue::Ifd(_) = l[0].value {
+                if let IfdValue::Ifd(_) = l[0] {
                     l.iter()
                         .enumerate()
                         .map(|(_i, x)| {
-                            if let IfdValue::Ifd(ifd) = &x.value {
+                            if let IfdValue::Ifd(ifd) = &x {
                                 Self::indent_yaml_list_item(self.dump_ifd(ifd))
                             } else {
                                 unreachable!()
@@ -96,7 +92,14 @@ impl IfdYamlDumper {
                 } else {
                     let comma_separated: String = l
                         .iter()
-                        .map(|x| self.dump_ifd_value(x))
+                        .enumerate()
+                        .map(|(i, x)| {
+                            self.dump_ifd_value(IfdEntryRef {
+                                value: x,
+                                path: &entry.path.chain_list_index(i as u16),
+                                tag: entry.tag,
+                            })
+                        })
                         .intersperse(", ".to_string())
                         .collect();
                     format!("[{comma_separated}]")
@@ -108,7 +111,7 @@ impl IfdYamlDumper {
             IfdValue::Offsets(_) => unimplemented!(),
         }
     }
-    fn dump_tag_if_needed(&self, entry: &IfdEntry) -> String {
+    fn dump_tag_if_needed(&self, entry: IfdEntryRef) -> String {
         if let Some(types) = entry.tag.get_known_value_type() {
             if types.contains(&entry.value.get_ifd_value_type()) {
                 return "".to_string();

@@ -1,5 +1,5 @@
+use crate::ifd::IfdPath;
 use crate::ifd::{Ifd, IfdValue};
-use crate::ifd::{IfdEntry, IfdPath};
 use crate::tags::{IfdType, IfdTypeInterpretation, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use fraction::Ratio;
 use lazy_regex::regex_captures;
@@ -85,12 +85,9 @@ impl IfdYamlParser {
             let tag = self.parse_ifd_tag(key, ifd_type)?;
 
             // if we have offsets we need to emit two tags (offsets and lengths), thus we need to handle this directly
-            if let Some(IfdTypeInterpretation::Offsets { lengths }) = tag.get_type_interpretation()
-            {
-                let parse_offset_entry = |value: &Node<RcRepr>,
-                                          path: IfdPath|
-                 -> Result<
-                    Option<(IfdEntry, IfdEntry)>,
+            if let Some(IfdTypeInterpretation::Offsets { .. }) = tag.get_type_interpretation() {
+                let parse_offset_entry = |value: &Node<RcRepr>| -> Result<
+                    Option<(IfdValue, IfdValue)>,
                     IfdYamlParserError,
                 > {
                     let str = if let Ok(str) = value.as_str() {
@@ -104,16 +101,8 @@ impl IfdYamlParser {
                         let mut buffer = Vec::new();
                         file.read_to_end(&mut buffer)?;
                         let len = buffer.len();
-                        let offsets_entry = IfdEntry {
-                            value: IfdValue::Offsets(Arc::new(buffer)),
-                            path: path.clone(),
-                            tag,
-                        };
-                        let lengths_entry = IfdEntry {
-                            value: IfdValue::Long(len as u32),
-                            path: path.with_last_tag_replaced(lengths.as_maybe()),
-                            tag,
-                        };
+                        let offsets_entry = IfdValue::Offsets(Arc::new(buffer));
+                        let lengths_entry = IfdValue::Long(len as u32);
                         Ok(Some((offsets_entry, lengths_entry)))
                     } else {
                         Ok(None)
@@ -122,39 +111,28 @@ impl IfdYamlParser {
 
                 match value.as_seq() {
                     Ok(seq) => {
-                        let mapped: Result<Vec<_>, IfdYamlParserError> = seq
-                            .iter()
-                            .enumerate()
-                            .map(|(i, x)| parse_offset_entry(x, path.chain_list_index(i as u16)))
-                            .collect();
+                        let mapped: Result<Vec<_>, IfdYamlParserError> =
+                            seq.iter().map(|x| parse_offset_entry(x)).collect();
                         let mapped = mapped?;
                         if mapped.iter().all(|x| x.is_some()) {
                             let (offsets, lengths_values): (Vec<_>, Vec<_>) =
                                 mapped.into_iter().map(|x| x.unwrap()).unzip();
-                            ifd.insert(IfdEntry {
-                                value: IfdValue::List(offsets),
-                                path: path.clone(),
-                                tag,
-                            });
-                            ifd.insert(IfdEntry {
-                                value: IfdValue::List(lengths_values),
-                                path: path.with_last_tag_replaced(lengths.as_maybe()),
-                                tag,
-                            });
+                            ifd.insert(tag, IfdValue::List(offsets));
+                            ifd.insert(tag, IfdValue::List(lengths_values));
                             continue;
                         }
                     }
                     Err(_) => {
-                        if let Some((offsets, lengths)) = parse_offset_entry(value, path.clone())? {
-                            ifd.insert(offsets);
-                            ifd.insert(lengths);
+                        if let Some((offsets_value, lengths_value)) = parse_offset_entry(value)? {
+                            ifd.insert(tag, offsets_value);
+                            ifd.insert(tag, lengths_value);
                             continue;
                         }
                     }
                 }
             }
 
-            ifd.insert(self.parse_ifd_entry(value, tag, path.clone(), None)?)
+            ifd.insert(tag, self.parse_ifd_entry(value, tag, path.clone(), None)?)
         }
 
         Ok(ifd)
@@ -191,8 +169,8 @@ impl IfdYamlParser {
         tag: MaybeKnownIfdFieldDescriptor,
         path: IfdPath,
         parent_yaml_tag: Option<&str>,
-    ) -> Result<IfdEntry, IfdYamlParserError> {
-        let value = if value.as_map().is_ok() {
+    ) -> Result<IfdValue, IfdYamlParserError> {
+        Ok(if value.as_map().is_ok() {
             let ifd_type = if let Some(IfdTypeInterpretation::IfdOffset { ifd_type }) =
                 tag.get_type_interpretation()
             {
@@ -225,27 +203,14 @@ impl IfdYamlParser {
                         let mut file = File::open(file_path)?;
                         let mut buffer = Vec::new();
                         file.read_to_end(&mut buffer)?;
-                        break IfdValue::List(
-                            buffer
-                                .iter()
-                                .enumerate()
-                                .map(|(i, b)| IfdEntry {
-                                    value: IfdValue::Byte(*b),
-                                    path: path.chain_list_index(i as u16),
-                                    tag,
-                                })
-                                .collect(),
-                        );
+                        break IfdValue::List(buffer.iter().map(|b| IfdValue::Byte(*b)).collect());
                     }
                 }
 
                 // we are dealing with a scalar
                 break self.parse_ifd_scalar_value(value, tag, parent_yaml_tag)?;
             }
-        };
-
-        let path = path.chain_tag(tag);
-        Ok(IfdEntry { value, path, tag })
+        })
     }
 
     fn parse_ifd_scalar_value(

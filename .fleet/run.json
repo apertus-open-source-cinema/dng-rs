@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "name": "check",
+            "type": "cargo",
+            "cargoArgs": ["check"],
+            "cargoExtraArgs": ["--all-features"],
+        }
+    ]
+}

@@ -2,12 +2,11 @@ use crate::tags::{IfdType, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use derivative::Derivative;
 use itertools::Itertools;
 use std::fmt::{Debug, Display, Formatter};
-use std::iter;
 use std::iter::once;
 use std::ops::Deref;
 use std::sync::Arc;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Represents an IFD-Tree that was read / can be written
 pub struct Ifd {
     pub(crate) entries: Vec<IfdEntry>,
@@ -20,19 +19,93 @@ impl Ifd {
             ifd_type,
         }
     }
-    pub fn insert(&mut self, value: IfdEntry) {
-        self.entries.push(value)
+    /// Inserts all entries from another IFD overwriting previously existing entries of the same tags
+    pub fn insert_from_other(&mut self, other: Ifd) {
+        for entry in other.entries {
+            self.insert(entry.tag, entry.value)
+        }
     }
-    pub fn get_entry_by_tag(&self, tag: MaybeKnownIfdFieldDescriptor) -> Option<&IfdEntry> {
-        self.entries.iter().find(|x| x.tag == tag)
+    /// Inserts an entry into the IFD, overwriting a previously existing entry of the same tag
+    pub fn insert(&mut self, tag: MaybeKnownIfdFieldDescriptor, value: IfdValue) {
+        self.entries.retain(|e| e.tag != tag);
+        self.entries.push(IfdEntry { value, tag })
     }
-    pub fn flat_entries(&self) -> impl Iterator<Item = &IfdEntry> {
-        self.entries
-            .iter()
-            .flat_map(|entry| once(entry).chain(entry.value.iter_children()))
+    /// Returns an ifd entry by path. It will return None for the empty path because we cant produce
+    /// a ref with an appropriate lifetime for `self`
+    pub fn get_entry_by_path<'a>(&'a self, path: &'a IfdPath) -> Option<IfdEntryRef<'a>> {
+        let path_vec = path.as_vec();
+        let mut current = if let Some(IfdPathElement::Tag(tag)) = path_vec.get(0) {
+            self.entries
+                .iter()
+                .find(|x| &x.tag == tag)
+                .map(|x| &x.value)
+        } else {
+            return None;
+        };
+        for element in &path_vec[1..] {
+            current = current.and_then(|x| x.index_with(element.clone()))
+        }
+        if let (Some(value), Some(tag)) = (&current, path.last_tag()) {
+            Some(IfdEntryRef { value, path, tag })
+        } else {
+            None
+        }
     }
+    pub fn find_entry(&self, predicate: impl Fn(IfdEntryRef) -> bool + Clone) -> Option<IfdPath> {
+        self.find_entry_with_start_path(Default::default(), predicate)
+    }
+    fn find_entry_with_start_path(
+        &self,
+        path: IfdPath,
+        predicate: impl Fn(IfdEntryRef) -> bool + Clone,
+    ) -> Option<IfdPath> {
+        for entry in self.entries.iter() {
+            let path = path.chain_tag(entry.tag);
+            let entry_ref = entry.get_ref(&path);
+            if predicate(entry_ref) {
+                return Some(path.clone());
+            }
+
+            if let IfdValue::List(list) = &entry.value {
+                for (i, v) in list.iter().enumerate() {
+                    let path = path.chain_list_index(i as u16);
+                    let entry = IfdEntryRef {
+                        value: v,
+                        path: &path,
+                        tag: &entry.tag,
+                    };
+                    if predicate(entry) {
+                        return Some(path);
+                    }
+                }
+            } else if let IfdValue::Ifd(ifd) = &entry.value {
+                let result = ifd.find_entry_with_start_path(path, predicate.clone());
+                if result.is_some() {
+                    return result;
+                }
+            }
+        }
+        None
+    }
+
     pub fn get_type(&self) -> IfdType {
         self.ifd_type
+    }
+}
+
+#[derive(Clone, Debug)]
+/// A singular entry in an IFD (that does not know its path)
+pub struct IfdEntry {
+    pub value: IfdValue,
+    pub tag: MaybeKnownIfdFieldDescriptor,
+}
+impl IfdEntry {
+    pub fn get_ref<'a>(&'a self, path: &'a IfdPath) -> IfdEntryRef<'a> {
+        IfdEntryRef {
+            value: &self.value,
+            path,
+            tag: &self.tag,
+        }
     }
 }
 
@@ -40,23 +113,14 @@ impl Ifd {
 /// The absolute path at which the entry is found in the IFD-tree
 pub struct IfdPath(Vec<IfdPathElement>);
 impl IfdPath {
-    pub fn chain_list_index(&self, n: u16) -> Self {
-        Self(
-            self.0
-                .iter()
-                .cloned()
-                .chain(once(IfdPathElement::ListIndex(n)))
-                .collect(),
-        )
+    pub fn chain_path_element(&self, element: IfdPathElement) -> Self {
+        Self(self.0.iter().cloned().chain(once(element)).collect())
     }
-    pub fn chain_tag(&self, tag: MaybeKnownIfdFieldDescriptor) -> Self {
-        Self(
-            self.0
-                .iter()
-                .cloned()
-                .chain(once(IfdPathElement::Tag(tag)))
-                .collect(),
-        )
+    pub fn chain_list_index(&self, n: u16) -> Self {
+        self.chain_path_element(IfdPathElement::ListIndex(n))
+    }
+    pub fn chain_tag(&self, tag: impl Into<MaybeKnownIfdFieldDescriptor>) -> Self {
+        self.chain_path_element(IfdPathElement::Tag(tag.into()))
     }
     pub fn parent(&self) -> Self {
         let mut new = self.0.clone();
@@ -78,6 +142,14 @@ impl IfdPath {
             }
         }
         Self(new_vec)
+    }
+    pub fn last_tag(&self) -> Option<&MaybeKnownIfdFieldDescriptor> {
+        for elem in self.as_vec().iter().rev() {
+            if let IfdPathElement::Tag(tag) = elem {
+                return Some(tag);
+            }
+        }
+        None
     }
 }
 impl Debug for IfdPath {
@@ -101,12 +173,12 @@ impl Display for IfdPathElement {
     }
 }
 
-#[derive(Clone, Debug)]
-/// A singular entry in an IFD (that knows its tag and path)
-pub struct IfdEntry {
-    pub value: IfdValue,
-    pub path: IfdPath,
-    pub tag: MaybeKnownIfdFieldDescriptor,
+#[derive(Clone, Copy, Debug)]
+/// A ref to a singular entry in an IFD
+pub struct IfdEntryRef<'a> {
+    pub value: &'a IfdValue,
+    pub tag: &'a MaybeKnownIfdFieldDescriptor,
+    pub path: &'a IfdPath,
 }
 
 #[derive(Clone, Derivative)]
@@ -126,7 +198,7 @@ pub enum IfdValue {
     Float(f32),
     Double(f64),
 
-    List(Vec<IfdEntry>),
+    List(Vec<IfdValue>),
     Ifd(Ifd),
 
     /// this value is not produced by the reader but rather there to insert image data into the writer
@@ -147,18 +219,6 @@ impl IfdValue {
             _ => None,
         }
     }
-    pub fn iter_children<'a>(&'a self) -> impl Iterator<Item = &'a IfdEntry> + 'a {
-        match self {
-            IfdValue::List(list) => Box::new(
-                list.iter()
-                    .flat_map(|entry| once(entry).chain(entry.value.iter_children())),
-            ) as Box<dyn Iterator<Item = &'a IfdEntry> + 'a>,
-            IfdValue::Ifd(ifd) => {
-                Box::new(ifd.flat_entries()) as Box<dyn Iterator<Item = &'a IfdEntry> + 'a>
-            }
-            _ => Box::new(iter::empty()) as Box<dyn Iterator<Item = &'a IfdEntry> + 'a>,
-        }
-    }
     pub fn get_ifd_value_type(&self) -> IfdValueType {
         match self {
             IfdValue::Byte(_) => IfdValueType::Byte,
@@ -173,7 +233,7 @@ impl IfdValue {
             IfdValue::SRational(_, _) => IfdValueType::SRational,
             IfdValue::Float(_) => IfdValueType::Float,
             IfdValue::Double(_) => IfdValueType::Double,
-            IfdValue::List(list) => list[0].value.get_ifd_value_type(),
+            IfdValue::List(list) => list[0].get_ifd_value_type(),
 
             // these two are made into a pointer to the actual data
             IfdValue::Ifd(_) => IfdValueType::Long,
@@ -189,10 +249,43 @@ impl IfdValue {
     }
     pub fn as_list(&self) -> impl Iterator<Item = &IfdValue> {
         match self {
-            Self::List(list) => {
-                Box::new(list.iter().map(|x| &x.value)) as Box<dyn Iterator<Item = &IfdValue>>
-            }
+            Self::List(list) => Box::new(list.iter()) as Box<dyn Iterator<Item = &IfdValue>>,
             _ => Box::new(once(self)) as Box<dyn Iterator<Item = &IfdValue>>,
         }
+    }
+    pub fn index_with(&self, index: IfdPathElement) -> Option<&Self> {
+        match (&self, index) {
+            (Self::Ifd(ifd), IfdPathElement::Tag(tag)) => {
+                ifd.entries.iter().find(|x| x.tag == tag).map(|x| &x.value)
+            }
+            (Self::List(list), IfdPathElement::ListIndex(index)) => list.get(index as usize),
+            _ => None,
+        }
+    }
+}
+
+macro_rules! implement_from {
+    ($rust_type:ty, $variant:expr) => {
+        impl From<$rust_type> for IfdValue {
+            fn from(x: $rust_type) -> Self {
+                $variant(x)
+            }
+        }
+    };
+}
+implement_from!(u8, IfdValue::Byte);
+implement_from!(String, IfdValue::Ascii);
+implement_from!(u16, IfdValue::Short);
+implement_from!(u32, IfdValue::Long);
+implement_from!(i8, IfdValue::SByte);
+implement_from!(i16, IfdValue::SShort);
+implement_from!(i32, IfdValue::SLong);
+
+impl<T: From<IfdValue> + Clone> From<&[T]> for IfdValue
+where
+    IfdValue: From<T>,
+{
+    fn from(x: &[T]) -> Self {
+        IfdValue::List(x.iter().cloned().map(|x| x.into()).collect())
     }
 }

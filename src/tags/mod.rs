@@ -24,6 +24,11 @@ impl IfdType {
             .chain(gps_info::ALL.iter())
     }
 }
+impl Default for IfdType {
+    fn default() -> Self {
+        Self::Ifd
+    }
+}
 
 /// A data structure describing one specific Field (2byte key) that can appear in an IFD
 /// Possible keys are defined in various specs, such ass the TIFF, TIFF-EP, DNG, ... spec.
@@ -46,6 +51,11 @@ impl IfdFieldDescriptor {
 impl PartialEq for IfdFieldDescriptor {
     fn eq(&self, other: &Self) -> bool {
         self.tag == other.tag
+    }
+}
+impl From<IfdFieldDescriptor> for MaybeKnownIfdFieldDescriptor {
+    fn from(x: IfdFieldDescriptor) -> Self {
+        MaybeKnownIfdFieldDescriptor::Known(x)
     }
 }
 
