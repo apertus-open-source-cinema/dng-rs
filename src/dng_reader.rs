@@ -8,9 +8,10 @@ use std::cell::RefCell;
 use std::fmt::{Display, Formatter};
 use std::io;
 use std::io::{Read, Seek, SeekFrom};
+use thiserror::Error;
 
 /// The error-type produced by [DngReader]
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum DngReaderError {
     IoError(io::Error),
     FormatError(String),

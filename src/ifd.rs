@@ -2,6 +2,8 @@ use crate::tags::{IfdType, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use derivative::Derivative;
 use itertools::Itertools;
 use std::fmt::{Debug, Display, Formatter};
+use std::io;
+use std::io::Write;
 use std::iter::once;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -26,9 +28,14 @@ impl Ifd {
         }
     }
     /// Inserts an entry into the IFD, overwriting a previously existing entry of the same tag
-    pub fn insert(&mut self, tag: MaybeKnownIfdFieldDescriptor, value: IfdValue) {
+    pub fn insert(
+        &mut self,
+        tag: impl Into<MaybeKnownIfdFieldDescriptor>,
+        value: impl Into<IfdValue>,
+    ) {
+        let tag = tag.into();
         self.entries.retain(|e| e.tag != tag);
-        self.entries.push(IfdEntry { value, tag })
+        self.entries.push(IfdEntry::new(tag, value))
     }
     /// Returns an ifd entry by path. It will return None for the empty path because we cant produce
     /// a ref with an appropriate lifetime for `self`
@@ -100,6 +107,15 @@ pub struct IfdEntry {
     pub tag: MaybeKnownIfdFieldDescriptor,
 }
 impl IfdEntry {
+    pub fn new(
+        tag: impl Into<MaybeKnownIfdFieldDescriptor>,
+        value: impl Into<IfdValue>,
+    ) -> IfdEntry {
+        Self {
+            tag: tag.into(),
+            value: value.into(),
+        }
+    }
     pub fn get_ref<'a>(&'a self, path: &'a IfdPath) -> IfdEntryRef<'a> {
         IfdEntryRef {
             value: &self.value,
@@ -204,7 +220,7 @@ pub enum IfdValue {
     /// this value is not produced by the reader but rather there to insert image data into the writer
     /// The contents will be written somewhere in the file and the tag will be replaced by a [IfdValue::Long]
     /// pointing to that data. You are responsible for setting the corresponding length tag yourself.
-    Offsets(#[derivative(Debug = "ignore")] Arc<dyn Deref<Target = [u8]>>),
+    Offsets(#[derivative(Debug = "ignore")] Arc<dyn Offsets + Send + Sync>),
 }
 impl IfdValue {
     pub fn as_u32(&self) -> Option<u32> {
@@ -281,11 +297,37 @@ implement_from!(i8, IfdValue::SByte);
 implement_from!(i16, IfdValue::SShort);
 implement_from!(i32, IfdValue::SLong);
 
-impl<T: From<IfdValue> + Clone> From<&[T]> for IfdValue
-where
-    IfdValue: From<T>,
-{
+impl From<&str> for IfdValue {
+    fn from(x: &str) -> Self {
+        IfdValue::Ascii(x.to_string())
+    }
+}
+
+impl<T: Into<IfdValue> + Clone> From<&[T]> for IfdValue {
     fn from(x: &[T]) -> Self {
         IfdValue::List(x.iter().cloned().map(|x| x.into()).collect())
+    }
+}
+impl<T: Into<IfdValue> + Clone, const N: usize> From<[T; N]> for IfdValue {
+    fn from(x: [T; N]) -> Self {
+        IfdValue::List(x.iter().cloned().map(|x| x.into()).collect())
+    }
+}
+impl<T: Into<IfdValue> + Clone, const N: usize> From<&[T; N]> for IfdValue {
+    fn from(x: &[T; N]) -> Self {
+        IfdValue::List(x.iter().cloned().map(|x| x.into()).collect())
+    }
+}
+
+pub trait Offsets {
+    fn size(&self) -> u32;
+    fn write(&self, writer: &mut dyn Write) -> io::Result<()>;
+}
+impl<T: Deref<Target = [u8]>> Offsets for T {
+    fn size(&self) -> u32 {
+        self.len() as u32
+    }
+    fn write(&self, writer: &mut dyn Write) -> io::Result<()> {
+        writer.write_all(self)
     }
 }

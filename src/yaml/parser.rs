@@ -10,13 +10,14 @@ use std::io::Read;
 use std::iter::once;
 use std::path::PathBuf;
 use std::sync::Arc;
+use thiserror::Error;
 use yaml_peg::parser::parse;
 use yaml_peg::parser::PError;
 use yaml_peg::repr::RcRepr;
 use yaml_peg::Node;
 
 /// The error-type produced by the [IfdYamlParser]
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum IfdYamlParserError {
     PError(PError),
     IoError(io::Error),
