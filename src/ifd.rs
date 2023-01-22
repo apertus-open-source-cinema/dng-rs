@@ -235,6 +235,15 @@ impl IfdValue {
             _ => None,
         }
     }
+    pub fn as_f64(&self) -> Option<f64> {
+        match self {
+            IfdValue::SRational(x, y) => Some(*x as f64 / *y as f64),
+            IfdValue::Rational(x, y) => Some(*x as f64 / *y as f64),
+            IfdValue::Float(f) => Some(*f as f64),
+            IfdValue::Double(f) => Some(*f),
+            _ => self.as_u32().map(|x| x as f64),
+        }
+    }
     pub fn get_ifd_value_type(&self) -> IfdValueType {
         match self {
             IfdValue::Byte(_) => IfdValueType::Byte,
