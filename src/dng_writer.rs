@@ -80,6 +80,7 @@ impl<W: Write + Seek> WritePlan<W> {
 /// ifd.insert(tags::ifd::Copyright, "this is a test string");
 /// ifd.insert(tags::ifd::CFAPattern, &[0u8, 1, 0, 2]);
 /// ifd.insert(tags::ifd::StripOffsets, IfdValue::Offsets(Arc::new(vec![0u8, 0, 0, 0])));
+/// ifd.insert(tags::ifd::StripByteCounts, 4);
 /// DngWriter::write_dng(file, true, FileType::Dng, vec![ifd]).unwrap();
 /// ```
 #[derive(Debug, Derivative)]
