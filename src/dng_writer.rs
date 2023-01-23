@@ -11,24 +11,24 @@ use std::sync::Arc;
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-struct WritePlanEntry<W: Write + Seek> {
+struct WritePlanEntry<W: Write + Seek, T> {
     offset: u32,
     size: u32,
     #[derivative(Debug = "ignore")]
-    write_fn: Box<dyn FnOnce(&mut ByteOrderWriter<W>) -> io::Result<()>>,
+    write_fn: Box<dyn FnOnce(&mut ByteOrderWriter<W>, &T) -> io::Result<()>>,
 }
 
 #[derive(Debug, Derivative)]
 #[derivative(Default(bound = ""))]
-struct WritePlan<W: Write + Seek> {
-    to_write: RefCell<VecDeque<WritePlanEntry<W>>>,
+struct WritePlan<W: Write + Seek, T> {
+    to_write: RefCell<VecDeque<WritePlanEntry<W, T>>>,
     write_ptr: RefCell<u32>,
 }
-impl<W: Write + Seek> WritePlan<W> {
+impl<W: Write + Seek, T> WritePlan<W, T> {
     pub fn add_entry(
         &self,
         size: u32,
-        write_fn: impl FnOnce(&mut ByteOrderWriter<W>) -> io::Result<()> + 'static,
+        write_fn: impl FnOnce(&mut ByteOrderWriter<W>, &T) -> io::Result<()> + 'static,
     ) -> u32 {
         let offset = (*self.write_ptr.borrow() + 3) & !3; // we align to word boundaries
         self.to_write.borrow_mut().push_back(WritePlanEntry {
@@ -39,7 +39,7 @@ impl<W: Write + Seek> WritePlan<W> {
         *self.write_ptr.borrow_mut() = offset + size;
         offset
     }
-    fn execute(&self, writer: &mut ByteOrderWriter<W>) -> io::Result<()> {
+    fn execute(&self, writer: &mut ByteOrderWriter<W>, additional: &T) -> io::Result<()> {
         loop {
             let entry = if let Some(entry) = self.to_write.borrow_mut().pop_front() {
                 entry
@@ -55,7 +55,7 @@ impl<W: Write + Seek> WritePlan<W> {
                 writer.write_u8(0)?;
             }
 
-            (entry.write_fn)(writer)?;
+            (entry.write_fn)(writer, additional)?;
 
             let current_offset = writer.seek(SeekFrom::Current(0)).unwrap() as u32;
             if entry.offset + entry.size != current_offset {
@@ -87,9 +87,9 @@ impl<W: Write + Seek> WritePlan<W> {
 #[derivative(Clone(bound = ""))]
 pub struct DngWriter<W: Write + Seek> {
     is_little_endian: bool,
-    plan: Arc<WritePlan<W>>,
+    plan: Arc<WritePlan<W, Self>>,
 }
-impl<W: Write + Seek + 'static> DngWriter<W> {
+impl<W: Write + Seek> DngWriter<W> {
     /// Writes a DNG / DCP file given the endianness and a list of toplevel [Ifd]s
     pub fn write_dng(
         writer: W,
@@ -102,8 +102,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             is_little_endian,
             plan,
         };
-        let dng_writer_clone = dng_writer.clone();
-        dng_writer.plan.add_entry(8, move |writer| {
+        dng_writer.plan.add_entry(8, move |writer, dng_writer| {
             if is_little_endian {
                 writer.write_all(&[0x49, 0x49])?;
             } else {
@@ -111,12 +110,12 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             }
             writer.write_u16(file_type.magic())?;
 
-            let ifd_address = dng_writer_clone.write_ifds(ifds);
+            let ifd_address = dng_writer.write_ifds(ifds);
             writer.write_u32(ifd_address)
         });
 
         let mut writer = ByteOrderWriter::new(writer, is_little_endian);
-        dng_writer.plan.execute(&mut writer)
+        dng_writer.plan.execute(&mut writer, &dng_writer)
     }
 
     fn write_ifds(&self, mut ifds: Vec<Ifd>) -> u32 {
@@ -130,13 +129,12 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
         // * 12 byte for each entry
         // * 4 byte pointer to the next ifd
         let ifd_size = 2 + (ifd.entries.len() as u32 * 12) + 4;
-        let self_clone = self.clone();
-        self.plan.add_entry(ifd_size, move |writer| {
+        self.plan.add_entry(ifd_size, move |writer, dng_writer| {
             writer.write_u16(ifd.entries.len() as u16)?;
             for entry in ifd.entries {
-                self_clone.write_ifd_entry(writer, entry)?;
+                dng_writer.write_ifd_entry(writer, entry)?;
             }
-            let next_ifd_address = self_clone.write_ifds(ifds);
+            let next_ifd_address = dng_writer.write_ifds(ifds);
             writer.write_u32(next_ifd_address)
         })
     }
@@ -161,10 +159,11 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             }
             Ok(())
         } else {
-            let self_clone = self.clone();
-            let value_pointer = self.plan.add_entry(required_bytes, move |writer| {
-                Self::write_value(entry.value, writer, &self_clone)
-            });
+            let value_pointer = self
+                .plan
+                .add_entry(required_bytes, move |writer, dng_writer| {
+                    Self::write_value(entry.value, writer, &dng_writer)
+                });
             writer.write_u32(value_pointer)
         }
     }
@@ -181,7 +180,7 @@ impl<W: Write + Seek + 'static> DngWriter<W> {
             }
             IfdValue::Offsets(blob) => {
                 let size = blob.size();
-                let offset = dng_writer.plan.add_entry(size, move |writer| {
+                let offset = dng_writer.plan.add_entry(size, move |writer, _| {
                     blob.write(writer.deref_mut())?;
                     Ok(())
                 });
