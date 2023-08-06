@@ -37,13 +37,13 @@ impl Display for IfdYamlParserError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             IfdYamlParserError::PError(PError::Terminate { name, msg }) => {
-                f.write_fmt(format_args!("Error '{}' at:\n{}", name, msg))
+                f.write_fmt(format_args!("Error {name}: {msg} "))
             }
             IfdYamlParserError::PError(PError::Mismatch) => {
                 f.write_fmt(format_args!("PError::Mismatch"))
             }
             IfdYamlParserError::Other(pos, e) => {
-                f.write_fmt(format_args!("Other Error '{}' at: {}", e, pos))
+                f.write_fmt(format_args!("Other Error at {pos}: {e}"))
             }
             IfdYamlParserError::IoError(e) => f.write_fmt(format_args!("IoError '{}'", e)),
         }
@@ -160,7 +160,7 @@ impl IfdYamlParser {
                     .map_err(|e| IfdYamlParserError::Other(source.pos(), e))
             }
         } else {
-            Err(err!(source.pos(), "couldnt parse tag '{source:?}"))
+            Err(err!(source.pos(), "couldnt parse tag '{source:?}'"))
         }
     }
 
@@ -233,15 +233,15 @@ impl IfdYamlParser {
             Some(IfdTypeInterpretation::Enumerated { values }) => {
                 let str = value
                     .as_str()
-                    .map_err(|pos| err!(pos, "cant read {value:?} as a string"))?;
+                    .map_err(|pos| err!(pos, "cant read '{value:?}' as a string"))?;
                 let matching_values: Vec<_> = values
                     .iter()
                     .filter(|(_, v)| v.to_lowercase().contains(&str.to_lowercase()))
                     .collect();
                 let (numeric, _) = match matching_values.len() {
-                    0 => Err(err!(value.pos(), "{str} didnt match any enum variant for field {tag}.\nPossible variants are: {values:?}"))?,
+                    0 => Err(err!(value.pos(), "'{str}' didnt match any enum variant for field {tag}.\nPossible variants are: {values:?}"))?,
                     1 => matching_values[0],
-                    _ => Err(err!(value.pos(), "{str} is ambiguous for tag {tag}. Disambiguate between: {matching_values:?}"))?,
+                    _ => Err(err!(value.pos(), "'{str}' is ambiguous for tag {tag}. Disambiguate between: {matching_values:?}"))?,
                 };
                 for dtype in dtypes {
                     match dtype {
@@ -255,13 +255,14 @@ impl IfdYamlParser {
                 Err(err!(value.pos(), "No dtype worked"))
             }
             _ => {
+                let mut errors = String::new();
                 for dtype in dtypes {
                     match self.parse_ifd_primitive_value(value, dtype) {
                         Ok(v) => return Ok(v),
-                        Err(_err) => {} // eprintln!("{err:#?}"),
+                        Err(err) => errors += &format!("\t* {err}\n"),
                     }
                 }
-                Err(err!(value.pos(), "No dtype worked for tag {tag}"))
+                Err(err!(value.pos(), "No dtype worked for tag '{tag}'. Tried: \n {errors}"))
             }
         }
     }
@@ -290,14 +291,14 @@ impl IfdYamlParser {
         dtype: IfdValueType,
     ) -> Result<IfdValue, IfdYamlParserError> {
         let str = value.as_value().map_err(|pos| {
-            IfdYamlParserError::Other(pos, format!("{value:?} is not a scalar value"))
+            IfdYamlParserError::Other(pos, format!("'{value:?}' is not a scalar value"))
         })?;
 
         macro_rules! parse_int_like {
             ($value:ident, $name:literal) => {{
                 let int = $value
                     .as_int()
-                    .map_err(|pos| err!(pos, "couldn't parse {str} as {}", $name))?;
+                    .map_err(|pos| err!(pos, "couldn't parse '{str}' as '{}'", $name))?;
                 int.try_into().map_err(|e| err!(value.pos(), "{e:?}"))?
             }};
         }
@@ -321,15 +322,15 @@ impl IfdYamlParser {
                     {
                         IfdValue::Rational(numerator, denominator)
                     } else {
-                        Err(err!(value.pos(), "couldn't parse {str} as RATIONAL"))?
+                        Err(err!(value.pos(), "couldn't parse '{str}' as RATIONAL"))?
                     }
                 } else if let Ok(float) = str.parse::<f32>() {
                     let fraction = Ratio::<i32>::approximate_float(float).ok_or_else(|| {
-                        err!(value.pos(), "couldnt find a fraction for float {float}")
+                        err!(value.pos(), "couldnt find a fraction for float '{float}'")
                     })?;
                     IfdValue::Rational(*fraction.numer() as u32, *fraction.denom() as u32)
                 } else {
-                    Err(err!(value.pos(), "couldn't parse {str} as RATIONAL"))?
+                    Err(err!(value.pos(), "couldn't parse '{str}' as RATIONAL"))?
                 }
             }
             IfdValueType::SRational => {
@@ -341,26 +342,26 @@ impl IfdYamlParser {
                     {
                         IfdValue::SRational(numerator, denominator)
                     } else {
-                        Err(err!(value.pos(), "couldn't parse {str} as SRATIONAL"))?
+                        Err(err!(value.pos(), "couldn't parse '{str}' as SRATIONAL"))?
                     }
                 } else if let Ok(float) = str.parse::<f32>() {
                     let fraction = Ratio::<i32>::approximate_float(float).ok_or_else(|| {
-                        err!(value.pos(), "couldnt find a fraction for float {float}")
+                        err!(value.pos(), "couldnt find a fraction for float '{float}'")
                     })?;
                     IfdValue::SRational(*fraction.numer(), *fraction.denom())
                 } else {
-                    Err(err!(value.pos(), "couldn't parse {str} as SRATIONAL"))?
+                    Err(err!(value.pos(), "couldn't parse '{str}' as SRATIONAL"))?
                 }
             }
 
             IfdValueType::Float => IfdValue::Float(match value.as_value() {
                 Ok(v) => v
                     .parse()
-                    .map_err(|_e| err!(value.pos(), "couldn't parse {str} as FLOAT"))?,
-                Err(pos) => Err(err!(pos, "couldn't parse {str} as FLOAT"))?,
+                    .map_err(|_e| err!(value.pos(), "couldn't parse '{str}' as FLOAT"))?,
+                Err(pos) => Err(err!(pos, "couldn't parse '{str}' as FLOAT"))?,
             }),
             IfdValueType::Double => IfdValue::Double(value.as_float().map_err(|pos| {
-                IfdYamlParserError::Other(pos, format!("couldn't parse {str} as DOUBLE"))
+                IfdYamlParserError::Other(pos, format!("couldn't parse '{str}' as DOUBLE"))
             })?),
         })
     }
