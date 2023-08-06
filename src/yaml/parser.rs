@@ -329,6 +329,9 @@ impl IfdYamlParser {
                         err!(value.pos(), "couldnt find a fraction for float '{float}'")
                     })?;
                     IfdValue::Rational(*fraction.numer() as u32, *fraction.denom() as u32)
+                } else if str == "" {
+                    // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
+                    return Ok(IfdValue::SRational(0, 1))
                 } else {
                     Err(err!(value.pos(), "couldn't parse '{str}' as RATIONAL"))?
                 }
@@ -349,6 +352,9 @@ impl IfdYamlParser {
                         err!(value.pos(), "couldnt find a fraction for float '{float}'")
                     })?;
                     IfdValue::SRational(*fraction.numer(), *fraction.denom())
+                } else if str == "" {
+                    // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
+                    return Ok(IfdValue::SRational(0, 1))
                 } else {
                     Err(err!(value.pos(), "couldn't parse '{str}' as SRATIONAL"))?
                 }
