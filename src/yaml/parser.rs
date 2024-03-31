@@ -262,7 +262,10 @@ impl IfdYamlParser {
                         Err(err) => errors += &format!("\t* {err}\n"),
                     }
                 }
-                Err(err!(value.pos(), "No dtype worked for tag '{tag}'. Tried: \n {errors}"))
+                Err(err!(
+                    value.pos(),
+                    "No dtype worked for tag '{tag}'. Tried: \n {errors}"
+                ))
             }
         }
     }
@@ -331,7 +334,7 @@ impl IfdYamlParser {
                     IfdValue::Rational(*fraction.numer() as u32, *fraction.denom() as u32)
                 } else if str == "" {
                     // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
-                    return Ok(IfdValue::SRational(0, 1))
+                    return Ok(IfdValue::SRational(0, 1));
                 } else {
                     Err(err!(value.pos(), "couldn't parse '{str}' as RATIONAL"))?
                 }
@@ -354,7 +357,7 @@ impl IfdYamlParser {
                     IfdValue::SRational(*fraction.numer(), *fraction.denom())
                 } else if str == "" {
                     // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
-                    return Ok(IfdValue::SRational(0, 1))
+                    return Ok(IfdValue::SRational(0, 1));
                 } else {
                     Err(err!(value.pos(), "couldn't parse '{str}' as SRATIONAL"))?
                 }

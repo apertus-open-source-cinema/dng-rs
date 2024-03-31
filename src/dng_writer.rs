@@ -162,7 +162,7 @@ impl<W: Write + Seek> DngWriter<W> {
             let value_pointer = self
                 .plan
                 .add_entry(required_bytes, move |writer, dng_writer| {
-                    Self::write_value(entry.value, writer, &dng_writer)
+                    Self::write_value(entry.value, writer, dng_writer)
                 });
             writer.write_u32(value_pointer)
         }

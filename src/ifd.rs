@@ -40,7 +40,7 @@ impl Ifd {
     /// a ref with an appropriate lifetime for `self`
     pub fn get_entry_by_path<'a>(&'a self, path: &'a IfdPath) -> Option<IfdEntryRef<'a>> {
         let path_vec = path.as_vec();
-        let mut current = if let Some(IfdPathElement::Tag(tag)) = path_vec.get(0) {
+        let mut current = if let Some(IfdPathElement::Tag(tag)) = path_vec.first() {
             self.entries
                 .iter()
                 .find(|x| &x.tag == tag)
@@ -230,7 +230,7 @@ impl IfdValue {
         match self {
             IfdValue::Byte(x) => Some(*x as u32),
             IfdValue::Short(x) => Some(*x as u32),
-            IfdValue::Long(x) => Some(*x as u32),
+            IfdValue::Long(x) => Some(*x),
             IfdValue::SByte(x) => Some(*x as u32),
             IfdValue::Undefined(x) => Some(*x as u32),
             IfdValue::SShort(x) => Some(*x as u32),

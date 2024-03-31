@@ -100,7 +100,7 @@ impl IfdEntryReader {
                 }
             }
         } else {
-            Self::read_primitive_ifd_value(self.dtype, self.count, tag, reader)
+            Self::read_primitive_ifd_value(self.dtype, self.count, reader)
         }?;
         Ok(value)
     }
@@ -108,7 +108,6 @@ impl IfdEntryReader {
     fn read_primitive_ifd_value(
         dtype: IfdValueType,
         count: u32,
-        tag: MaybeKnownIfdFieldDescriptor,
         reader: &mut ByteOrderReader<impl Read>,
     ) -> io::Result<IfdValue> {
         let value = if let IfdValueType::Ascii = dtype {
@@ -117,7 +116,7 @@ impl IfdEntryReader {
             IfdValue::Ascii(String::from_utf8_lossy(&buf).to_string())
         } else if count > 1 {
             let vec: Result<Vec<_>, _> = (0..count)
-                .map(|_| Self::read_primitive_ifd_value(dtype, 1, tag, reader))
+                .map(|_| Self::read_primitive_ifd_value(dtype, 1, reader))
                 .collect();
             IfdValue::List(vec?)
         } else {
