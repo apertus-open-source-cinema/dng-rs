@@ -3,7 +3,6 @@ use dng::ifd::{IfdEntryRef, IfdValue};
 use dng::tags::IfdTypeInterpretation;
 use dng::yaml::IfdYamlDumper;
 use dng::DngReader;
-use itertools::Itertools;
 use std::fs;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
@@ -58,8 +57,10 @@ fn main() {
                                 })
                             )
                         })
+                        .collect::<Vec<String>>()
                         .join(" ")
                 })
+                .collect::<Vec<String>>()
                 .join("\n");
             return Some(format!(
                 "[\n{}\n]",

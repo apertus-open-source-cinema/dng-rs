@@ -1,6 +1,5 @@
 use crate::ifd::{Ifd, IfdEntryRef, IfdPath, IfdValue};
 use crate::tags::{IfdTypeInterpretation, IfdValueType};
-use itertools::Itertools;
 use std::sync::Arc;
 
 /// Dumps an [Ifd] struct into a friendly human readable text-representation
@@ -87,8 +86,8 @@ impl IfdYamlDumper {
                                 unreachable!()
                             }
                         })
-                        .intersperse("\n".to_string())
-                        .collect()
+                        .collect::<Vec<String>>()
+                        .join("\n")
                 } else {
                     let comma_separated: String = l
                         .iter()
@@ -100,8 +99,8 @@ impl IfdYamlDumper {
                                 tag: entry.tag,
                             })
                         })
-                        .intersperse(", ".to_string())
-                        .collect();
+                        .collect::<Vec<String>>()
+                        .join(", ");
                     format!("[{comma_separated}]")
                 }
             }

@@ -1,6 +1,5 @@
 use crate::tags::{IfdType, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use derivative::Derivative;
-use itertools::Itertools;
 use std::fmt::{Debug, Display, Formatter};
 use std::io;
 use std::io::Write;
@@ -144,7 +143,11 @@ impl IfdPath {
         Self(new)
     }
     pub fn string_with_separator(&self, separator: &str) -> String {
-        self.0.iter().map(|x| x.to_string()).join(separator)
+        self.0
+            .iter()
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>()
+            .join(separator)
     }
     pub fn as_vec(&self) -> &Vec<IfdPathElement> {
         &self.0

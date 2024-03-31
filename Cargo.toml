@@ -22,9 +22,7 @@ name = "compile_dng"
 required-features = ["cli"]
 
 [dependencies]
-byteorder = "1.4.3"
 derivative = "2.2.0"
-itertools = "0.10.5"
 thiserror = "1.0.37"
 
 # these are needed for the yaml reading / writing

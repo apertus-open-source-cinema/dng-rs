@@ -1,4 +1,3 @@
-use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use std::io::Write;
 use std::{
     io::{self},
@@ -22,21 +21,18 @@ macro_rules! generate_write_function {
     ($name:ident, $kind:ty) => {
         #[allow(unused)]
         pub fn $name(&mut self, value: $kind) -> Result<(), io::Error> {
-            if self.is_little_endian {
-                self.writer.$name::<LittleEndian>(value)
+            let bytes = if self.is_little_endian {
+                <$kind>::to_le_bytes(value)
             } else {
-                self.writer.$name::<BigEndian>(value)
-            }
+                <$kind>::to_be_bytes(value)
+            };
+            self.writer.write_all(&bytes)
         }
     };
 }
 impl<W: Write> ByteOrderWriter<W> {
-    pub fn write_u8(&mut self, value: u8) -> Result<(), io::Error> {
-        self.writer.write_u8(value)
-    }
-    pub fn write_i8(&mut self, value: i8) -> Result<(), io::Error> {
-        self.writer.write_i8(value)
-    }
+    generate_write_function!(write_u8, u8);
+    generate_write_function!(write_i8, i8);
     generate_write_function!(write_u16, u16);
     generate_write_function!(write_i16, i16);
     generate_write_function!(write_u32, u32);

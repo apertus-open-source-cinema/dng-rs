@@ -1,6 +1,6 @@
-use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use std::{
     io::{self, Read},
+    mem::size_of,
     ops::{Deref, DerefMut},
 };
 
@@ -21,21 +21,19 @@ macro_rules! generate_read_function {
     ($name:ident, $kind:ty) => {
         #[allow(unused)]
         pub fn $name(&mut self) -> Result<$kind, io::Error> {
+            let mut bytes = [0u8; size_of::<$kind>()];
+            self.reader.read_exact(&mut bytes)?;
             if self.is_little_endian {
-                self.reader.$name::<LittleEndian>()
+                Ok(<$kind>::from_le_bytes(bytes))
             } else {
-                self.reader.$name::<BigEndian>()
+                Ok(<$kind>::from_be_bytes(bytes))
             }
         }
     };
 }
 impl<R: Read> ByteOrderReader<R> {
-    pub fn read_u8(&mut self) -> Result<u8, io::Error> {
-        self.reader.read_u8()
-    }
-    pub fn read_i8(&mut self) -> Result<i8, io::Error> {
-        self.reader.read_i8()
-    }
+    generate_read_function!(read_u8, u8);
+    generate_read_function!(read_i8, i8);
     generate_read_function!(read_u16, u16);
     generate_read_function!(read_i16, i16);
     generate_read_function!(read_u32, u32);
