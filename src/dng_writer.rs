@@ -192,22 +192,11 @@ impl<W: Write + Seek> DngWriter<W> {
                 }
                 Ok(())
             }
-            _ => Self::write_primitive_value_internal(&value, writer),
+            _ => Self::write_primitive_value(&value, writer),
         }
     }
 
-    pub fn write_primitive_value(
-        value: &IfdValue,
-        writer: W,
-        little_endian: bool,
-    ) -> io::Result<()> {
-        let mut writer = ByteOrderWriter::new(writer, little_endian);
-        Self::write_primitive_value_internal(value, &mut writer)
-    }
-    fn write_primitive_value_internal(
-        value: &IfdValue,
-        writer: &mut ByteOrderWriter<W>,
-    ) -> io::Result<()> {
+    fn write_primitive_value(value: &IfdValue, writer: &mut ByteOrderWriter<W>) -> io::Result<()> {
         match value {
             IfdValue::Byte(v) => writer.write_u8(*v),
             IfdValue::Ascii(v) => {
@@ -234,7 +223,7 @@ impl<W: Write + Seek> DngWriter<W> {
             IfdValue::Double(v) => writer.write_f64(*v),
             IfdValue::List(list) => {
                 for v in list {
-                    Self::write_primitive_value_internal(v, writer)?;
+                    Self::write_primitive_value(v, writer)?;
                 }
                 Ok(())
             }

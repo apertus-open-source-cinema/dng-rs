@@ -3,7 +3,6 @@ use dng::ifd::{IfdEntryRef, IfdValue};
 use dng::tags::IfdTypeInterpretation;
 use dng::yaml::IfdYamlDumper;
 use dng::DngReader;
-use dng::DngWriter;
 use itertools::Itertools;
 use std::fs;
 use std::fs::{File, OpenOptions};
@@ -92,19 +91,33 @@ fn main() {
                     entry.tag.get_type_interpretation(),
                     Some(IfdTypeInterpretation::Blob)
                 ) {
-                    let path = dir.join(entry.path.string_with_separator("_"));
-                    let file = OpenOptions::new()
-                        .write(true)
-                        .create(true)
-                        .truncate(true)
-                        .open(path.clone())
-                        .unwrap();
-                    DngWriter::write_primitive_value(&entry.value, file, true).unwrap();
-                    return Some(format!(
-                        "file://{}",
-                        path.strip_prefix(dir.clone()).unwrap().to_str().unwrap()
-                    ));
+                    let bytes_vec: Option<Vec<u8>> = entry
+                        .value
+                        .as_list()
+                        .map(|x| {
+                            if let IfdValue::Byte(x) = x {
+                                Some(*x)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    if let Some(buf) = bytes_vec {
+                        let path = dir.join(entry.path.string_with_separator("_"));
+                        let mut file = OpenOptions::new()
+                            .write(true)
+                            .create(true)
+                            .truncate(true)
+                            .open(path.clone())
+                            .unwrap();
+                        file.write_all(&buf).unwrap();
+                        return Some(format!(
+                            "file://{}",
+                            path.strip_prefix(dir.clone()).unwrap().to_str().unwrap()
+                        ));
+                    }
                 }
+
                 if matches!(
                     entry.tag.get_type_interpretation(),
                     Some(IfdTypeInterpretation::Offsets { .. })
