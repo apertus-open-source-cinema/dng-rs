@@ -57,7 +57,7 @@ pub struct DngReader<R: Read + Seek> {
     ifds: Vec<Ifd>,
 }
 impl<R: Read + Seek> DngReader<R> {
-    /// reads and parses the DNG file IFD-tree eagerly
+    /// reads and parses the DNG file IFD-tree eagerly.
     ///
     /// NOTE: OFFSETS (where the image data is located) are not yet read.
     ///
@@ -70,7 +70,8 @@ impl<R: Read + Seek> DngReader<R> {
     /// Or for a bit higher level direct image data access:
     /// [main_image_data_ifd_path][Self::main_image_data_ifd_path],
     /// [needed_buffer_length_for_image_data][Self::needed_buffer_length_for_image_data],
-    /// [read_image_data_to_buffer][Self::read_image_data_to_buffer]
+    /// [read_image_data_to_buffer][Self::read_image_data_to_buffer].
+    /// (see usage example).
     pub fn read(mut reader: R) -> Result<Self, DngReaderError> {
         // the first two bytes set the byte order
         let mut header = vec![0u8; 2];

@@ -92,8 +92,8 @@ pub enum IfdTypeInterpretation {
     },
     Lengths,
 
-    /// this is a made-up interpretation to flag, that it might be smart to not dump the value but
-    /// rather extract it to a file.
+    /// this is a made-up (non spec) interpretation to flag that it might be smart to not dump the
+    /// value but rather extract it to a file.
     Blob,
 }
 

@@ -217,7 +217,7 @@ pub enum IfdValue {
     List(Vec<IfdValue>),
     Ifd(Ifd),
 
-    /// this value is not produced by the reader but rather there to insert image data into the writer
+    /// this value is not produced by the reader but rather there to insert image data into the writer.
     /// The contents will be written somewhere in the file and the tag will be replaced by a [IfdValue::Long]
     /// pointing to that data. You are responsible for setting the corresponding length tag yourself.
     Offsets(#[derivative(Debug = "ignore")] Arc<dyn Offsets + Send + Sync>),
