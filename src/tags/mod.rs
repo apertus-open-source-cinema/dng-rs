@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 
 include!(concat!(env!("OUT_DIR"), "/ifd_data.rs"));
 
@@ -98,7 +98,7 @@ pub enum IfdTypeInterpretation {
 }
 
 /// Represents a 2-byte IFD key, that is either known or unknown
-#[derive(Debug, Clone, Eq, Copy)]
+#[derive(Clone, Eq, Copy)]
 pub enum MaybeKnownIfdFieldDescriptor {
     Known(IfdFieldDescriptor),
     Unknown(u16),
@@ -148,11 +148,16 @@ impl MaybeKnownIfdFieldDescriptor {
 impl Display for MaybeKnownIfdFieldDescriptor {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self {
-            MaybeKnownIfdFieldDescriptor::Known(tag) => tag.name.fmt(f),
+            MaybeKnownIfdFieldDescriptor::Known(tag) => std::fmt::Display::fmt(&tag.name, f),
             MaybeKnownIfdFieldDescriptor::Unknown(tag) => {
                 f.write_fmt(format_args!("{:#02X}", &tag))
             }
         }
+    }
+}
+impl Debug for MaybeKnownIfdFieldDescriptor {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self) // call method from Display
     }
 }
 impl PartialEq for MaybeKnownIfdFieldDescriptor {
