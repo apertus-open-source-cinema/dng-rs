@@ -10,14 +10,17 @@ pub struct IfdYamlDumper {
 }
 impl IfdYamlDumper {
     pub fn dump_ifd(&self, ifd: &Ifd) -> String {
+        self.dump_ifd_with_path(ifd, &IfdPath::default())
+    }
+    pub fn dump_ifd_with_path(&self, ifd: &Ifd, path: &IfdPath) -> String {
         ifd.entries
             .iter()
             .map(|entry| {
                 format!(
                     "{}: {}{}\n",
                     entry.tag,
-                    self.dump_tag_if_needed(entry.get_ref(&IfdPath::default())),
-                    self.dump_ifd_value(entry.get_ref(&IfdPath::default()))
+                    self.dump_tag_if_needed(entry.get_ref(&path.chain_tag(entry.tag))),
+                    self.dump_ifd_value(entry.get_ref(&path.chain_tag(entry.tag)))
                 )
             })
             .collect()
@@ -79,9 +82,9 @@ impl IfdYamlDumper {
                 if let IfdValue::Ifd(_) = l[0] {
                     l.iter()
                         .enumerate()
-                        .map(|(_i, x)| {
+                        .map(|(i, x)| {
                             if let IfdValue::Ifd(ifd) = &x {
-                                Self::indent_yaml_list_item(self.dump_ifd(ifd))
+                                Self::indent_yaml_list_item(self.dump_ifd_with_path(ifd, &entry.path.chain_list_index(i as u16)))
                             } else {
                                 unreachable!()
                             }
@@ -105,7 +108,7 @@ impl IfdYamlDumper {
                 }
             }
             IfdValue::Ifd(ifd) => {
-                format!("\n{}", textwrap::indent(&self.dump_ifd(ifd), "  "))
+                format!("\n{}", textwrap::indent(&self.dump_ifd_with_path(ifd, &entry.path.chain_tag(entry.tag.clone())), "  "))
             }
             IfdValue::Offsets(_) => unimplemented!(),
         }
