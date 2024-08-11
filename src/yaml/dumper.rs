@@ -108,7 +108,7 @@ impl IfdYamlDumper {
                 }
             }
             IfdValue::Ifd(ifd) => {
-                format!("\n{}", textwrap::indent(&self.dump_ifd_with_path(ifd, &entry.path.chain_tag(entry.tag.clone())), "  "))
+                format!("\n{}", textwrap::indent(&self.dump_ifd_with_path(ifd, &entry.path), "  "))
             }
             IfdValue::Offsets(_) => unimplemented!(),
         }
