@@ -133,7 +133,7 @@ impl IfdYamlParser {
                 }
             }
 
-            ifd.insert(tag, self.parse_ifd_entry(value, tag, path.clone(), None)?)
+            ifd.insert(tag, self.parse_ifd_entry(value, tag, path.clone(), None, None)?)
         }
 
         Ok(ifd)
@@ -170,6 +170,7 @@ impl IfdYamlParser {
         tag: MaybeKnownIfdFieldDescriptor,
         path: IfdPath,
         parent_yaml_tag: Option<&str>,
+        force_type: Option<IfdValueType>,
     ) -> Result<IfdValue, IfdYamlParserError> {
         Ok(if value.as_map().is_ok() {
             let ifd_type = if let Some(IfdTypeInterpretation::IfdOffset { ifd_type }) =
@@ -181,7 +182,11 @@ impl IfdYamlParser {
             };
             IfdValue::Ifd(self.parse_ifd(value, ifd_type, path.chain_tag(tag))?)
         } else if let Ok(seq) = value.as_seq() {
-            let result: Result<Vec<_>, _> = seq
+            let mut force_type = None;
+            let mut list_tag = Err(err!(value.pos(), "couldnt bring all values to the same type in tag '{tag}'"));
+            let mut types: Option<Vec<IfdValueType>> = None;
+            for i in 0..seq.len() {
+                let result: Result<Vec<_>, _> = seq
                 .iter()
                 .enumerate()
                 .map(|(i, node)| {
@@ -190,10 +195,23 @@ impl IfdYamlParser {
                         tag,
                         path.chain_list_index(i as u16),
                         Some(value.tag()),
+                        force_type,
                     )
                 })
                 .collect();
-            IfdValue::List(result?)
+            let result = result?;
+            let ty = &result[0].get_ifd_value_type();
+            if !result.iter().all(|elem| elem.get_ifd_value_type() == *ty) {
+                if force_type == None {
+                    types = Some(result.iter().map(|elem| elem.get_ifd_value_type()).collect());
+                }
+                force_type = Some(types.clone().unwrap()[i]);
+                continue;
+            }
+            list_tag = Ok(IfdValue::List(result));
+            break;
+            }
+            list_tag?
         } else {
             loop {
                 // this is the 'well-known' loop hack
@@ -209,7 +227,7 @@ impl IfdYamlParser {
                 }
 
                 // we are dealing with a scalar
-                break self.parse_ifd_scalar_value(value, tag, parent_yaml_tag)?;
+                break self.parse_ifd_scalar_value(value, tag, parent_yaml_tag, force_type)?;
             }
         })
     }
@@ -219,9 +237,12 @@ impl IfdYamlParser {
         value: &Node<RcRepr>,
         tag: MaybeKnownIfdFieldDescriptor,
         parent_yaml_tag: Option<&str>,
+        force_type: Option<IfdValueType>,
     ) -> Result<IfdValue, IfdYamlParserError> {
         let yaml_tag = parent_yaml_tag.unwrap_or_else(|| value.tag());
-        let dtypes = if let Some(ty) = Self::parse_ifd_value_type(yaml_tag) {
+        let dtypes = if let Some(ty) = force_type {
+            Ok(Box::new(once(ty)) as Box<dyn Iterator<Item = IfdValueType>>)
+        } else if let Some(ty) = Self::parse_ifd_value_type(yaml_tag) {
             Ok(Box::new(once(ty)) as Box<dyn Iterator<Item = IfdValueType>>)
         } else if let Some(types) = tag.get_known_value_type() {
             Ok(Box::new(types.iter().cloned()) as Box<dyn Iterator<Item = IfdValueType>>)

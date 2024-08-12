@@ -261,7 +261,13 @@ impl IfdValue {
             IfdValue::SRational(_, _) => IfdValueType::SRational,
             IfdValue::Float(_) => IfdValueType::Float,
             IfdValue::Double(_) => IfdValueType::Double,
-            IfdValue::List(list) => list[0].get_ifd_value_type(),
+            IfdValue::List(list) => {
+                let ty = list[0].get_ifd_value_type();
+                for elem in list {
+                    assert_eq!(elem.get_ifd_value_type(), ty)
+                }
+                ty
+            },
 
             // these two are made into a pointer to the actual data
             IfdValue::Ifd(_) => IfdValueType::Long,
