@@ -86,7 +86,8 @@ impl IfdYamlParser {
             let tag = self.parse_ifd_tag(key, ifd_type)?;
 
             // if we have offsets we need to emit two tags (offsets and lengths), thus we need to handle this directly
-            if let Some(IfdTypeInterpretation::Offsets { lengths }) = tag.get_type_interpretation() {
+            if let Some(IfdTypeInterpretation::Offsets { lengths }) = tag.get_type_interpretation()
+            {
                 let parse_offset_entry = |value: &Node<RcRepr>| -> Result<
                     Option<(IfdValue, IfdValue)>,
                     IfdYamlParserError,
@@ -113,7 +114,7 @@ impl IfdYamlParser {
                 match value.as_seq() {
                     Ok(seq) => {
                         let mapped: Result<Vec<_>, IfdYamlParserError> =
-                            seq.iter().map(|x| parse_offset_entry(x)).collect();
+                            seq.iter().map(parse_offset_entry).collect();
                         let mapped = mapped?;
                         if mapped.iter().all(|x| x.is_some()) {
                             let (offsets, lengths_values): (Vec<_>, Vec<_>) =
@@ -122,7 +123,7 @@ impl IfdYamlParser {
                             ifd.insert(lengths.as_maybe(), IfdValue::List(lengths_values));
                             continue;
                         } else {
-                            return Err(err!(source.pos(), "not all buffers could be read"))
+                            return Err(err!(source.pos(), "not all buffers could be read"));
                         }
                     }
                     Err(_) => {
@@ -135,7 +136,10 @@ impl IfdYamlParser {
                 }
             }
 
-            ifd.insert(tag, self.parse_ifd_entry(value, tag, path.clone(), None, None)?)
+            ifd.insert(
+                tag,
+                self.parse_ifd_entry(value, tag, path.clone(), None, None)?,
+            )
         }
 
         Ok(ifd)
@@ -185,36 +189,45 @@ impl IfdYamlParser {
             IfdValue::Ifd(self.parse_ifd(value, ifd_type, path.chain_tag(tag))?)
         } else if let Ok(seq) = value.as_seq() {
             let mut force_type = None;
-            let mut list_tag = Err(err!(value.pos(), "couldnt bring all values to the same type in tag '{tag}'"));
+            let mut list_tag = Err(err!(
+                value.pos(),
+                "couldnt bring all values to the same type in tag '{tag}'"
+            ));
             let mut types: Option<Vec<IfdValueType>> = None;
             for i in 0..seq.len() {
                 let result: Result<Vec<_>, _> = seq
-                .iter()
-                .enumerate()
-                .map(|(i, node)| {
-                    self.parse_ifd_entry(
-                        node,
-                        tag,
-                        path.chain_list_index(i as u16),
-                        Some(value.tag()),
-                        force_type,
-                    )
-                })
-                .collect();
-            let result = result?;
-            let ty = &result[0].get_ifd_value_type();
-            if !result.iter().all(|elem| elem.get_ifd_value_type() == *ty) {
-                if force_type == None {
-                    types = Some(result.iter().map(|elem| elem.get_ifd_value_type()).collect());
+                    .iter()
+                    .enumerate()
+                    .map(|(i, node)| {
+                        self.parse_ifd_entry(
+                            node,
+                            tag,
+                            path.chain_list_index(i as u16),
+                            Some(value.tag()),
+                            force_type,
+                        )
+                    })
+                    .collect();
+                let result = result?;
+                let ty = &result[0].get_ifd_value_type();
+                if !result.iter().all(|elem| elem.get_ifd_value_type() == *ty) {
+                    if force_type.is_none() {
+                        types = Some(
+                            result
+                                .iter()
+                                .map(|elem| elem.get_ifd_value_type())
+                                .collect(),
+                        );
+                    }
+                    force_type = Some(types.clone().unwrap()[i]);
+                    continue;
                 }
-                force_type = Some(types.clone().unwrap()[i]);
-                continue;
-            }
-            list_tag = Ok(IfdValue::List(result));
-            break;
+                list_tag = Ok(IfdValue::List(result));
+                break;
             }
             list_tag?
         } else {
+            #[allow(clippy::never_loop)]
             loop {
                 // this is the 'well-known' loop hack
                 // we try to parse the value as a file
@@ -270,7 +283,7 @@ impl IfdYamlParser {
                     match dtype {
                         IfdValueType::Byte => return Ok(IfdValue::Byte(*numeric as u8)),
                         IfdValueType::Short => return Ok(IfdValue::Short(*numeric as u16)),
-                        IfdValueType::Long => return Ok(IfdValue::Long(*numeric as u32)),
+                        IfdValueType::Long => return Ok(IfdValue::Long(*numeric)),
                         IfdValueType::Undefined => return Ok(IfdValue::Undefined(*numeric as u8)),
                         _ => {}
                     };
@@ -355,7 +368,7 @@ impl IfdYamlParser {
                         err!(value.pos(), "couldnt find a fraction for float '{float}'")
                     })?;
                     IfdValue::Rational(*fraction.numer() as u32, *fraction.denom() as u32)
-                } else if str == "" {
+                } else if str.is_empty() {
                     // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
                     return Ok(IfdValue::SRational(0, 1));
                 } else {
@@ -378,7 +391,7 @@ impl IfdYamlParser {
                         err!(value.pos(), "couldnt find a fraction for float '{float}'")
                     })?;
                     IfdValue::SRational(*fraction.numer(), *fraction.denom())
-                } else if str == "" {
+                } else if str.is_empty() {
                     // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
                     return Ok(IfdValue::SRational(0, 1));
                 } else {

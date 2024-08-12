@@ -84,7 +84,10 @@ impl IfdYamlDumper {
                         .enumerate()
                         .map(|(i, x)| {
                             if let IfdValue::Ifd(ifd) = &x {
-                                Self::indent_yaml_list_item(self.dump_ifd_with_path(ifd, &entry.path.chain_list_index(i as u16)))
+                                Self::indent_yaml_list_item(self.dump_ifd_with_path(
+                                    ifd,
+                                    &entry.path.chain_list_index(i as u16),
+                                ))
                             } else {
                                 unreachable!()
                             }
@@ -108,7 +111,10 @@ impl IfdYamlDumper {
                 }
             }
             IfdValue::Ifd(ifd) => {
-                format!("\n{}", textwrap::indent(&self.dump_ifd_with_path(ifd, &entry.path), "  "))
+                format!(
+                    "\n{}",
+                    textwrap::indent(&self.dump_ifd_with_path(ifd, entry.path), "  ")
+                )
             }
             IfdValue::Offsets(_) => unimplemented!(),
         }

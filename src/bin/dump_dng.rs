@@ -52,8 +52,8 @@ fn main() {
                                 "{},",
                                 dumper.dump_ifd_value(IfdEntryRef {
                                     value,
-                                    path: &entry.path,
-                                    tag: &entry.tag,
+                                    path: entry.path,
+                                    tag: entry.tag,
                                 })
                             )
                         })
@@ -62,10 +62,7 @@ fn main() {
                 })
                 .collect::<Vec<String>>()
                 .join("\n");
-            return Some(format!(
-                "[\n{}\n]",
-                textwrap::indent(&*wrapped_string, "  ")
-            ));
+            return Some(format!("[\n{}\n]", textwrap::indent(&wrapped_string, "  ")));
         }
         None
     };
@@ -86,7 +83,6 @@ fn main() {
         let extract_visitor = {
             let dir = dir.clone();
             let dng = dng.clone();
-            let matrix_prettify_visitor = matrix_prettify_visitor.clone();
             move |entry: IfdEntryRef| -> Option<String> {
                 if matches!(
                     entry.tag.get_type_interpretation(),
@@ -126,7 +122,7 @@ fn main() {
                 {
                     let path = dir.join(entry.path.string_with_separator("_"));
                     let buffer_size = dng.needed_buffer_size_for_offsets(entry).unwrap();
-                    let mut buffer = vec![0u8; buffer_size as usize];
+                    let mut buffer = vec![0u8; buffer_size];
                     dng.read_offsets_to_buffer(entry, &mut buffer).unwrap();
                     OpenOptions::new()
                         .write(true)
@@ -134,7 +130,7 @@ fn main() {
                         .truncate(true)
                         .open(path.clone())
                         .unwrap()
-                        .write(&buffer)
+                        .write_all(&buffer)
                         .unwrap();
                     return Some(format!(
                         "file://{}",
@@ -149,21 +145,21 @@ fn main() {
             visitor: Some(Arc::new(extract_visitor)),
         };
 
-        let ifd_yaml = yaml_dumper.dump_ifd(&dng.get_ifd0());
+        let ifd_yaml = yaml_dumper.dump_ifd(dng.get_ifd0());
         OpenOptions::new()
             .write(true)
             .create(true)
             .truncate(true)
             .open(dir.join("ifds.yml"))
             .unwrap()
-            .write(ifd_yaml.as_bytes())
+            .write_all(ifd_yaml.as_bytes())
             .unwrap();
     } else {
         let yaml_dumper = IfdYamlDumper {
             dump_rational_as_float: args.dump_rational_as_float,
             visitor: Some(Arc::new(matrix_prettify_visitor)),
         };
-        let ifd_yaml = yaml_dumper.dump_ifd(&dng.get_ifd0());
+        let ifd_yaml = yaml_dumper.dump_ifd(dng.get_ifd0());
         print!("{ifd_yaml}")
     }
 }

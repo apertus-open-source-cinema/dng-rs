@@ -267,7 +267,7 @@ impl IfdValue {
                     assert_eq!(elem.get_ifd_value_type(), ty)
                 }
                 ty
-            },
+            }
 
             // these two are made into a pointer to the actual data
             IfdValue::Ifd(_) => IfdValueType::Long,
