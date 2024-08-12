@@ -86,7 +86,7 @@ impl IfdYamlParser {
             let tag = self.parse_ifd_tag(key, ifd_type)?;
 
             // if we have offsets we need to emit two tags (offsets and lengths), thus we need to handle this directly
-            if let Some(IfdTypeInterpretation::Offsets { .. }) = tag.get_type_interpretation() {
+            if let Some(IfdTypeInterpretation::Offsets { lengths }) = tag.get_type_interpretation() {
                 let parse_offset_entry = |value: &Node<RcRepr>| -> Result<
                     Option<(IfdValue, IfdValue)>,
                     IfdYamlParserError,
@@ -119,14 +119,16 @@ impl IfdYamlParser {
                             let (offsets, lengths_values): (Vec<_>, Vec<_>) =
                                 mapped.into_iter().map(|x| x.unwrap()).unzip();
                             ifd.insert(tag, IfdValue::List(offsets));
-                            ifd.insert(tag, IfdValue::List(lengths_values));
+                            ifd.insert(lengths.as_maybe(), IfdValue::List(lengths_values));
                             continue;
+                        } else {
+                            return Err(err!(source.pos(), "not all buffers could be read"))
                         }
                     }
                     Err(_) => {
                         if let Some((offsets_value, lengths_value)) = parse_offset_entry(value)? {
                             ifd.insert(tag, offsets_value);
-                            ifd.insert(tag, lengths_value);
+                            ifd.insert(lengths.as_maybe(), lengths_value);
                             continue;
                         }
                     }
