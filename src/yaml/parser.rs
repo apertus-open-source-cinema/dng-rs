@@ -3,6 +3,7 @@ use crate::ifd::{Ifd, IfdValue};
 use crate::tags::{IfdType, IfdTypeInterpretation, IfdValueType, MaybeKnownIfdFieldDescriptor};
 use fraction::Ratio;
 use lazy_regex::regex_captures;
+use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::io;
@@ -10,29 +11,31 @@ use std::io::Read;
 use std::iter::once;
 use std::path::PathBuf;
 use std::sync::Arc;
-use thiserror::Error;
 use yaml_peg::parser::parse;
 use yaml_peg::parser::PError;
 use yaml_peg::repr::RcRepr;
 use yaml_peg::Node;
 
 /// The error-type produced by the [IfdYamlParser]
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub enum IfdYamlParserError {
     PError(PError),
     IoError(io::Error),
     Other(u64, String),
 }
+
 impl From<PError> for IfdYamlParserError {
     fn from(e: PError) -> Self {
         Self::PError(e)
     }
 }
+
 impl From<io::Error> for IfdYamlParserError {
     fn from(e: io::Error) -> Self {
         Self::IoError(e)
     }
 }
+
 impl Display for IfdYamlParserError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -49,6 +52,8 @@ impl Display for IfdYamlParserError {
         }
     }
 }
+
+impl Error for IfdYamlParserError {}
 
 macro_rules! err {
     ($pos:expr, $($format_args:tt)*) => {
