@@ -21,7 +21,7 @@ pub mod tags;
 #[allow(unstable_name_collisions)]
 pub mod yaml;
 
-pub use dng_reader::DngReader;
+pub use dng_reader::{DngReader, DngReaderError};
 pub use dng_writer::DngWriter;
 
 /// An enumeration over DNG / DCP files
