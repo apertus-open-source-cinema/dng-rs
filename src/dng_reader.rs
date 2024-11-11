@@ -5,29 +5,41 @@ use crate::tags::{ifd, IfdType, IfdTypeInterpretation};
 use crate::FileType;
 use derivative::Derivative;
 use std::cell::RefCell;
+use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::io;
 use std::io::{Read, Seek, SeekFrom};
-use thiserror::Error;
 
 /// The error-type produced by [DngReader]
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub enum DngReaderError {
     IoError(io::Error),
     FormatError(String),
     Other(String),
 }
+
 impl From<io::Error> for DngReaderError {
     fn from(e: io::Error) -> Self {
         Self::IoError(e)
     }
 }
+
 impl Display for DngReaderError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             DngReaderError::IoError(e) => f.write_fmt(format_args!("IoError: '{:?}'", e)),
             DngReaderError::FormatError(e) => f.write_fmt(format_args!("FormatError: '{}'", e)),
             DngReaderError::Other(e) => f.write_fmt(format_args!("Other: '{}'", e)),
+        }
+    }
+}
+
+impl Error for DngReaderError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            DngReaderError::IoError(e) => Some(e),
+            DngReaderError::FormatError(_) => None,
+            DngReaderError::Other(_) => None,
         }
     }
 }

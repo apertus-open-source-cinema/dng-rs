@@ -23,7 +23,6 @@ required-features = ["cli"]
 
 [dependencies]
 derivative = "2.2.0"
-thiserror = "1.0.37"
 
 # these are needed for the yaml reading / writing
 fraction = { version = "0.12.1", optional = true }
