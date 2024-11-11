@@ -1,5 +1,6 @@
 use json::JsonValue;
 use std::env;
+use std::fmt::Write as FmtWrite;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -28,10 +29,10 @@ fn parse_ifd_file(path: &str, name: &str) -> String {
         .map(|entry| parse_ifd_field_descriptor(entry.take()))
         .collect();
     let definitions: String = entries.iter().map(|(_, code)| code.to_string()).collect();
-    let arr_contents: String = entries
-        .iter()
-        .map(|(name, _)| format!("{name}, "))
-        .collect();
+    let arr_contents: String = entries.iter().fold(String::new(), |mut output, (name, _)| {
+        let _ = write!(output, "{name}, ");
+        output
+    });
     let len = entries.len();
     format!("
         /// Tags contained in the {name} namespace
@@ -86,7 +87,10 @@ fn parse_ifd_field_descriptor(mut json: JsonValue) -> (String, String) {
     (name, definition)
 }
 fn doc_lines(lines: String) -> String {
-    lines.lines().map(|s| format!("/// {s}")).collect()
+    lines.lines().fold(String::new(), |mut out, s| {
+        let _ = write!(out, "/// {s}");
+        out
+    })
 }
 fn parse_dtype(mut json: JsonValue) -> String {
     let entrys: String = json
@@ -153,15 +157,14 @@ fn parse_ifd_type(json: JsonValue) -> String {
     }
 }
 fn parse_reverse_map(json: JsonValue) -> String {
-    let entries: String = json
-        .entries()
-        .map(|(k, v)| {
-            format!(
-                r#"({}, "{}"), "#,
-                v.as_str().unwrap().replace("bit ", ""),
-                k
-            )
-        })
-        .collect();
+    let entries: String = json.entries().fold(String::new(), |mut output, (k, v)| {
+        let _ = write!(
+            output,
+            r#"({}, "{}"), "#,
+            v.as_str().unwrap().replace("bit ", ""),
+            k
+        );
+        output
+    });
     format!("&[{entries}]")
 }
