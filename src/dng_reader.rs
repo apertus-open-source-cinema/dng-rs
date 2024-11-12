@@ -34,7 +34,15 @@ impl Display for DngReaderError {
     }
 }
 
-impl Error for DngReaderError {}
+impl Error for DngReaderError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            DngReaderError::IoError(e) => Some(e),
+            DngReaderError::FormatError(e) => None,
+            DngReaderError::Other(e) => None,
+        }
+    }
+}
 
 #[derive(Derivative)]
 #[derivative(Debug)]

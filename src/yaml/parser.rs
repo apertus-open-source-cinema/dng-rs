@@ -53,7 +53,15 @@ impl Display for IfdYamlParserError {
     }
 }
 
-impl Error for IfdYamlParserError {}
+impl Error for IfdYamlParserError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            IfdYamlParserError::PError(pe) => Some(pe),
+            IfdYamlParserError::IoError(ioe) => Some(ioe),
+            IfdYamlParserError::Other(_, _) => None,
+        }
+    }
+}
 
 macro_rules! err {
     ($pos:expr, $($format_args:tt)*) => {
