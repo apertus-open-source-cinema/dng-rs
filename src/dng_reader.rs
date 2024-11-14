@@ -38,8 +38,8 @@ impl Error for DngReaderError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             DngReaderError::IoError(e) => Some(e),
-            DngReaderError::FormatError(e) => None,
-            DngReaderError::Other(e) => None,
+            DngReaderError::FormatError(_) => None,
+            DngReaderError::Other(_) => None,
         }
     }
 }
