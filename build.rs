@@ -40,7 +40,7 @@ fn parse_ifd_file(path: &str, name: &str) -> String {
         pub mod {name} {{
             #[allow(unused_imports)]
             use super::{{IfdFieldDescriptor, IfdValueType, IfdCount, IfdTypeInterpretation, IfdType}};
-            pub(crate) const ALL: [IfdFieldDescriptor; {len}] = [{arr_contents}];
+            pub(crate) static ALL: [IfdFieldDescriptor; {len}] = [{arr_contents}];
             {definitions}
         }}
     ")
@@ -87,10 +87,15 @@ fn parse_ifd_field_descriptor(mut json: JsonValue) -> (String, String) {
     (name, definition)
 }
 fn doc_lines(lines: String) -> String {
-    lines.lines().fold(String::new(), |mut out, s| {
+    let out = lines.lines().fold(String::new(), |mut out, s| {
         let _ = write!(out, "/// {s}");
         out
-    })
+    });
+    if !out.is_empty() {
+        out
+    } else {
+        "/// ".into()
+    }
 }
 fn parse_dtype(mut json: JsonValue) -> String {
     let entrys: String = json
