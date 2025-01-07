@@ -4,6 +4,7 @@ use std::fmt::{Debug, Display, Formatter};
 use std::io;
 use std::io::Write;
 use std::iter::once;
+use std::mem;
 use std::ops::Deref;
 use std::sync::Arc;
 
@@ -14,6 +15,7 @@ pub struct Ifd {
     pub(crate) ifd_type: IfdType,
 }
 impl Ifd {
+    /// Create a new `Ifd` of the given type.
     pub fn new(ifd_type: IfdType) -> Self {
         Self {
             entries: Vec::new(),
@@ -36,6 +38,33 @@ impl Ifd {
         self.entries.retain(|e| e.tag != tag);
         self.entries.push(IfdEntry::new(tag, value))
     }
+    /// Inserts an entry into the IFD at the given path, overwriting a previously existing entry there.
+    /// Returns the previous value if it existed, does nothing otherwise.
+    pub fn replace_by_path(
+        &mut self,
+        path: &IfdPath,
+        value: impl Into<IfdValue>,
+    ) -> Option<IfdValue> {
+        let path_vec = path.as_vec();
+        let mut current = if let Some(IfdPathElement::Tag(tag)) = path_vec.first() {
+            self.entries
+                .iter_mut()
+                .find(|x| &x.tag == tag)
+                .map(|x| &mut x.value)
+        } else {
+            return None;
+        };
+        for element in &path_vec[1..] {
+            current = current.and_then(|x| x.index_with_mut(element.clone()));
+        }
+        if let Some(v) = current {
+            let mut value = value.into();
+            mem::swap(v, &mut value);
+            Some(value)
+        } else {
+            None
+        }
+    }
     /// Returns an ifd entry by path. It will return None for the empty path because we cant produce
     /// a ref with an appropriate lifetime for `self`
     pub fn get_entry_by_path<'a>(&'a self, path: &'a IfdPath) -> Option<IfdEntryRef<'a>> {
@@ -57,6 +86,8 @@ impl Ifd {
             None
         }
     }
+
+    /// Return the first entry satisfying the given predicate.
     pub fn find_entry(&self, predicate: impl Fn(IfdEntryRef) -> bool + Clone) -> Option<IfdPath> {
         self.find_entry_with_start_path(Default::default(), predicate)
     }
@@ -94,8 +125,48 @@ impl Ifd {
         None
     }
 
+    /// Find all entries satisfying the given predicate
+    pub fn find_entries(&self, predicate: impl Fn(IfdEntryRef) -> bool + Clone) -> Vec<IfdPath> {
+        self.find_entries_with_start_path(Default::default(), predicate)
+    }
+    fn find_entries_with_start_path(
+        &self,
+        path: IfdPath,
+        predicate: impl Fn(IfdEntryRef) -> bool + Clone,
+    ) -> Vec<IfdPath> {
+        let mut entries = Vec::new();
+        for entry in self.entries.iter() {
+            let path = path.chain_tag(entry.tag);
+            let entry_ref = entry.get_ref(&path);
+            if predicate(entry_ref) {
+                entries.push(path.clone());
+            }
+
+            if let IfdValue::List(list) = &entry.value {
+                for (i, v) in list.iter().enumerate() {
+                    let path = path.chain_list_index(i as u16);
+                    let entry = IfdEntryRef {
+                        value: v,
+                        path: &path,
+                        tag: &entry.tag,
+                    };
+                    if predicate(entry) {
+                        entries.push(path);
+                    }
+                }
+            } else if let IfdValue::Ifd(ifd) = &entry.value {
+                entries.extend(ifd.find_entries_with_start_path(path, predicate.clone()));
+            }
+        }
+        entries
+    }
+
     pub fn get_type(&self) -> IfdType {
         self.ifd_type
+    }
+
+    pub fn entries(&self) -> &[IfdEntry] {
+        &self.entries
     }
 }
 
@@ -238,6 +309,7 @@ impl IfdValue {
             _ => None,
         }
     }
+
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             IfdValue::SRational(x, y) => Some(*x as f64 / *y as f64),
@@ -247,6 +319,7 @@ impl IfdValue {
             _ => self.as_u32().map(|x| x as f64),
         }
     }
+
     pub fn get_ifd_value_type(&self) -> IfdValueType {
         match self {
             IfdValue::Byte(_) => IfdValueType::Byte,
@@ -274,6 +347,7 @@ impl IfdValue {
             IfdValue::Offsets(_) => IfdValueType::Long,
         }
     }
+
     pub fn get_count(&self) -> u32 {
         match self {
             IfdValue::List(list) => list.len() as u32,
@@ -281,18 +355,30 @@ impl IfdValue {
             _ => 1,
         }
     }
+    
     pub fn as_list(&self) -> impl Iterator<Item = &IfdValue> {
         match self {
             Self::List(list) => Box::new(list.iter()) as Box<dyn Iterator<Item = &IfdValue>>,
             _ => Box::new(once(self)) as Box<dyn Iterator<Item = &IfdValue>>,
         }
     }
+    
     pub fn index_with(&self, index: IfdPathElement) -> Option<&Self> {
         match (&self, index) {
             (Self::Ifd(ifd), IfdPathElement::Tag(tag)) => {
                 ifd.entries.iter().find(|x| x.tag == tag).map(|x| &x.value)
             }
             (Self::List(list), IfdPathElement::ListIndex(index)) => list.get(index as usize),
+            _ => None,
+        }
+    }
+    
+    pub fn index_with_mut(&mut self, index: IfdPathElement) -> Option<&mut Self> {
+        match (self, index) {
+            (Self::Ifd(ifd), IfdPathElement::Tag(tag)) => {
+                ifd.entries.iter_mut().find(|x| x.tag == tag).map(|x| &mut x.value)
+            }
+            (Self::List(list), IfdPathElement::ListIndex(index)) => list.get_mut(index as usize),
             _ => None,
         }
     }
