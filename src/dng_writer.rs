@@ -9,13 +9,15 @@ use std::io::{Seek, SeekFrom, Write};
 use std::ops::DerefMut;
 use std::sync::Arc;
 
+type PlanFn<W, T> = dyn FnOnce(&mut ByteOrderWriter<W>, &T) -> io::Result<()>;
+
 #[derive(Derivative)]
 #[derivative(Debug)]
 struct WritePlanEntry<W: Write + Seek, T> {
     offset: u32,
     size: u32,
     #[derivative(Debug = "ignore")]
-    write_fn: Box<dyn FnOnce(&mut ByteOrderWriter<W>, &T) -> io::Result<()>>,
+    write_fn: Box<PlanFn<W, T>>,
 }
 
 #[derive(Debug, Derivative)]
