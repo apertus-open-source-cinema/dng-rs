@@ -206,14 +206,6 @@ impl<R: Read + Seek> DngReader<R> {
         &self,
         ifd_path: &IfdPath,
     ) -> Result<usize, DngReaderError> {
-        if let Some(compression) = self.get_entry_by_path(&ifd_path.chain_tag(ifd::Compression)) {
-            if compression.value.as_u32() != Some(1) {
-                return Err(DngReaderError::Other(
-                    "reading compressed images is not implemented".to_string(),
-                ));
-            }
-        }
-
         // we try the different options one after another
         if let (Some(_offsets), Some(lengths)) = (
             self.get_entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets)),
@@ -236,19 +228,13 @@ impl<R: Read + Seek> DngReader<R> {
         }
     }
     /// Reads the image data from a given IFD into o given buffer
+    /// Note: the image might be bit-packed or compressed, depending its bit depth and the value of the
+    /// `Compression` IFD tag.
     pub fn read_image_data_to_buffer(
         &self,
         ifd_path: &IfdPath,
         buffer: &mut [u8],
     ) -> Result<(), DngReaderError> {
-        if let Some(compression) = self.get_entry_by_path(&ifd_path.chain_tag(ifd::Compression)) {
-            if compression.value.as_u32() != Some(1) {
-                return Err(DngReaderError::Other(
-                    "reading compressed images is not implemented".to_string(),
-                ));
-            }
-        }
-
         // we try the different options one after another
         if let (Some(offsets), Some(lengths)) = (
             self.get_entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets)),
