@@ -65,10 +65,11 @@ impl<W: Write + Seek, T> WritePlan<W, T> {
     }
 }
 
-/// The main entrypoint for writing DNG / DCP files
+/// The main entrypoint for writing DNG/DCP files.
 ///
-/// example:
-/// ```rust
+/// # Examples
+///
+/// ```
 /// use std::fs::File;
 /// use std::sync::Arc;
 /// use dng::{DngWriter, FileType, tags};
@@ -90,7 +91,7 @@ pub struct DngWriter<W: Write + Seek> {
     plan: Arc<WritePlan<W, Self>>,
 }
 impl<W: Write + Seek> DngWriter<W> {
-    /// Writes a DNG / DCP file given the endianness and a list of toplevel [Ifd]s
+    /// Writes a DNG/DCP file given the endianness and a list of toplevel [`Ifd`]s.
     pub fn write_dng(
         writer: W,
         is_little_endian: bool,
@@ -144,14 +145,14 @@ impl<W: Write + Seek> DngWriter<W> {
         // * 2 byte type
         // * 4 byte count
         // * 4 byte value or pointer
-        let count = entry.value.get_count();
-        let dtype = entry.value.get_ifd_value_type();
+        let count = entry.value.count();
+        let dtype = entry.value.ifd_value_type();
 
-        writer.write_u16(entry.tag.numeric())?;
-        writer.write_u16(dtype.as_u16())?;
+        writer.write_u16(entry.tag.into())?;
+        writer.write_u16(dtype.into())?;
         writer.write_u32(count)?;
 
-        let required_bytes = count * dtype.needed_bytes();
+        let required_bytes = count * dtype.size() as u32;
         if required_bytes <= 4 {
             Self::write_value(entry.value, writer, self)?;
             for _ in 0..(4 - required_bytes) {
@@ -211,11 +212,11 @@ impl<W: Write + Seek> DngWriter<W> {
                 writer.write_u32(*num)?;
                 writer.write_u32(*denom)
             }
-            IfdValue::SByte(v) => writer.write_i8(*v),
+            IfdValue::SignedByte(v) => writer.write_i8(*v),
             IfdValue::Undefined(v) => writer.write_u8(*v),
-            IfdValue::SShort(v) => writer.write_i16(*v),
-            IfdValue::SLong(v) => writer.write_i32(*v),
-            IfdValue::SRational(num, denom) => {
+            IfdValue::SignedShort(v) => writer.write_i16(*v),
+            IfdValue::SignedLong(v) => writer.write_i32(*v),
+            IfdValue::SignedRational(num, denom) => {
                 writer.write_i32(*num)?;
                 writer.write_i32(*denom)
             }

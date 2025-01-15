@@ -85,9 +85,11 @@ fn parse_ifd_field_descriptor(mut json: JsonValue) -> (String, String) {
     );
     (name, definition)
 }
+
 fn doc_lines(lines: String) -> String {
     lines.lines().map(|s| format!("/// {s}")).collect()
 }
+
 fn parse_dtype(mut json: JsonValue) -> String {
     let entrys: String = json
         .members_mut()
@@ -95,6 +97,7 @@ fn parse_dtype(mut json: JsonValue) -> String {
         .collect();
     format!("&[{entrys}]")
 }
+
 fn parse_single_dtype(json: JsonValue) -> String {
     match json.as_str().unwrap() {
         "BYTE" => "IfdValueType::Byte".to_string(),
@@ -102,16 +105,17 @@ fn parse_single_dtype(json: JsonValue) -> String {
         "SHORT" => "IfdValueType::Short".to_string(),
         "LONG" => "IfdValueType::Long".to_string(),
         "RATIONAL" => "IfdValueType::Rational".to_string(),
-        "SBYTE" => "IfdValueType::SByte".to_string(),
+        "SBYTE" => "IfdValueType::SignedByte".to_string(),
         "UNDEFINED" => "IfdValueType::Undefined".to_string(),
-        "SSHORT" => "IfdValueType::SShort".to_string(),
-        "SLONG" => "IfdValueType::SLong".to_string(),
-        "SRATIONAL" => "IfdValueType::SRational".to_string(),
+        "SSHORT" => "IfdValueType::SignedShort".to_string(),
+        "SLONG" => "IfdValueType::SignedLong".to_string(),
+        "SRATIONAL" => "IfdValueType::SignedRational".to_string(),
         "FLOAT" => "IfdValueType::Float".to_string(),
         "DOUBLE" => "IfdValueType::Double".to_string(),
         _ => unreachable!(),
     }
 }
+
 fn parse_count(json: JsonValue) -> String {
     let str = json.as_str().unwrap();
     match str.parse::<u32>() {
@@ -119,6 +123,7 @@ fn parse_count(json: JsonValue) -> String {
         Err(_) => "IfdCount::N".to_string(),
     }
 }
+
 fn parse_interpretation(mut json: JsonValue) -> String {
     let kind = json.remove("kind").take_string().unwrap();
     match kind.as_str() {
@@ -144,6 +149,7 @@ fn parse_interpretation(mut json: JsonValue) -> String {
         _ => "IfdTypeInterpretation::Default".to_string(),
     }
 }
+
 fn parse_ifd_type(json: JsonValue) -> String {
     match json.as_str().unwrap() {
         "IFD" => "IfdType::Ifd".to_string(),
@@ -152,6 +158,7 @@ fn parse_ifd_type(json: JsonValue) -> String {
         _ => unreachable!(),
     }
 }
+
 fn parse_reverse_map(json: JsonValue) -> String {
     let entries: String = json
         .entries()

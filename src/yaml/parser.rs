@@ -86,8 +86,7 @@ impl IfdYamlParser {
             let tag = self.parse_ifd_tag(key, ifd_type)?;
 
             // if we have offsets we need to emit two tags (offsets and lengths), thus we need to handle this directly
-            if let Some(IfdTypeInterpretation::Offsets { lengths }) = tag.get_type_interpretation()
-            {
+            if let Some(IfdTypeInterpretation::Offsets { lengths }) = tag.type_interpretation() {
                 let parse_offset_entry = |value: &Node<RcRepr>| -> Result<
                     Option<(IfdValue, IfdValue)>,
                     IfdYamlParserError,
@@ -180,7 +179,7 @@ impl IfdYamlParser {
     ) -> Result<IfdValue, IfdYamlParserError> {
         Ok(if value.as_map().is_ok() {
             let ifd_type = if let Some(IfdTypeInterpretation::IfdOffset { ifd_type }) =
-                tag.get_type_interpretation()
+                tag.type_interpretation()
             {
                 *ifd_type
             } else {
@@ -209,15 +208,10 @@ impl IfdYamlParser {
                     })
                     .collect();
                 let result = result?;
-                let ty = &result[0].get_ifd_value_type();
-                if !result.iter().all(|elem| elem.get_ifd_value_type() == *ty) {
+                let ty = &result[0].ifd_value_type();
+                if !result.iter().all(|elem| elem.ifd_value_type() == *ty) {
                     if force_type.is_none() {
-                        types = Some(
-                            result
-                                .iter()
-                                .map(|elem| elem.get_ifd_value_type())
-                                .collect(),
-                        );
+                        types = Some(result.iter().map(|elem| elem.ifd_value_type()).collect());
                     }
                     force_type = Some(types.clone().unwrap()[i]);
                     continue;
@@ -259,13 +253,13 @@ impl IfdYamlParser {
             Ok(Box::new(once(ty)) as Box<dyn Iterator<Item = IfdValueType>>)
         } else if let Some(ty) = Self::parse_ifd_value_type(yaml_tag) {
             Ok(Box::new(once(ty)) as Box<dyn Iterator<Item = IfdValueType>>)
-        } else if let Some(types) = tag.get_known_value_type() {
+        } else if let Some(types) = tag.known_value_type() {
             Ok(Box::new(types.iter().cloned()) as Box<dyn Iterator<Item = IfdValueType>>)
         } else {
             Err(err!(value.pos(), "couldnt determine dtype of tag '{tag}'. if the IFD tag is unknown, the dtype must be specified explicitly with a YAML tag"))
         }?;
 
-        match tag.get_type_interpretation() {
+        match tag.type_interpretation() {
             Some(IfdTypeInterpretation::Enumerated { values }) => {
                 let str = value
                     .as_str()
@@ -313,11 +307,11 @@ impl IfdYamlParser {
             "SHORT" => Some(IfdValueType::Short),
             "LONG" => Some(IfdValueType::Long),
             "RATIONAL" => Some(IfdValueType::Rational),
-            "SBYTE" => Some(IfdValueType::SByte),
+            "SBYTE" => Some(IfdValueType::SignedByte),
             "UNDEFINED" => Some(IfdValueType::Undefined),
-            "SSHORT" => Some(IfdValueType::SShort),
-            "SLONG" => Some(IfdValueType::SLong),
-            "SRATIONAL" => Some(IfdValueType::SRational),
+            "SSHORT" => Some(IfdValueType::SignedShort),
+            "SLONG" => Some(IfdValueType::SignedLong),
+            "SRATIONAL" => Some(IfdValueType::SignedRational),
             "FLOAT" => Some(IfdValueType::Float),
             "DOUBLE" => Some(IfdValueType::Double),
             _ => None,
@@ -347,10 +341,10 @@ impl IfdYamlParser {
             IfdValueType::Ascii => IfdValue::Ascii(str.to_string()),
             IfdValueType::Short => IfdValue::Short(parse_int_like!(value, "SHORT")),
             IfdValueType::Long => IfdValue::Long(parse_int_like!(value, "LONG")),
-            IfdValueType::SByte => IfdValue::SByte(parse_int_like!(value, "SBYTE")),
+            IfdValueType::SignedByte => IfdValue::SignedByte(parse_int_like!(value, "SBYTE")),
             IfdValueType::Undefined => IfdValue::Undefined(parse_int_like!(value, "UNDEFINED")),
-            IfdValueType::SShort => IfdValue::SShort(parse_int_like!(value, "SSHORT")),
-            IfdValueType::SLong => IfdValue::SLong(parse_int_like!(value, "SLONG")),
+            IfdValueType::SignedShort => IfdValue::SignedShort(parse_int_like!(value, "SSHORT")),
+            IfdValueType::SignedLong => IfdValue::SignedLong(parse_int_like!(value, "SLONG")),
 
             IfdValueType::Rational => {
                 if let Some((_whole, numerator, denominator)) =
@@ -370,19 +364,19 @@ impl IfdYamlParser {
                     IfdValue::Rational(*fraction.numer() as u32, *fraction.denom() as u32)
                 } else if str.is_empty() {
                     // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
-                    return Ok(IfdValue::SRational(0, 1));
+                    return Ok(IfdValue::SignedRational(0, 1));
                 } else {
                     Err(err!(value.pos(), "couldn't parse '{str}' as RATIONAL"))?
                 }
             }
-            IfdValueType::SRational => {
+            IfdValueType::SignedRational => {
                 if let Some((_whole, numerator, denominator)) =
                     regex_captures!("([\\-0-9]+)\\s*/\\s*([\\-0-9]+)", str)
                 {
                     if let (Ok(numerator), Ok(denominator)) =
                         (numerator.parse(), denominator.parse())
                     {
-                        IfdValue::SRational(numerator, denominator)
+                        IfdValue::SignedRational(numerator, denominator)
                     } else {
                         Err(err!(value.pos(), "couldn't parse '{str}' as SRATIONAL"))?
                     }
@@ -390,10 +384,10 @@ impl IfdYamlParser {
                     let fraction = Ratio::<i32>::approximate_float(float).ok_or_else(|| {
                         err!(value.pos(), "couldnt find a fraction for float '{float}'")
                     })?;
-                    IfdValue::SRational(*fraction.numer(), *fraction.denom())
+                    IfdValue::SignedRational(*fraction.numer(), *fraction.denom())
                 } else if str.is_empty() {
                     // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
-                    return Ok(IfdValue::SRational(0, 1));
+                    return Ok(IfdValue::SignedRational(0, 1));
                 } else {
                     Err(err!(value.pos(), "couldn't parse '{str}' as SRATIONAL"))?
                 }

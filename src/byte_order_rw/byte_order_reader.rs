@@ -8,6 +8,7 @@ pub struct ByteOrderReader<R: Read> {
     reader: R,
     is_little_endian: bool,
 }
+
 impl<R: Read> ByteOrderReader<R> {
     pub fn new(reader: R, is_little_endian: bool) -> Self {
         Self {
@@ -31,6 +32,7 @@ macro_rules! generate_read_function {
         }
     };
 }
+
 impl<R: Read> ByteOrderReader<R> {
     generate_read_function!(read_u8, u8);
     generate_read_function!(read_i8, i8);
@@ -51,6 +53,7 @@ impl<R: Read> Deref for ByteOrderReader<R> {
         &self.reader
     }
 }
+
 impl<R: Read> DerefMut for ByteOrderReader<R> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.reader
