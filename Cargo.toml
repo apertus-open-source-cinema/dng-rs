@@ -1,15 +1,21 @@
 [package]
 name = "dng"
-description = "A pure rust library for reading / writing DNG files providing access to the raw data"
-version = "1.5.2"
+description = "A pure Rust library for reading/writing of DNG files, providing access to the RAW data"
+version = "1.6.0"
 keywords = ["dng", "raw", "tiff", "ifd", "exif"]
-categories = ["command-line-utilities", "multimedia::images", "multimedia::encoding", "multimedia::video"]
+categories = [
+    "command-line-utilities",
+    "multimedia::images",
+    "multimedia::encoding",
+    "multimedia::video",
+]
 repository = "https://github.com/apertus-open-source-cinema/dng-rs"
 readme = "README.md"
 license = "AGPL-3.0"
 edition = "2021"
 
 [features]
+default = []
 yaml = ["dep:fraction", "dep:lazy-regex", "dep:textwrap", "dep:yaml-peg"]
 cli = ["yaml", "dep:clap"]
 
@@ -22,18 +28,17 @@ name = "compile_dng"
 required-features = ["cli"]
 
 [dependencies]
-derivative = "2.2.0"
-thiserror = "1.0.37"
+derivative = "2.2"
+thiserror = "2"
 
-# these are needed for the yaml reading / writing
-fraction = { version = "0.12.1", optional = true }
-lazy-regex = { version = "2.3.1", optional = true }
-textwrap = { version = "0.16.0", optional = true }
-yaml-peg = { version = "1.0.5", optional = true }
+# these are needed for the yaml reading/writing
+fraction = { version = "0.15", optional = true }
+lazy-regex = { version = "3.4", optional = true }
+textwrap = { version = "0.16", optional = true }
+yaml-peg = { version = "1.0", optional = true }
 
 # this is only needed for the cli tools
-clap = { version = "4.0.22", features = ["derive"], optional = true }
-
+clap = { version = "4.5", features = ["derive"], optional = true }
 
 [build-dependencies]
-json = "0.12.4"
+json = "0.12"
