@@ -19,14 +19,14 @@ impl IfdYamlDumper {
                 format!(
                     "{}: {}{}\n",
                     entry.tag,
-                    self.dump_tag_if_needed(entry.get_ref(&path.chain_tag(entry.tag))),
-                    self.dump_ifd_value(entry.get_ref(&path.chain_tag(entry.tag)))
+                    self.dump_tag_if_needed(entry.build_ref(&path.chain_tag(entry.tag))),
+                    self.dump_ifd_value(entry.build_ref(&path.chain_tag(entry.tag)))
                 )
             })
             .collect()
     }
     pub fn dump_ifd_value(&self, entry: IfdEntryRef) -> String {
-        if entry.tag.get_type_interpretation().is_some() {
+        if entry.tag.type_interpretation().is_some() {
             self.dump_ifd_value_with_type_interpretation(entry)
         } else {
             self.dump_ifd_value_plain(entry)
@@ -37,7 +37,7 @@ impl IfdYamlDumper {
             return s;
         }
 
-        match entry.tag.get_type_interpretation().unwrap() {
+        match entry.tag.type_interpretation().unwrap() {
             IfdTypeInterpretation::Enumerated { values } => {
                 if let Some(num) = entry.value.as_u32() {
                     if let Some((_, v)) = values.iter().find(|(k, _)| *k == num) {
@@ -65,11 +65,11 @@ impl IfdYamlDumper {
                     format!("{x}/{y}")
                 }
             }
-            IfdValue::SByte(x) => format!("{x}"),
+            IfdValue::SignedByte(x) => format!("{x}"),
             IfdValue::Undefined(x) => format!("{x:#02X}"),
-            IfdValue::SShort(x) => format!("{x}"),
-            IfdValue::SLong(x) => format!("{x}"),
-            IfdValue::SRational(x, y) => {
+            IfdValue::SignedShort(x) => format!("{x}"),
+            IfdValue::SignedLong(x) => format!("{x}"),
+            IfdValue::SignedRational(x, y) => {
                 if self.dump_rational_as_float {
                     format!("{}", *x as f32 / *y as f32)
                 } else {
@@ -120,14 +120,14 @@ impl IfdYamlDumper {
         }
     }
     fn dump_tag_if_needed(&self, entry: IfdEntryRef) -> String {
-        if let Some(types) = entry.tag.get_known_value_type() {
-            if types.contains(&entry.value.get_ifd_value_type()) {
+        if let Some(types) = entry.tag.known_value_type() {
+            if types.contains(&entry.value.ifd_value_type()) {
                 return "".to_string();
             }
         }
         format!(
             "!{} ",
-            Self::dump_ifd_value_type(&entry.value.get_ifd_value_type())
+            Self::dump_ifd_value_type(&entry.value.ifd_value_type())
         )
     }
     fn dump_ifd_value_type(v: &IfdValueType) -> &str {
@@ -137,11 +137,11 @@ impl IfdYamlDumper {
             IfdValueType::Short => "SHORT",
             IfdValueType::Long => "LONG",
             IfdValueType::Rational => "RATIONAL",
-            IfdValueType::SByte => "SBYTE",
+            IfdValueType::SignedByte => "SBYTE",
             IfdValueType::Undefined => "UNDEFINED",
-            IfdValueType::SShort => "SSHORT",
-            IfdValueType::SLong => "SLONG",
-            IfdValueType::SRational => "SRATIONAL",
+            IfdValueType::SignedShort => "SSHORT",
+            IfdValueType::SignedLong => "SLONG",
+            IfdValueType::SignedRational => "SRATIONAL",
             IfdValueType::Float => "FLOAT",
             IfdValueType::Double => "DOUBLE",
         }

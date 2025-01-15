@@ -46,10 +46,11 @@ impl Error for DngReaderError {
 
 #[derive(Derivative)]
 #[derivative(Debug)]
-/// The main entrypoint for reading DNG / DCP files
+/// The main entrypoint for reading DNG/DCP files.
 ///
-/// usage example:
-/// ```rust
+/// # Examples
+///
+/// ```
 /// use std::fs::File;
 /// use dng::DngReader;
 ///
@@ -125,14 +126,23 @@ impl<R: Read + Seek> DngReader<R> {
         })
     }
 
-    /// returns the first toplevel IFD of the DNG file.
-    pub fn get_ifd0(&self) -> &Ifd {
+    /// Returns the first toplevel IFD of the DNG file.
+    pub fn first_ifd(&self) -> &Ifd {
         &self.ifds[0]
     }
 
-    pub fn get_entry_by_path<'a>(&'a self, path: &'a IfdPath) -> Option<IfdEntryRef<'a>> {
+    /// Returns the first toplevel IFD of the DNG file.
+    #[deprecated(
+        since = "1.6.0",
+        note = "`get_` prefixes are non-canonical Rust; use `first_ifd()` instead"
+    )]
+    pub fn get_ifd0(&self) -> &Ifd {
+        &self.first_ifd()
+    }
+
+    pub fn entry_by_path<'a>(&'a self, path: &'a IfdPath) -> Option<IfdEntryRef<'a>> {
         for ifd in &self.ifds {
-            let result = ifd.get_entry_by_path(path);
+            let result = ifd.entry_by_path(path);
             if result.is_some() {
                 return result;
             }
@@ -140,17 +150,24 @@ impl<R: Read + Seek> DngReader<R> {
         None
     }
 
-    /// This low-level function returns the length of a single OFFSETS field
+    #[deprecated(
+        since = "1.6.0",
+        note = "`get_` prefixes are non-canonical Rust; use `entry_by_path()` instead"
+    )]
+    pub fn get_entry_by_path<'a>(&'a self, path: &'a IfdPath) -> Option<IfdEntryRef<'a>> {
+        self.entry_by_path(path)
+    }
+
+    /// This low-level function returns the length of a single OFFSETS field.
+    ///
     /// Lists are not supported (you must query the individual list member)
     pub fn needed_buffer_size_for_offsets(
         &self,
         entry: IfdEntryRef,
     ) -> Result<usize, DngReaderError> {
-        if let Some(IfdTypeInterpretation::Offsets { lengths }) =
-            entry.tag.get_type_interpretation()
-        {
+        if let Some(IfdTypeInterpretation::Offsets { lengths }) = entry.tag.type_interpretation() {
             let lengths_paths = entry.path.with_last_tag_replaced(lengths.as_maybe());
-            let lengths_value = self.get_entry_by_path(&lengths_paths);
+            let lengths_value = self.entry_by_path(&lengths_paths);
             if let Some(entry) = lengths_value {
                 Ok(entry.value.as_u32().unwrap() as usize)
             } else {
@@ -165,7 +182,8 @@ impl<R: Read + Seek> DngReader<R> {
             )))
         }
     }
-    /// This low-level function can read a single entry from an OFFSETS field to a buffer
+    /// This low-level function can read a single entry from an OFFSETS field to a buffer.
+    ///
     /// Lists are not supported (you must query the individual list member)
     pub fn read_offsets_to_buffer(
         &self,
@@ -193,7 +211,7 @@ impl<R: Read + Seek> DngReader<R> {
 
     /// Returns the Path to the IFD in which the main image data (not a preview) is stored.
     pub fn main_image_data_ifd_path(&self) -> IfdPath {
-        self.get_ifd0()
+        self.first_ifd()
             .find_entry(|entry| {
                 entry.tag == &ifd::NewSubfileType.as_maybe() && entry.value.as_u32() == Some(0)
             })
@@ -201,12 +219,12 @@ impl<R: Read + Seek> DngReader<R> {
             .unwrap_or_default()
     }
 
-    /// Returns the length in bytes needed for a buffer to store the image data from a given IFD
+    /// Returns the length in bytes needed for a buffer to store the image data from a given IFD.
     pub fn needed_buffer_length_for_image_data(
         &self,
         ifd_path: &IfdPath,
     ) -> Result<usize, DngReaderError> {
-        if let Some(compression) = self.get_entry_by_path(&ifd_path.chain_tag(ifd::Compression)) {
+        if let Some(compression) = self.entry_by_path(&ifd_path.chain_tag(ifd::Compression)) {
             if compression.value.as_u32() != Some(1) {
                 return Err(DngReaderError::Other(
                     "reading compressed images is not implemented".to_string(),
@@ -216,14 +234,14 @@ impl<R: Read + Seek> DngReader<R> {
 
         // we try the different options one after another
         if let (Some(_offsets), Some(lengths)) = (
-            self.get_entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets)),
-            self.get_entry_by_path(&ifd_path.chain_tag(ifd::StripByteCounts)),
+            self.entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets)),
+            self.entry_by_path(&ifd_path.chain_tag(ifd::StripByteCounts)),
         ) {
             let sum: u32 = lengths.value.as_list().map(|x| x.as_u32().unwrap()).sum();
             Ok(sum as usize)
         } else if let (Some(_offsets), Some(_lengths)) = (
-            self.get_entry_by_path(&ifd_path.chain_tag(ifd::TileOffsets)),
-            self.get_entry_by_path(&ifd_path.chain_tag(ifd::TileByteCounts)),
+            self.entry_by_path(&ifd_path.chain_tag(ifd::TileOffsets)),
+            self.entry_by_path(&ifd_path.chain_tag(ifd::TileByteCounts)),
         ) {
             Err(DngReaderError::Other(
                 "reading tiled images is not implemented".to_string(),
@@ -235,13 +253,14 @@ impl<R: Read + Seek> DngReader<R> {
             ))
         }
     }
-    /// Reads the image data from a given IFD into o given buffer
+
+    /// Reads the image data from a given IFD into o given buffer.
     pub fn read_image_data_to_buffer(
         &self,
         ifd_path: &IfdPath,
         buffer: &mut [u8],
     ) -> Result<(), DngReaderError> {
-        if let Some(compression) = self.get_entry_by_path(&ifd_path.chain_tag(ifd::Compression)) {
+        if let Some(compression) = self.entry_by_path(&ifd_path.chain_tag(ifd::Compression)) {
             if compression.value.as_u32() != Some(1) {
                 return Err(DngReaderError::Other(
                     "reading compressed images is not implemented".to_string(),
@@ -251,12 +270,12 @@ impl<R: Read + Seek> DngReader<R> {
 
         // we try the different options one after another
         if let (Some(offsets), Some(lengths)) = (
-            self.get_entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets)),
-            self.get_entry_by_path(&ifd_path.chain_tag(ifd::StripByteCounts)),
+            self.entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets)),
+            self.entry_by_path(&ifd_path.chain_tag(ifd::StripByteCounts)),
         ) {
             let mut reader = self.reader.borrow_mut();
-            let count = offsets.value.get_count();
-            if count != lengths.value.get_count() {
+            let count = offsets.value.count();
+            if count != lengths.value.count() {
                 return Err(DngReaderError::FormatError(
                     "the counts of OFFSETS and LENGTHS must be the same".to_string(),
                 ));
@@ -275,8 +294,8 @@ impl<R: Read + Seek> DngReader<R> {
             }
             Ok(())
         } else if let (Some(_offsets), Some(_lengths)) = (
-            self.get_entry_by_path(&ifd_path.chain_tag(ifd::TileOffsets)),
-            self.get_entry_by_path(&ifd_path.chain_tag(ifd::TileByteCounts)),
+            self.entry_by_path(&ifd_path.chain_tag(ifd::TileOffsets)),
+            self.entry_by_path(&ifd_path.chain_tag(ifd::TileByteCounts)),
         ) {
             Err(DngReaderError::Other(
                 "reading tiled images is not implemented".to_string(),

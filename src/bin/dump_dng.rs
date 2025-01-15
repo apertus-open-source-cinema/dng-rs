@@ -9,16 +9,15 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 
-/// Dump the IFD metadata of a TIFF / DNG image to a human readable yaml representation
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about="Dump the IFD metadata of a TIFF/DNG image to a human readable YAML representation", long_about = None)]
 struct Args {
-    /// input file to get the metadata from
+    /// Input file to get the metadata from
     file: String,
-    /// convert Rational and SRational types to float for better readability (this is lossy)
+    /// Convert (signed) rational types to float for better readability (this is lossy!)
     #[arg(short = 'f', long, action)]
     dump_rational_as_float: bool,
-    /// extract strips, tiles and larger blobs into a directory. also write the ifd chain as a yaml file there
+    /// Extract strips, tiles and larger blobs into a directory; also write the IFD chain as a YAML file there
     #[arg(short = 'e', long, action)]
     extract: bool,
 }
@@ -32,7 +31,7 @@ fn main() {
     let matrix_prettify_visitor = move |entry: IfdEntryRef| -> Option<String> {
         if entry
             .tag
-            .get_known_name()
+            .known_name()
             .map_or(true, |name| !name.to_lowercase().contains("matrix"))
         {
             return None;
@@ -85,7 +84,7 @@ fn main() {
             let dng = dng.clone();
             move |entry: IfdEntryRef| -> Option<String> {
                 if matches!(
-                    entry.tag.get_type_interpretation(),
+                    entry.tag.type_interpretation(),
                     Some(IfdTypeInterpretation::Blob)
                 ) {
                     let bytes_vec: Option<Vec<u8>> = entry
@@ -116,7 +115,7 @@ fn main() {
                 }
 
                 if matches!(
-                    entry.tag.get_type_interpretation(),
+                    entry.tag.type_interpretation(),
                     Some(IfdTypeInterpretation::Offsets { .. })
                 ) && !matches!(entry.value, IfdValue::List(_))
                 {
@@ -145,7 +144,7 @@ fn main() {
             visitor: Some(Arc::new(extract_visitor)),
         };
 
-        let ifd_yaml = yaml_dumper.dump_ifd(dng.get_ifd0());
+        let ifd_yaml = yaml_dumper.dump_ifd(dng.first_ifd());
         OpenOptions::new()
             .write(true)
             .create(true)
@@ -159,7 +158,7 @@ fn main() {
             dump_rational_as_float: args.dump_rational_as_float,
             visitor: Some(Arc::new(matrix_prettify_visitor)),
         };
-        let ifd_yaml = yaml_dumper.dump_ifd(dng.get_ifd0());
+        let ifd_yaml = yaml_dumper.dump_ifd(dng.first_ifd());
         print!("{ifd_yaml}")
     }
 }

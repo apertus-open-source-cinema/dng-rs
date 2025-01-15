@@ -6,19 +6,18 @@ use std::fs::{File, OpenOptions};
 use std::io::Read;
 use std::path::Path;
 
-/// Assemble a DNG file from some of other dng files, plain raw files and metadata
 #[derive(clap::Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about="Assemble a DNG file from some of other DNG files, plain RAW files and metadata", long_about = None)]
 struct Args {
-    /// input YAML file to get the metadata from
+    /// Input YAML file to get the metadata from
     #[arg(long)]
     yaml: String,
 
-    // write the DCP magic bytes (DNG Camera profile) instead of the DNG ones
+    /// Write the DCP magic bytes (DNG Camera profile) instead of the DNG ones
     #[arg(long, action)]
     dcp: bool,
 
-    // write a big endian DNG (default: little endian)
+    /// Write a big endian DNG (default: little endian)
     #[arg(short = 'b', long, action)]
     big_endian: bool,
 }

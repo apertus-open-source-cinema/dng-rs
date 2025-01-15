@@ -8,6 +8,7 @@ pub struct ByteOrderWriter<W: Write> {
     writer: W,
     is_little_endian: bool,
 }
+
 impl<W: Write> ByteOrderWriter<W> {
     pub fn new(writer: W, is_little_endian: bool) -> Self {
         Self {
@@ -30,6 +31,7 @@ macro_rules! generate_write_function {
         }
     };
 }
+
 impl<W: Write> ByteOrderWriter<W> {
     generate_write_function!(write_u8, u8);
     generate_write_function!(write_i8, i8);
@@ -50,6 +52,7 @@ impl<W: Write> Deref for ByteOrderWriter<W> {
         &self.writer
     }
 }
+
 impl<W: Write> DerefMut for ByteOrderWriter<W> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.writer
