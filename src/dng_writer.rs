@@ -48,9 +48,9 @@ impl<W: Write + Seek, T> WritePlan<W, T> {
             } else {
                 return Ok(());
             };
-            let current_offset = writer.seek(SeekFrom::Current(0)).unwrap() as u32;
+            let current_offset = writer.seek(SeekFrom::Current(0))? as u32;
             if entry.offset < current_offset {
-                return Err(io::Error::new(io::ErrorKind::Other, format!("someone before lied about their write amount. now we are fucked (write_offset={current_offset}, expected={})", entry.offset)));
+                return Err(io::Error::other(format!("someone before lied about their write amount. now we are fucked (write_offset={current_offset}, expected={})", entry.offset)));
             }
             // add padding if required
             for _ in 0..(entry.offset - current_offset) {
@@ -59,9 +59,9 @@ impl<W: Write + Seek, T> WritePlan<W, T> {
 
             (entry.write_fn)(writer, additional)?;
 
-            let current_offset = writer.seek(SeekFrom::Current(0)).unwrap() as u32;
+            let current_offset = writer.seek(SeekFrom::Current(0))? as u32;
             if entry.offset + entry.size != current_offset {
-                return Err(io::Error::new(io::ErrorKind::Other, format!("entry at {} lied about their write amount. now we are fucked (write_offset={current_offset}, expected={})", entry.offset, entry.offset + entry.size)));
+                return Err(io::Error::other(format!("entry at {} lied about their write amount. now we are fucked (write_offset={current_offset}, expected={})", entry.offset, entry.offset + entry.size)));
             }
         }
     }
@@ -229,10 +229,9 @@ impl<W: Write + Seek> DngWriter<W> {
                 }
                 Ok(())
             }
-            _ => Err(io::Error::new(
-                io::ErrorKind::Other,
-                format!("value '{value:?} is not primitive"),
-            )),
+            _ => Err(io::Error::other(format!(
+                "value '{value:?} is not primitive"
+            ))),
         }
     }
 }

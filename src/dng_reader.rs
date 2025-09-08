@@ -152,7 +152,14 @@ impl<R: Read + Seek> DngReader<R> {
             let lengths_paths = entry.path.with_last_tag_replaced(lengths.as_maybe());
             let lengths_value = self.get_entry_by_path(&lengths_paths);
             if let Some(entry) = lengths_value {
-                Ok(entry.value.as_u32().unwrap() as usize)
+                entry
+                    .value
+                    .as_u32()
+                    .map(|v| v as usize)
+                    .ok_or(DngReaderError::Other(format!(
+                        "length tag {lengths_paths:?} for {:?} does not have integer value",
+                        entry.path
+                    )))
             } else {
                 Err(DngReaderError::Other(format!(
                     "length tag {lengths_paths:?} for {:?} not found",
@@ -207,12 +214,22 @@ impl<R: Read + Seek> DngReader<R> {
         ifd_path: &IfdPath,
     ) -> Result<usize, DngReaderError> {
         // we try the different options one after another
-        if let (Some(_offsets), Some(lengths)) = (
+        if let (Some(offsets), Some(lengths)) = (
             self.get_entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets)),
             self.get_entry_by_path(&ifd_path.chain_tag(ifd::StripByteCounts)),
         ) {
-            let sum: u32 = lengths.value.as_list().map(|x| x.as_u32().unwrap()).sum();
-            Ok(sum as usize)
+            lengths
+                .value
+                .as_list()
+                .try_fold(0, |acc, x| {
+                    x.as_u32()
+                        .map(|v| acc + v)
+                        .ok_or(DngReaderError::Other(format!(
+                            "length tag {:?} for {:?} does not have integer value",
+                            lengths.path, offsets.path
+                        )))
+                })
+                .map(|v| v as usize)
         } else if let (Some(_offsets), Some(_lengths)) = (
             self.get_entry_by_path(&ifd_path.chain_tag(ifd::TileOffsets)),
             self.get_entry_by_path(&ifd_path.chain_tag(ifd::TileByteCounts)),
@@ -249,8 +266,14 @@ impl<R: Read + Seek> DngReader<R> {
             }
             let mut buffer_offset = 0;
             for (offset, length) in offsets.value.as_list().zip(lengths.value.as_list()) {
-                let offset = offset.as_u32().unwrap();
-                let length = length.as_u32().unwrap();
+                let offset = offset.as_u32().ok_or(DngReaderError::Other(format!(
+                    "offset tag {offset:?} for  {:?} does not have integer value",
+                    offsets.path
+                )))?;
+                let length = length.as_u32().ok_or(DngReaderError::Other(format!(
+                    "length tag {length:?} for  {:?} does not have integer value",
+                    offsets.path
+                )))?;
 
                 reader.seek(SeekFrom::Start(offset as u64))?;
                 let buffer_slice =
