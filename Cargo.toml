@@ -1,7 +1,7 @@
 [package]
 name = "dng"
 description = "A pure rust library for reading / writing DNG files providing access to the raw data"
-version = "1.5.3"
+version = "1.5.4"
 keywords = ["dng", "raw", "tiff", "ifd", "exif"]
 categories = ["command-line-utilities", "multimedia::images", "multimedia::encoding", "multimedia::video"]
 repository = "https://github.com/apertus-open-source-cinema/dng-rs"
