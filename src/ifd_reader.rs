@@ -38,12 +38,13 @@ pub struct IfdEntryReader {
     value_or_offset: u32,
     own_offset: u32,
 }
+
 impl IfdEntryReader {
     pub fn read(reader: &mut ByteOrderReader<impl Read + Seek>) -> Result<Self, io::Error> {
         let own_offset = reader.seek(SeekFrom::Current(0))? as u32;
         let tag = reader.read_u16()?;
         let dtype = reader.read_u16()?;
-        let dtype = IfdValueType::from_u16(dtype).ok_or_else(|| {
+        let dtype = IfdValueType::try_from(dtype).map_err(|_| {
             io::Error::new(
                 io::ErrorKind::InvalidData,
                 format!(
@@ -65,7 +66,7 @@ impl IfdEntryReader {
 
     // if the value fits into 4 byte, it is stored inline
     fn fits_inline(&self) -> bool {
-        self.count * self.dtype.needed_bytes() <= 4
+        self.count * self.dtype.size() as u32 <= 4
     }
 
     pub fn process(
@@ -80,7 +81,7 @@ impl IfdEntryReader {
         }
 
         let value = if let Some(IfdTypeInterpretation::IfdOffset { ifd_type }) =
-            tag.get_type_interpretation()
+            tag.type_interpretation()
         {
             assert_eq!(self.dtype, IfdValueType::Long);
             let mut read_ifd = || -> Result<IfdValue, io::Error> {
@@ -127,12 +128,12 @@ impl IfdEntryReader {
                 IfdValueType::Rational => {
                     IfdValue::Rational(reader.read_u32()?, reader.read_u32()?)
                 }
-                IfdValueType::SByte => IfdValue::SByte(reader.read_i8()?),
+                IfdValueType::SignedByte => IfdValue::SignedByte(reader.read_i8()?),
                 IfdValueType::Undefined => IfdValue::Undefined(reader.read_u8()?),
-                IfdValueType::SShort => IfdValue::SByte(reader.read_i8()?),
-                IfdValueType::SLong => IfdValue::SLong(reader.read_i32()?),
-                IfdValueType::SRational => {
-                    IfdValue::SRational(reader.read_i32()?, reader.read_i32()?)
+                IfdValueType::SignedShort => IfdValue::SignedByte(reader.read_i8()?),
+                IfdValueType::SignedLong => IfdValue::SignedLong(reader.read_i32()?),
+                IfdValueType::SignedRational => {
+                    IfdValue::SignedRational(reader.read_i32()?, reader.read_i32()?)
                 }
                 IfdValueType::Float => IfdValue::Float(reader.read_f32()?),
                 IfdValueType::Double => IfdValue::Double(reader.read_f64()?),
