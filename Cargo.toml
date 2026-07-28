@@ -28,8 +28,6 @@ name = "compile_dng"
 required-features = ["cli"]
 
 [dependencies]
-derivative = "2.2"
-
 # these are needed for the yaml reading/writing
 fraction = { version = "0.15", optional = true }
 lazy-regex = { version = "3.4", optional = true }

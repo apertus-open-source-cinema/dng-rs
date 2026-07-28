@@ -1,9 +1,9 @@
 use crate::byte_order_rw::ByteOrderWriter;
 use crate::ifd::{Ifd, IfdEntry, IfdValue};
 use crate::FileType;
-use derivative::Derivative;
 use std::cell::RefCell;
 use std::collections::VecDeque;
+use std::fmt::{self, Debug};
 use std::io;
 use std::io::{Seek, SeekFrom, Write};
 use std::ops::DerefMut;
@@ -11,21 +11,18 @@ use std::sync::Arc;
 
 type PlanFn<W, T> = dyn FnOnce(&mut ByteOrderWriter<W>, &T) -> io::Result<()>;
 
-#[derive(Derivative)]
-#[derivative(Debug)]
 struct WritePlanEntry<W: Write + Seek, T> {
     offset: u32,
     size: u32,
-    #[derivative(Debug = "ignore")]
     write_fn: Box<PlanFn<W, T>>,
 }
 
-#[derive(Debug, Derivative)]
-#[derivative(Default(bound = ""))]
+#[derive(Debug)]
 struct WritePlan<W: Write + Seek, T> {
     to_write: RefCell<VecDeque<WritePlanEntry<W, T>>>,
     write_ptr: RefCell<u32>,
 }
+
 impl<W: Write + Seek, T> WritePlan<W, T> {
     pub fn add_entry(
         &self,
@@ -86,12 +83,12 @@ impl<W: Write + Seek, T> WritePlan<W, T> {
 /// ifd.insert(tags::ifd::StripByteCounts, 4);
 /// DngWriter::write_dng(file, true, FileType::Dng, vec![ifd]).unwrap();
 /// ```
-#[derive(Debug, Derivative)]
-#[derivative(Clone(bound = ""))]
+#[derive(Debug)]
 pub struct DngWriter<W: Write + Seek> {
     is_little_endian: bool,
     plan: Arc<WritePlan<W, Self>>,
 }
+
 impl<W: Write + Seek> DngWriter<W> {
     /// Writes a DNG/DCP file given the endianness and a list of toplevel [`Ifd`]s.
     pub fn write_dng(
@@ -234,5 +231,33 @@ impl<W: Write + Seek> DngWriter<W> {
                 "value '{value:?} is not primitive"
             ))),
         }
+    }
+}
+
+impl<W: Write + Seek> Clone for DngWriter<W> {
+    fn clone(&self) -> Self {
+        Self {
+            is_little_endian: self.is_little_endian,
+            plan: self.plan.clone(),
+        }
+    }
+}
+
+impl<W: Write + Seek, T> Default for WritePlan<W, T> {
+    fn default() -> Self {
+        Self {
+            to_write: Default::default(),
+            write_ptr: Default::default(),
+        }
+    }
+}
+
+impl<W: Write + Seek, T> Debug for WritePlanEntry<W, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "WritePlanEntry {{ offset: {}, size: {} }}",
+            self.offset, self.size
+        )
     }
 }

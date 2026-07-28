@@ -3,8 +3,9 @@ use std::fmt::{Debug, Display, Formatter};
 include!(concat!(env!("OUT_DIR"), "/ifd_data.rs"));
 
 /// An enum indicating the context (and thus valid tags) of an IFD (normal/EXIF/GPSInfo).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum IfdType {
+    #[default]
     Ifd,
     Exif,
     GpsInfo,
@@ -32,12 +33,6 @@ impl IfdType {
             .iter()
             .chain(exif::ALL.iter())
             .chain(gps_info::ALL.iter())
-    }
-}
-
-impl Default for IfdType {
-    fn default() -> Self {
-        Self::Ifd
     }
 }
 
@@ -205,9 +200,7 @@ impl Display for MaybeKnownIfdFieldDescriptor {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self {
             MaybeKnownIfdFieldDescriptor::Known(tag) => std::fmt::Display::fmt(&tag.name, f),
-            MaybeKnownIfdFieldDescriptor::Unknown(tag) => {
-                f.write_fmt(format_args!("{:#02X}", &tag))
-            }
+            MaybeKnownIfdFieldDescriptor::Unknown(tag) => f.write_fmt(format_args!("{:#X}", &tag)),
         }
     }
 }

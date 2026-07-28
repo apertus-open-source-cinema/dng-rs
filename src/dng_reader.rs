@@ -3,7 +3,6 @@ use crate::ifd::{Ifd, IfdEntryRef, IfdPath};
 use crate::ifd_reader::IfdReader;
 use crate::tags::{ifd, IfdType, IfdTypeInterpretation};
 use crate::FileType;
-use derivative::Derivative;
 use std::cell::RefCell;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
@@ -45,8 +44,6 @@ impl Error for DngReaderError {
     }
 }
 
-#[derive(Derivative)]
-#[derivative(Debug)]
 /// The main entrypoint for reading DNG/DCP files.
 ///
 /// # Examples
@@ -62,11 +59,11 @@ impl Error for DngReaderError {
 /// let buffers = dng.main_image_data().expect("couldnt read buffers");
 /// println!("successfully read {} buffers", buffers.len())
 /// ```
+#[derive(Debug)]
 pub struct DngReader<R: Read + Seek> {
-    file_type: FileType,
-    #[derivative(Debug = "ignore")]
-    reader: RefCell<ByteOrderReader<R>>,
     ifds: Vec<Ifd>,
+    reader: RefCell<ByteOrderReader<R>>,
+    _file_type: FileType,
 }
 
 /// TIFF image type
@@ -108,7 +105,7 @@ impl<R: Read + Seek> DngReader<R> {
         }?;
         let mut reader = ByteOrderReader::new(reader, is_little_endian);
         let magic = reader.read_u16()?;
-        let file_type = FileType::from_magic(magic).ok_or_else(|| {
+        let _file_type = FileType::from_magic(magic).ok_or_else(|| {
             DngReaderError::FormatError(format!(
                 "invalid magic byte sequence (expected 42, got {}",
                 magic
@@ -131,7 +128,7 @@ impl<R: Read + Seek> DngReader<R> {
         Ok(Self {
             reader: RefCell::new(reader),
             ifds: ifds?,
-            file_type,
+            _file_type,
         })
     }
 

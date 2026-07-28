@@ -1,4 +1,5 @@
 use std::{
+    fmt::{self, Debug},
     io::{self, Read},
     mem::size_of,
     ops::{Deref, DerefMut},
@@ -57,5 +58,16 @@ impl<R: Read> Deref for ByteOrderReader<R> {
 impl<R: Read> DerefMut for ByteOrderReader<R> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.reader
+    }
+}
+
+impl<R: Read> Debug for ByteOrderReader<R> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let endian = if self.is_little_endian {
+            "little"
+        } else {
+            "big"
+        };
+        write!(f, "ByteOrderReader({endian} endian)")
     }
 }

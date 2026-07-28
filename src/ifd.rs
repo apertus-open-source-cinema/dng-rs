@@ -1,6 +1,5 @@
 use crate::tags::{IfdType, IfdValueType, MaybeKnownIfdFieldDescriptor};
-use derivative::Derivative;
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::io;
 use std::io::Write;
 use std::iter::once;
@@ -326,8 +325,7 @@ pub struct IfdEntryRef<'a> {
     pub path: &'a IfdPath,
 }
 
-#[derive(Clone, Derivative)]
-#[derivative(Debug)]
+#[derive(Clone)]
 /// A singular Value in an IFD (that doesn't know its tag or path).
 pub enum IfdValue {
     Byte(u8),
@@ -351,7 +349,7 @@ pub enum IfdValue {
     /// pointing to that data.
     ///
     /// You are responsible for setting the corresponding length tag yourself.
-    Offsets(#[derivative(Debug = "ignore")] Arc<dyn Offsets + Send + Sync>),
+    Offsets(Arc<dyn Offsets + Send + Sync>),
 }
 
 impl IfdValue {
@@ -523,5 +521,27 @@ impl<T: Deref<Target = [u8]>> Offsets for T {
     }
     fn write(&self, writer: &mut dyn Write) -> io::Result<()> {
         writer.write_all(self)
+    }
+}
+
+impl Debug for IfdValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            IfdValue::Byte(x) => write!(f, "Byte(\n{x:?},\n)"),
+            IfdValue::Ascii(x) => write!(f, "Ascii(\n{x:?},\n)"),
+            IfdValue::Short(x) => write!(f, "Short(\n{x:?},\n)"),
+            IfdValue::Long(x) => write!(f, "Long(\n{x:?},\n)"),
+            IfdValue::Rational(x, y) => write!(f, "Rational(\n{x:?},\n){y:?},\n)"),
+            IfdValue::SByte(x) => write!(f, "SByte(\n{x:?},\n)"),
+            IfdValue::Undefined(x) => write!(f, "Undefined(\n{x:?},\n)"),
+            IfdValue::SShort(x) => write!(f, "SShort(\n{x:?},\n)"),
+            IfdValue::SLong(x) => write!(f, "SLong(\n{x:?},\n)"),
+            IfdValue::SRational(x, y) => write!(f, "SRational(\n{x:?},\n{y:?},\n)"),
+            IfdValue::Float(x) => write!(f, "Float(\n{x:?},\n)"),
+            IfdValue::Double(x) => write!(f, "Double(\n{x:?},\n)"),
+            IfdValue::Ifd(x) => write!(f, "Ifd(\n{x:?},\n)"),
+            IfdValue::List(x) => write!(f, "List(\n{x:?},\n)"),
+            IfdValue::Offsets(_) => write!(f, "Offsets()"),
+        }
     }
 }

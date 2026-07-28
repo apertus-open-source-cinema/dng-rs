@@ -1,4 +1,4 @@
-//! A pure Rust library for reading/writing of DNG files, providing access to the raw data in a zero-copy-friendly way.
+//! A pure Rust, no dependency library for reading/writing of DNG files, providing access to the raw data in a zero-copy-friendly way.
 //!
 //! It also contains code for reading/writing a human-readable YAML representation of DNG tags resp. the IFD structure.
 //! The library also supports interacting with DCP (DNG Camera Profile) files. The latter is on a best-effort basis as I

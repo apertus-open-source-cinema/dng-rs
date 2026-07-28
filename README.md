@@ -5,7 +5,7 @@
 [docs-shield]: https://img.shields.io/docsrs/dng.svg
 [docs.rs]: https://docs.rs/dng
 
-**A pure rust library for reading/writing DNG files providing access to the raw data in a zero-copy friendly way.**
+**A pure rust, no dependency library for reading/writing DNG files providing access to the raw data in a zero-copy friendly way.**
 Also containing code for reading/writing a human-readable YAML representation of DNG tags/the IFD structure.
 
 The crate also supports interacting with DCP (DNG Camera Profile) files, but that is on a best-effort basis since I
