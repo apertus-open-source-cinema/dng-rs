@@ -335,11 +335,11 @@ pub enum IfdValue {
     Short(u16),
     Long(u32),
     Rational(u32, u32),
-    SignedByte(i8),
+    SByte(i8),
     Undefined(u8),
-    SignedShort(i16),
-    SignedLong(i32),
-    SignedRational(i32, i32),
+    SShort(i16),
+    SLong(i32),
+    SRational(i32, i32),
     Float(f32),
     Double(f64),
 
@@ -360,17 +360,17 @@ impl IfdValue {
             IfdValue::Byte(x) => Some(*x as u32),
             IfdValue::Short(x) => Some(*x as u32),
             IfdValue::Long(x) => Some(*x),
-            IfdValue::SignedByte(x) => Some(*x as u32),
+            IfdValue::SByte(x) => Some(*x as u32),
             IfdValue::Undefined(x) => Some(*x as u32),
-            IfdValue::SignedShort(x) => Some(*x as u32),
-            IfdValue::SignedLong(x) => Some(*x as u32),
+            IfdValue::SShort(x) => Some(*x as u32),
+            IfdValue::SLong(x) => Some(*x as u32),
             _ => None,
         }
     }
 
     pub fn as_f64(&self) -> Option<f64> {
         match self {
-            IfdValue::SignedRational(x, y) => Some(*x as f64 / *y as f64),
+            IfdValue::SRational(x, y) => Some(*x as f64 / *y as f64),
             IfdValue::Rational(x, y) => Some(*x as f64 / *y as f64),
             IfdValue::Float(f) => Some(*f as f64),
             IfdValue::Double(f) => Some(*f),
@@ -385,11 +385,11 @@ impl IfdValue {
             IfdValue::Short(_) => IfdValueType::Short,
             IfdValue::Long(_) => IfdValueType::Long,
             IfdValue::Rational(_, _) => IfdValueType::Rational,
-            IfdValue::SignedByte(_) => IfdValueType::SignedByte,
+            IfdValue::SByte(_) => IfdValueType::SignedByte,
             IfdValue::Undefined(_) => IfdValueType::Undefined,
-            IfdValue::SignedShort(_) => IfdValueType::SignedShort,
-            IfdValue::SignedLong(_) => IfdValueType::SignedLong,
-            IfdValue::SignedRational(_, _) => IfdValueType::SignedRational,
+            IfdValue::SShort(_) => IfdValueType::SignedShort,
+            IfdValue::SLong(_) => IfdValueType::SignedLong,
+            IfdValue::SRational(_, _) => IfdValueType::SignedRational,
             IfdValue::Float(_) => IfdValueType::Float,
             IfdValue::Double(_) => IfdValueType::Double,
             IfdValue::List(list) => {
@@ -484,9 +484,9 @@ implement_from!(u8, IfdValue::Byte);
 implement_from!(String, IfdValue::Ascii);
 implement_from!(u16, IfdValue::Short);
 implement_from!(u32, IfdValue::Long);
-implement_from!(i8, IfdValue::SignedByte);
-implement_from!(i16, IfdValue::SignedShort);
-implement_from!(i32, IfdValue::SignedLong);
+implement_from!(i8, IfdValue::SByte);
+implement_from!(i16, IfdValue::SShort);
+implement_from!(i32, IfdValue::SLong);
 
 impl From<&str> for IfdValue {
     fn from(x: &str) -> Self {

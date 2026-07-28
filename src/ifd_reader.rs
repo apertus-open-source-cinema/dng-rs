@@ -128,12 +128,12 @@ impl IfdEntryReader {
                 IfdValueType::Rational => {
                     IfdValue::Rational(reader.read_u32()?, reader.read_u32()?)
                 }
-                IfdValueType::SignedByte => IfdValue::SignedByte(reader.read_i8()?),
+                IfdValueType::SignedByte => IfdValue::SByte(reader.read_i8()?),
                 IfdValueType::Undefined => IfdValue::Undefined(reader.read_u8()?),
-                IfdValueType::SignedShort => IfdValue::SignedByte(reader.read_i8()?),
-                IfdValueType::SignedLong => IfdValue::SignedLong(reader.read_i32()?),
+                IfdValueType::SignedShort => IfdValue::SByte(reader.read_i8()?),
+                IfdValueType::SignedLong => IfdValue::SLong(reader.read_i32()?),
                 IfdValueType::SignedRational => {
-                    IfdValue::SignedRational(reader.read_i32()?, reader.read_i32()?)
+                    IfdValue::SRational(reader.read_i32()?, reader.read_i32()?)
                 }
                 IfdValueType::Float => IfdValue::Float(reader.read_f32()?),
                 IfdValueType::Double => IfdValue::Double(reader.read_f64()?),

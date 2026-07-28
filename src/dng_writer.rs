@@ -214,11 +214,11 @@ impl<W: Write + Seek> DngWriter<W> {
                 writer.write_u32(*num)?;
                 writer.write_u32(*denom)
             }
-            IfdValue::SignedByte(v) => writer.write_i8(*v),
+            IfdValue::SByte(v) => writer.write_i8(*v),
             IfdValue::Undefined(v) => writer.write_u8(*v),
-            IfdValue::SignedShort(v) => writer.write_i16(*v),
-            IfdValue::SignedLong(v) => writer.write_i32(*v),
-            IfdValue::SignedRational(num, denom) => {
+            IfdValue::SShort(v) => writer.write_i16(*v),
+            IfdValue::SLong(v) => writer.write_i32(*v),
+            IfdValue::SRational(num, denom) => {
                 writer.write_i32(*num)?;
                 writer.write_i32(*denom)
             }

@@ -1,6 +1,6 @@
 [package]
 name = "dng"
-description = "A pure Rust library for reading/writing of DNG files, providing access to the RAW data"
+description = "A pure Rust library for reading/writing of DNG files, providing access to the raw data"
 version = "1.6.0"
 keywords = ["dng", "raw", "tiff", "ifd", "exif"]
 categories = [

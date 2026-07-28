@@ -7,7 +7,7 @@ use std::io::Read;
 use std::path::Path;
 
 #[derive(clap::Parser)]
-#[command(author, version, about="Assemble a DNG file from some of other DNG files, plain RAW files and metadata", long_about = None)]
+#[command(author, version, about="Assemble a DNG file from some of other DNG files, plain raw files and metadata", long_about = None)]
 struct Args {
     /// Input YAML file to get the metadata from
     #[arg(long)]

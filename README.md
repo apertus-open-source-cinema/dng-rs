@@ -37,7 +37,7 @@ Options:
 ### `compile_dng`
 
 ```
-Assemble a DNG file from some of other DNG files, plain RAW files and metadata
+Assemble a DNG file from some of other DNG files, plain raw files and metadata
 
 Usage: compile_dng [OPTIONS] --yaml <YAML>
 
