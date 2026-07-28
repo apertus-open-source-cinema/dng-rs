@@ -9,6 +9,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::io;
 use std::io::{Read, Seek, SeekFrom};
+use std::ops::DerefMut;
 
 /// The error-type produced by [DngReader]
 #[derive(Debug)]
@@ -57,11 +58,9 @@ impl Error for DngReaderError {
 /// let file = File::open("src/testdata/test.dng").expect("couldnt find file");
 /// let dng = DngReader::read(file).expect("couldnt read file as dng");
 ///
-/// let main_ifd = dng.main_image_data_ifd_path();
-/// let buffer_length = dng.needed_buffer_length_for_image_data(&main_ifd).expect("couldnt read buffer lengths");
-/// let mut buffer = vec![0u8; buffer_length];
-/// dng.read_image_data_to_buffer(&main_ifd, &mut buffer).expect("couldnt read to buffer");
-/// println!("successfully read {} bytes into buffer", buffer.len())
+/// // Migth read multiple buffers for tiled images.
+/// let buffers = dng.main_image_data().expect("couldnt read buffers");
+/// println!("successfully read {} buffers", buffers.len())
 /// ```
 pub struct DngReader<R: Read + Seek> {
     file_type: FileType,
@@ -69,6 +68,16 @@ pub struct DngReader<R: Read + Seek> {
     reader: RefCell<ByteOrderReader<R>>,
     ifds: Vec<Ifd>,
 }
+
+/// TIFF image type
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ImageType {
+    /// An image possibly divided into strips of rows.
+    Stripped,
+    /// An image divided into tiles.
+    Tiled,
+}
+
 impl<R: Read + Seek> DngReader<R> {
     /// reads and parses the DNG file IFD-tree eagerly.
     ///
@@ -137,7 +146,7 @@ impl<R: Read + Seek> DngReader<R> {
         note = "`get_` prefixes are non-canonical Rust; use `first_ifd()` instead"
     )]
     pub fn get_ifd0(&self) -> &Ifd {
-        &self.first_ifd()
+        self.first_ifd()
     }
 
     pub fn entry_by_path<'a>(&'a self, path: &'a IfdPath) -> Option<IfdEntryRef<'a>> {
@@ -226,21 +235,32 @@ impl<R: Read + Seek> DngReader<R> {
             .unwrap_or_default()
     }
 
+    /// Returns the image type for the image in the `ifd_path`; `None` if no image is present.
+    pub fn image_type(&self, ifd_path: &IfdPath) -> Option<ImageType> {
+        if self
+            .entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets))
+            .is_some()
+        {
+            Some(ImageType::Stripped)
+        } else if self
+            .entry_by_path(&ifd_path.chain_tag(ifd::TileOffsets))
+            .is_some()
+        {
+            Some(ImageType::Tiled)
+        } else {
+            None
+        }
+    }
+
     /// Returns the length in bytes needed for a buffer to store the image data from a given IFD.
+    ///
+    /// The IFD must contain a stripped image, otherwise an error is returned.
     pub fn needed_buffer_length_for_image_data(
         &self,
         ifd_path: &IfdPath,
     ) -> Result<usize, DngReaderError> {
-        if let Some(compression) = self.entry_by_path(&ifd_path.chain_tag(ifd::Compression)) {
-            if compression.value.as_u32() != Some(1) {
-                return Err(DngReaderError::Other(
-                    "reading compressed images is not implemented".to_string(),
-                ));
-            }
-        }
-
         // we try the different options one after another
-        if let (Some(_offsets), Some(lengths)) = (
+        if let (Some(offsets), Some(lengths)) = (
             self.entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets)),
             self.entry_by_path(&ifd_path.chain_tag(ifd::StripByteCounts)),
         ) {
@@ -256,35 +276,22 @@ impl<R: Read + Seek> DngReader<R> {
                         )))
                 })
                 .map(|v| v as usize)
-        } else if let (Some(_offsets), Some(_lengths)) = (
-            self.entry_by_path(&ifd_path.chain_tag(ifd::TileOffsets)),
-            self.entry_by_path(&ifd_path.chain_tag(ifd::TileByteCounts)),
-        ) {
-            Err(DngReaderError::Other(
-                "reading tiled images is not implemented".to_string(),
-            ))
         } else {
             Err(DngReaderError::Other(
-                "No image data was found in the specified IFD or the path didnt lead to an IFD"
+                "No image stripe was found in the specified IFD or the path didnt lead to an IFD"
                     .to_string(),
             ))
         }
     }
 
-    /// Reads the image data from a given IFD into o given buffer.
+    /// Reads the image data from a given IFD into a given buffer.
+    ///
+    /// The IFD must contain a stripped image, otherwise an error is returned.
     pub fn read_image_data_to_buffer(
         &self,
         ifd_path: &IfdPath,
         buffer: &mut [u8],
     ) -> Result<(), DngReaderError> {
-        if let Some(compression) = self.entry_by_path(&ifd_path.chain_tag(ifd::Compression)) {
-            if compression.value.as_u32() != Some(1) {
-                return Err(DngReaderError::Other(
-                    "reading compressed images is not implemented".to_string(),
-                ));
-            }
-        }
-
         // we try the different options one after another
         if let (Some(offsets), Some(lengths)) = (
             self.entry_by_path(&ifd_path.chain_tag(ifd::StripOffsets)),
@@ -316,18 +323,105 @@ impl<R: Read + Seek> DngReader<R> {
                 buffer_offset += length;
             }
             Ok(())
-        } else if let (Some(_offsets), Some(_lengths)) = (
+        } else {
+            Err(DngReaderError::Other(
+                "No image stripe was found in the specified IFD or the path didnt lead to an IFD"
+                    .to_string(),
+            ))
+        }
+    }
+
+    /// Returns the length in bytes needed for a buffer to store the image tiles from a given IFD.
+    ///
+    /// The IFD must contain a tiled image, otherwise an error is returned.
+    pub fn needed_buffer_lengths_for_tile_data(
+        &self,
+        ifd_path: &IfdPath,
+    ) -> Result<Vec<usize>, DngReaderError> {
+        // we try the different options one after another
+        if let (Some(_offsets), Some(lengths)) = (
             self.entry_by_path(&ifd_path.chain_tag(ifd::TileOffsets)),
             self.entry_by_path(&ifd_path.chain_tag(ifd::TileByteCounts)),
         ) {
+            lengths
+                .value
+                .as_list()
+                .map(|v| v.as_u32().map(|v| v as usize))
+                .collect::<Option<Vec<_>>>()
+                .ok_or(DngReaderError::Other(
+                    "Invalid tile length data in the specified IFD".to_string(),
+                ))
+        } else {
             Err(DngReaderError::Other(
-                "reading tiled images is not implemented".to_string(),
+                "No tile length data was found in the specified IFD or the path didnt lead to an IFD"
+                    .to_string(),
             ))
+        }
+    }
+
+    /// Reads the image tiles from a given IFD into given buffers.
+    ///
+    /// The IFD must contain a tiled image, otherwise an error is returned.
+    pub fn read_tile_data_to_buffers<'a, I: Iterator<Item = &'a mut [u8]>>(
+        &self,
+        ifd_path: &IfdPath,
+        buffers: I,
+    ) -> Result<(), DngReaderError> {
+        if let (Some(offsets), Some(lengths)) = (
+            self.entry_by_path(&ifd_path.chain_tag(ifd::TileOffsets)),
+            self.entry_by_path(&ifd_path.chain_tag(ifd::TileByteCounts)),
+        ) {
+            let mut reader = self.reader.borrow_mut();
+            let count = offsets.value.count();
+            if count != lengths.value.count() {
+                return Err(DngReaderError::FormatError(
+                    "the counts of OFFSETS and LENGTHS must be the same".to_string(),
+                ));
+            }
+            for (offset, buffer) in offsets.value.as_list().zip(buffers) {
+                let offset = offset.as_u32().ok_or(DngReaderError::Other(format!(
+                    "offset tag {offset:?} for  {:?} does not have integer value",
+                    offsets.path
+                )))?;
+                reader.seek(SeekFrom::Start(offset as u64))?;
+                reader.read_exact(buffer)?;
+            }
+            Ok(())
         } else {
             Err(DngReaderError::Other(
                 "No image data was found in the specified IFD or the path didnt lead to an IFD"
                     .to_string(),
             ))
         }
+    }
+
+    /// Reads the image data into a newly alloated buffers. May return more buffers if the image is tiled,
+    /// or none if the IFD contains no images.
+    pub fn image_data(&self, ifd_path: &IfdPath) -> Result<Vec<Vec<u8>>, DngReaderError> {
+        match self.image_type(ifd_path) {
+            Some(ImageType::Stripped) => {
+                let len = self.needed_buffer_length_for_image_data(ifd_path)?;
+                let mut buffer = vec![0; len];
+                self.read_image_data_to_buffer(ifd_path, &mut buffer)?;
+                Ok(vec![buffer])
+            }
+            Some(ImageType::Tiled) => {
+                let lens = self.needed_buffer_lengths_for_tile_data(ifd_path)?;
+                let mut buffers: Vec<_> = lens.into_iter().map(|len| vec![0; len]).collect();
+                self.read_tile_data_to_buffers(
+                    ifd_path,
+                    buffers.iter_mut().map(DerefMut::deref_mut),
+                )?;
+                Ok(buffers)
+            }
+            None => Ok(Vec::with_capacity(0)),
+        }
+    }
+
+    /// Reads the main image data into a newly alloated buffers. May return more buffers if the image is tiled,
+    /// or none if the IFD contains no images.
+    pub fn main_image_data(&self) -> Result<Vec<Vec<u8>>, DngReaderError> {
+        let ifd_path = self.main_image_data_ifd_path();
+        self.image_data(&ifd_path)
     }
 }
