@@ -1,4 +1,4 @@
-use clap::{arg, Parser};
+use clap::Parser;
 use dng::yaml::IfdYamlParser;
 use dng::DngWriter;
 use dng::FileType;

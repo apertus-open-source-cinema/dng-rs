@@ -32,7 +32,7 @@ fn main() {
         if entry
             .tag
             .known_name()
-            .map_or(true, |name| !name.to_lowercase().contains("matrix"))
+            .is_none_or(|name| !name.to_lowercase().contains("matrix"))
         {
             return None;
         }

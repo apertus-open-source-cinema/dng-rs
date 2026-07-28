@@ -320,11 +320,11 @@ impl IfdYamlParser {
             "SHORT" => Some(IfdValueType::Short),
             "LONG" => Some(IfdValueType::Long),
             "RATIONAL" => Some(IfdValueType::Rational),
-            "SBYTE" => Some(IfdValueType::SignedByte),
+            "SBYTE" => Some(IfdValueType::SByte),
             "UNDEFINED" => Some(IfdValueType::Undefined),
-            "SSHORT" => Some(IfdValueType::SignedShort),
-            "SLONG" => Some(IfdValueType::SignedLong),
-            "SRATIONAL" => Some(IfdValueType::SignedRational),
+            "SSHORT" => Some(IfdValueType::SShort),
+            "SLONG" => Some(IfdValueType::SLong),
+            "SRATIONAL" => Some(IfdValueType::SRational),
             "FLOAT" => Some(IfdValueType::Float),
             "DOUBLE" => Some(IfdValueType::Double),
             _ => None,
@@ -354,10 +354,10 @@ impl IfdYamlParser {
             IfdValueType::Ascii => IfdValue::Ascii(str.to_string()),
             IfdValueType::Short => IfdValue::Short(parse_int_like!(value, "SHORT")),
             IfdValueType::Long => IfdValue::Long(parse_int_like!(value, "LONG")),
-            IfdValueType::SignedByte => IfdValue::SignedByte(parse_int_like!(value, "SBYTE")),
+            IfdValueType::SByte => IfdValue::SByte(parse_int_like!(value, "SBYTE")),
             IfdValueType::Undefined => IfdValue::Undefined(parse_int_like!(value, "UNDEFINED")),
-            IfdValueType::SignedShort => IfdValue::SignedShort(parse_int_like!(value, "SSHORT")),
-            IfdValueType::SignedLong => IfdValue::SignedLong(parse_int_like!(value, "SLONG")),
+            IfdValueType::SShort => IfdValue::SShort(parse_int_like!(value, "SSHORT")),
+            IfdValueType::SLong => IfdValue::SLong(parse_int_like!(value, "SLONG")),
 
             IfdValueType::Rational => {
                 if let Some((_whole, numerator, denominator)) =
@@ -377,19 +377,19 @@ impl IfdYamlParser {
                     IfdValue::Rational(*fraction.numer() as u32, *fraction.denom() as u32)
                 } else if str.is_empty() {
                     // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
-                    return Ok(IfdValue::SignedRational(0, 1));
+                    return Ok(IfdValue::SRational(0, 1));
                 } else {
                     Err(err!(value.pos(), "couldn't parse '{str}' as RATIONAL"))?
                 }
             }
-            IfdValueType::SignedRational => {
+            IfdValueType::SRational => {
                 if let Some((_whole, numerator, denominator)) =
                     regex_captures!("([\\-0-9]+)\\s*/\\s*([\\-0-9]+)", str)
                 {
                     if let (Ok(numerator), Ok(denominator)) =
                         (numerator.parse(), denominator.parse())
                     {
-                        IfdValue::SignedRational(numerator, denominator)
+                        IfdValue::SRational(numerator, denominator)
                     } else {
                         Err(err!(value.pos(), "couldn't parse '{str}' as SRATIONAL"))?
                     }
@@ -397,10 +397,10 @@ impl IfdYamlParser {
                     let fraction = Ratio::<i32>::approximate_float(float).ok_or_else(|| {
                         err!(value.pos(), "couldnt find a fraction for float '{float}'")
                     })?;
-                    IfdValue::SignedRational(*fraction.numer(), *fraction.denom())
+                    IfdValue::SRational(*fraction.numer(), *fraction.denom())
                 } else if str.is_empty() {
                     // this works around a bug in yaml_peg, where 0.0 is represented as NodeFloat("")
-                    return Ok(IfdValue::SignedRational(0, 1));
+                    return Ok(IfdValue::SRational(0, 1));
                 } else {
                     Err(err!(value.pos(), "couldn't parse '{str}' as SRATIONAL"))?
                 }

@@ -8,6 +8,7 @@ pub struct IfdYamlDumper {
     pub dump_rational_as_float: bool,
     pub visitor: Option<Arc<dyn Fn(IfdEntryRef) -> Option<String>>>,
 }
+
 impl IfdYamlDumper {
     pub fn dump_ifd(&self, ifd: &Ifd) -> String {
         self.dump_ifd_with_path(ifd, &IfdPath::default())
@@ -65,11 +66,11 @@ impl IfdYamlDumper {
                     format!("{x}/{y}")
                 }
             }
-            IfdValue::SignedByte(x) => format!("{x}"),
-            IfdValue::Undefined(x) => format!("{x:#02X}"),
-            IfdValue::SignedShort(x) => format!("{x}"),
-            IfdValue::SignedLong(x) => format!("{x}"),
-            IfdValue::SignedRational(x, y) => {
+            IfdValue::SByte(x) => format!("{x}"),
+            IfdValue::Undefined(x) => format!("{x:#X}"),
+            IfdValue::SShort(x) => format!("{x}"),
+            IfdValue::SLong(x) => format!("{x}"),
+            IfdValue::SRational(x, y) => {
                 if self.dump_rational_as_float {
                     format!("{}", *x as f32 / *y as f32)
                 } else {
@@ -137,11 +138,11 @@ impl IfdYamlDumper {
             IfdValueType::Short => "SHORT",
             IfdValueType::Long => "LONG",
             IfdValueType::Rational => "RATIONAL",
-            IfdValueType::SignedByte => "SBYTE",
+            IfdValueType::SByte => "SBYTE",
             IfdValueType::Undefined => "UNDEFINED",
-            IfdValueType::SignedShort => "SSHORT",
-            IfdValueType::SignedLong => "SLONG",
-            IfdValueType::SignedRational => "SRATIONAL",
+            IfdValueType::SShort => "SSHORT",
+            IfdValueType::SLong => "SLONG",
+            IfdValueType::SRational => "SRATIONAL",
             IfdValueType::Float => "FLOAT",
             IfdValueType::Double => "DOUBLE",
         }
